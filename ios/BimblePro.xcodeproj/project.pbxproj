@@ -8,12 +8,26 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* BimbleProTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* BimbleProTests.m */; };
-		0C80B921A6F3F58F76C31292 /* libPods-BimblePro.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-BimblePro.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		7699B88040F8A987B510C191 /* libPods-BimblePro-BimbleProTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-BimblePro-BimbleProTests.a */; };
+		29EFC288C653423387734C95 /* SFPRODISPLAYSEMIBOLDITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = 4F91D71115784B7EBDD05679 /* SFPRODISPLAYSEMIBOLDITALIC.OTF */; };
+		30F8F9C42924488AA7742CB6 /* SFPRODISPLAYTHINITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = B05374F1F1744E058C52B0AA /* SFPRODISPLAYTHINITALIC.OTF */; };
+		38C3D540EFD2D9D5987DF34B /* libPods-BimblePro-BimbleProTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F76008BCAC820AC4E787AFC /* libPods-BimblePro-BimbleProTests.a */; };
+		3A8DA1AF02B4491EA5601369 /* Product Sans Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D3660D70ECF84289991795F1 /* Product Sans Regular.ttf */; };
+		425F7C6515AB4B4FB0165FE9 /* SFPRODISPLAYULTRALIGHTITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = D8669B2AFE45496DA6E05DA3 /* SFPRODISPLAYULTRALIGHTITALIC.OTF */; };
+		48879880F5B9436AAD6E2F0A /* Product Sans Bold Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BD1134804A5147F7A216B689 /* Product Sans Bold Italic.ttf */; };
+		5AAB4BB041464592A240D29A /* Product Sans Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4C1BD49E53054C7FBEFC7267 /* Product Sans Italic.ttf */; };
+		5B2107B18BDE4679B7E3E034 /* SFPRODISPLAYBLACKITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = 9C79CB40E081451DB075D85B /* SFPRODISPLAYBLACKITALIC.OTF */; };
+		61E1E382680C4E2CBD9B5248 /* SFPRODISPLAYHEAVYITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = 59861AF25F654215BABA6E41 /* SFPRODISPLAYHEAVYITALIC.OTF */; };
+		6210875110854BADA7068E86 /* SFPRODISPLAYMEDIUM.OTF in Resources */ = {isa = PBXBuildFile; fileRef = 31D19C402CDD414E9A684948 /* SFPRODISPLAYMEDIUM.OTF */; };
+		6623FB3335F8CF33E15557BC /* libPods-BimblePro.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E466A15B20BE6557DF531AC /* libPods-BimblePro.a */; };
+		6FF3C8D369784FB6A9BAE274 /* SFPRODISPLAYREGULAR.OTF in Resources */ = {isa = PBXBuildFile; fileRef = C417FD85D7B94D0EA7404C1E /* SFPRODISPLAYREGULAR.OTF */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		873B7873049A4A6F9946524E /* SFPRODISPLAYBOLD.OTF in Resources */ = {isa = PBXBuildFile; fileRef = C13EB37FAD574D14A313D4EF /* SFPRODISPLAYBOLD.OTF */; };
+		A1AD72511C5171C373AF1DDD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		B558577AEC1143EB976678EE /* Product Sans Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 77C74E733FDC4684B53FC396 /* Product Sans Bold.ttf */; };
+		FD354556A6C84EDAA2746EDD /* SFPRODISPLAYLIGHTITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = D5815B2AD66E4F039413BF30 /* SFPRODISPLAYLIGHTITALIC.OTF */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +44,7 @@
 		00E356EE1AD99517003FC87E /* BimbleProTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BimbleProTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* BimbleProTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BimbleProTests.m; sourceTree = "<group>"; };
+		07627AA30ECB95B85F792715 /* Pods-BimblePro.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* BimblePro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BimblePro.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = BimblePro/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = BimblePro/AppDelegate.mm; sourceTree = "<group>"; };
@@ -37,14 +52,26 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BimblePro/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = BimblePro/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = BimblePro/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		19F6CBCC0A4E27FBF8BF4A61 /* libPods-BimblePro-BimbleProTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro-BimbleProTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3B4392A12AC88292D35C810B /* Pods-BimblePro.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.debug.xcconfig"; sourceTree = "<group>"; };
-		5709B34CF0A7D63546082F79 /* Pods-BimblePro.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.release.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.release.xcconfig"; sourceTree = "<group>"; };
-		5B7EB9410499542E8C5724F5 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.debug.xcconfig"; sourceTree = "<group>"; };
-		5DCACB8F33CDC322A6C60F78 /* libPods-BimblePro.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E466A15B20BE6557DF531AC /* libPods-BimblePro.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		31D19C402CDD414E9A684948 /* SFPRODISPLAYMEDIUM.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYMEDIUM.OTF; path = ../assets/fonts/SFPRODISPLAYMEDIUM.OTF; sourceTree = "<group>"; };
+		3F76008BCAC820AC4E787AFC /* libPods-BimblePro-BimbleProTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro-BimbleProTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C1BD49E53054C7FBEFC7267 /* Product Sans Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Product Sans Italic.ttf"; path = "../assets/fonts/Product Sans Italic.ttf"; sourceTree = "<group>"; };
+		4F91D71115784B7EBDD05679 /* SFPRODISPLAYSEMIBOLDITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYSEMIBOLDITALIC.OTF; path = ../assets/fonts/SFPRODISPLAYSEMIBOLDITALIC.OTF; sourceTree = "<group>"; };
+		59861AF25F654215BABA6E41 /* SFPRODISPLAYHEAVYITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYHEAVYITALIC.OTF; path = ../assets/fonts/SFPRODISPLAYHEAVYITALIC.OTF; sourceTree = "<group>"; };
+		77C74E733FDC4684B53FC396 /* Product Sans Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Product Sans Bold.ttf"; path = "../assets/fonts/Product Sans Bold.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = BimblePro/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		89C6BE57DB24E9ADA2F236DE /* Pods-BimblePro-BimbleProTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.release.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.release.xcconfig"; sourceTree = "<group>"; };
+		953652AB2D1C8D03904545CF /* Pods-BimblePro-BimbleProTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.release.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.release.xcconfig"; sourceTree = "<group>"; };
+		9C79CB40E081451DB075D85B /* SFPRODISPLAYBLACKITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYBLACKITALIC.OTF; path = ../assets/fonts/SFPRODISPLAYBLACKITALIC.OTF; sourceTree = "<group>"; };
+		A79943ED59B9655B98C46563 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.debug.xcconfig"; sourceTree = "<group>"; };
+		B05374F1F1744E058C52B0AA /* SFPRODISPLAYTHINITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYTHINITALIC.OTF; path = ../assets/fonts/SFPRODISPLAYTHINITALIC.OTF; sourceTree = "<group>"; };
+		BD1134804A5147F7A216B689 /* Product Sans Bold Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Product Sans Bold Italic.ttf"; path = "../assets/fonts/Product Sans Bold Italic.ttf"; sourceTree = "<group>"; };
+		C13EB37FAD574D14A313D4EF /* SFPRODISPLAYBOLD.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYBOLD.OTF; path = ../assets/fonts/SFPRODISPLAYBOLD.OTF; sourceTree = "<group>"; };
+		C417FD85D7B94D0EA7404C1E /* SFPRODISPLAYREGULAR.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYREGULAR.OTF; path = ../assets/fonts/SFPRODISPLAYREGULAR.OTF; sourceTree = "<group>"; };
+		D3660D70ECF84289991795F1 /* Product Sans Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Product Sans Regular.ttf"; path = "../assets/fonts/Product Sans Regular.ttf"; sourceTree = "<group>"; };
+		D5815B2AD66E4F039413BF30 /* SFPRODISPLAYLIGHTITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYLIGHTITALIC.OTF; path = ../assets/fonts/SFPRODISPLAYLIGHTITALIC.OTF; sourceTree = "<group>"; };
+		D8669B2AFE45496DA6E05DA3 /* SFPRODISPLAYULTRALIGHTITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYULTRALIGHTITALIC.OTF; path = ../assets/fonts/SFPRODISPLAYULTRALIGHTITALIC.OTF; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		FC34E55881FB03CE14B2AB63 /* Pods-BimblePro.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.release.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,7 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7699B88040F8A987B510C191 /* libPods-BimblePro-BimbleProTests.a in Frameworks */,
+				38C3D540EFD2D9D5987DF34B /* libPods-BimblePro-BimbleProTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,7 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C80B921A6F3F58F76C31292 /* libPods-BimblePro.a in Frameworks */,
+				6623FB3335F8CF33E15557BC /* libPods-BimblePro.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -102,8 +129,8 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5DCACB8F33CDC322A6C60F78 /* libPods-BimblePro.a */,
-				19F6CBCC0A4E27FBF8BF4A61 /* libPods-BimblePro-BimbleProTests.a */,
+				2E466A15B20BE6557DF531AC /* libPods-BimblePro.a */,
+				3F76008BCAC820AC4E787AFC /* libPods-BimblePro-BimbleProTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -124,6 +151,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				DC88D682D1ED41599036FB3C /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -142,12 +170,33 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3B4392A12AC88292D35C810B /* Pods-BimblePro.debug.xcconfig */,
-				5709B34CF0A7D63546082F79 /* Pods-BimblePro.release.xcconfig */,
-				5B7EB9410499542E8C5724F5 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */,
-				89C6BE57DB24E9ADA2F236DE /* Pods-BimblePro-BimbleProTests.release.xcconfig */,
+				07627AA30ECB95B85F792715 /* Pods-BimblePro.debug.xcconfig */,
+				FC34E55881FB03CE14B2AB63 /* Pods-BimblePro.release.xcconfig */,
+				A79943ED59B9655B98C46563 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */,
+				953652AB2D1C8D03904545CF /* Pods-BimblePro-BimbleProTests.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		DC88D682D1ED41599036FB3C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BD1134804A5147F7A216B689 /* Product Sans Bold Italic.ttf */,
+				4C1BD49E53054C7FBEFC7267 /* Product Sans Italic.ttf */,
+				D3660D70ECF84289991795F1 /* Product Sans Regular.ttf */,
+				9C79CB40E081451DB075D85B /* SFPRODISPLAYBLACKITALIC.OTF */,
+				C13EB37FAD574D14A313D4EF /* SFPRODISPLAYBOLD.OTF */,
+				59861AF25F654215BABA6E41 /* SFPRODISPLAYHEAVYITALIC.OTF */,
+				D5815B2AD66E4F039413BF30 /* SFPRODISPLAYLIGHTITALIC.OTF */,
+				31D19C402CDD414E9A684948 /* SFPRODISPLAYMEDIUM.OTF */,
+				C417FD85D7B94D0EA7404C1E /* SFPRODISPLAYREGULAR.OTF */,
+				4F91D71115784B7EBDD05679 /* SFPRODISPLAYSEMIBOLDITALIC.OTF */,
+				B05374F1F1744E058C52B0AA /* SFPRODISPLAYTHINITALIC.OTF */,
+				D8669B2AFE45496DA6E05DA3 /* SFPRODISPLAYULTRALIGHTITALIC.OTF */,
+				77C74E733FDC4684B53FC396 /* Product Sans Bold.ttf */,
+			);
+			name = Resources;
+			path = "";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -157,12 +206,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "BimbleProTests" */;
 			buildPhases = (
-				A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */,
+				78B0FB09BA195842C774AB51 /* [CP] Check Pods Manifest.lock */,
 				00E356EA1AD99517003FC87E /* Sources */,
 				00E356EB1AD99517003FC87E /* Frameworks */,
 				00E356EC1AD99517003FC87E /* Resources */,
-				C59DA0FBD6956966B86A3779 /* [CP] Embed Pods Frameworks */,
-				F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */,
+				5ED367BE99057F251C8FED39 /* [CP] Embed Pods Frameworks */,
+				911397EFD765BD6A7DF8708A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -178,13 +227,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BimblePro" */;
 			buildPhases = (
-				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
+				0D3043637CDB53DF318A28F1 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
-				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				848533CD663D35D67378EF93 /* [CP] Embed Pods Frameworks */,
+				2DD770734BEB7B3E81979CF0 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -245,6 +294,20 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				A1AD72511C5171C373AF1DDD /* PrivacyInfo.xcprivacy in Resources */,
+				48879880F5B9436AAD6E2F0A /* Product Sans Bold Italic.ttf in Resources */,
+				5AAB4BB041464592A240D29A /* Product Sans Italic.ttf in Resources */,
+				3A8DA1AF02B4491EA5601369 /* Product Sans Regular.ttf in Resources */,
+				5B2107B18BDE4679B7E3E034 /* SFPRODISPLAYBLACKITALIC.OTF in Resources */,
+				873B7873049A4A6F9946524E /* SFPRODISPLAYBOLD.OTF in Resources */,
+				61E1E382680C4E2CBD9B5248 /* SFPRODISPLAYHEAVYITALIC.OTF in Resources */,
+				FD354556A6C84EDAA2746EDD /* SFPRODISPLAYLIGHTITALIC.OTF in Resources */,
+				6210875110854BADA7068E86 /* SFPRODISPLAYMEDIUM.OTF in Resources */,
+				6FF3C8D369784FB6A9BAE274 /* SFPRODISPLAYREGULAR.OTF in Resources */,
+				29EFC288C653423387734C95 /* SFPRODISPLAYSEMIBOLDITALIC.OTF in Resources */,
+				30F8F9C42924488AA7742CB6 /* SFPRODISPLAYTHINITALIC.OTF in Resources */,
+				425F7C6515AB4B4FB0165FE9 /* SFPRODISPLAYULTRALIGHTITALIC.OTF in Resources */,
+				B558577AEC1143EB976678EE /* Product Sans Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,46 +330,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-BimblePro-BimbleProTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
+		0D3043637CDB53DF318A28F1 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -328,24 +352,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C59DA0FBD6956966B86A3779 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
+		2DD770734BEB7B3E81979CF0 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -362,7 +369,63 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */ = {
+		5ED367BE99057F251C8FED39 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		78B0FB09BA195842C774AB51 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-BimblePro-BimbleProTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		848533CD663D35D67378EF93 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		911397EFD765BD6A7DF8708A /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -412,7 +475,7 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5B7EB9410499542E8C5724F5 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */;
+			baseConfigurationReference = A79943ED59B9655B98C46563 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -439,7 +502,7 @@
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 89C6BE57DB24E9ADA2F236DE /* Pods-BimblePro-BimbleProTests.release.xcconfig */;
+			baseConfigurationReference = 953652AB2D1C8D03904545CF /* Pods-BimblePro-BimbleProTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
@@ -463,7 +526,7 @@
 		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-BimblePro.debug.xcconfig */;
+			baseConfigurationReference = 07627AA30ECB95B85F792715 /* Pods-BimblePro.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -491,7 +554,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-BimblePro.release.xcconfig */;
+			baseConfigurationReference = FC34E55881FB03CE14B2AB63 /* Pods-BimblePro.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -584,7 +647,14 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				USE_HERMES = true;
 			};
 			name = Debug;
 		};
@@ -649,7 +719,13 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
