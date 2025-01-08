@@ -32,7 +32,7 @@ const FollowupChat = ({ navigation }) => {
       id: 3,
       type: 'patient',
       text: 'Lorem Ipsum available the majority',
-      files: ['Outbound.zip', 'Intakeform.pdf', 'CBC.pdf', 'KFTReport.pdf'],
+      files: ['Outbundle.zip', 'Intakeform.pdf', 'CBC.pdf', 'KFTReport.pdf'],
       profile:PatientFemaleImg
     },
     {
@@ -168,7 +168,9 @@ const FollowupChat = ({ navigation }) => {
               
             <Text style={{  fontSize: 15,
     fontWeight: '600',
-    color: '#191919',}}>
+    color: '#191919',
+    fontFamily:'Product Sans Bold Italic',
+    }}>
             Prescription</Text>  
           </TouchableOpacity>
         </View>
@@ -195,9 +197,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 25,
+    fontWeight: '700',
     marginLeft: 12,
+    fontFamily:'Product Sans Regular'
   },
   menuIcon: {
     width: 24,
@@ -222,7 +225,7 @@ const styles = StyleSheet.create({
     color: '#191919',
     fontSize: 17,
     fontWeight: '700',
-    fontFamily:'Product Sans Bold Italic'
+    fontFamily:'SFPRODISPLAYLIGHTITALIC'
   },
   newButtonContainer: {
     backgroundColor: 'green',
@@ -233,6 +236,7 @@ const styles = StyleSheet.create({
   newButton: {
     color: '#fff',
     fontSize: 14,
+    fontFamily:'SFPRODISPLAYLIGHTREGULAR'
   },
   dateContainer: {
     flexDirection: 'row',
@@ -287,12 +291,20 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 15,
     lineHeight: 20,
+    color:'#FFFFFF',
+    fontFamily:'SFPRODISPLAYLIGHTITALIC'
   },
   doctorText: {
-    color: '#fff',
+    color: '#FFFFFF',
+    fontWeight:400,
+    fontFamily:'Product Sans Regular',
+    fontSize:15
   },
   patientText: {
     color: '#191919',
+    fontWeight:400,
+    fontFamily:'Product Sans Regular',
+    fontSize:15
   },
   profileImage: {
     width: 36,
@@ -314,11 +326,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 8,
     borderColor: 'rgba(248, 94, 173, 0.4)',
+   
   },
   fileName: {
-    fontSize: 13,
-    color: '#666',
+    fontSize: 12,
+    color: '#191919',
     marginLeft: 6,
+    fontWeight:400,
+    fontFamily:'Product Sans Regular'
   },
   footer: {
     flexDirection: 'row',
@@ -342,11 +357,11 @@ const styles = StyleSheet.create({
     marginTop: 13,
   },
   footerButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '500',
     color: '#191919',
-  marginTop:40,
-  fontFamily:'Product Sans Bold Italic'
+    marginTop:40,
+    fontFamily:'Product Sans Regular'
   },
 })
 

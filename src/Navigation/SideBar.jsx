@@ -7,10 +7,14 @@ import {
   Dimensions,
   Animated,
   Pressable,
+  Alert,
 } from 'react-native';
 import { HomeIcon, LogoutIcon, ProfileIcon, SettingIcon } from '../component/svgComponent';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 const SidebarMenu = ({ onClose }) => {
+  const navigation = useNavigation();
   const slideAnim = useRef(new Animated.Value(-Dimensions.get('window').width * 0.60)).current; // Start off-screen
   const fadeAnim = useRef(new Animated.Value(0)).current; // Opacity for the overlay
 
@@ -29,6 +33,39 @@ const SidebarMenu = ({ onClose }) => {
       }),
     ]).start();
   }, []);
+
+
+ 
+  const handleLogout = async () => {
+    try {
+      // First, animate the sidebar closing
+      await Promise.all([
+        new Promise((resolve) => {
+          Animated.parallel([
+            Animated.timing(slideAnim, {
+              toValue: -Dimensions.get('window').width * 0.60,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(fadeAnim, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]).start(resolve);
+        }),
+      ]);
+
+      // Then clear the storage and navigate
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('remember_me');
+      onClose(); // Close the sidebar
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'An error occurred while logging out.');
+    }
+  };
 
   const handleClose = () => {
     // Slide out animation with overlay fade-out
@@ -58,35 +95,36 @@ const SidebarMenu = ({ onClose }) => {
       {/* Sidebar */}
       <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-          <Text style={styles.closeText}>✕</Text>
+          {/* <Text style={styles.closeText}>✕</Text> */}
         </TouchableOpacity>
-        <Text style={styles.menuTitle}>Menu</Text>
 
-        {/* Menu Items */}
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.icon}>
-            <HomeIcon color="white" />
-          </View>
-          <Text style={styles.menuText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.icon}>
-            <ProfileIcon color="white" />
-          </View>
-          <Text style={styles.menuText}>Profile</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.icon}>
-            <SettingIcon color="white" />
-          </View>
-          <Text style={styles.menuText}>Settings</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.icon}>
-            <LogoutIcon color="white" />
-          </View>
-          <Text style={styles.menuText}>Logout</Text>
-        </TouchableOpacity>
+        {/* Menu Items - removed menuTitle and adjusted spacing */}
+        <View style={styles.menuItemsContainer}>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.icon}>
+              <HomeIcon color="white" />
+            </View>
+            <Text style={styles.menuText}>Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.icon}>
+              <ProfileIcon color="white" />
+            </View>
+            <Text style={styles.menuText}>Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.icon}>
+              <SettingIcon color="white" />
+            </View>
+            <Text style={styles.menuText}>Settings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <View style={styles.icon}>
+              <LogoutIcon color="white" />
+            </View>
+            <Text style={styles.menuText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
     </View>
   );
@@ -95,6 +133,7 @@ const SidebarMenu = ({ onClose }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -107,10 +146,11 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width * 0.60,
     height: '100%',
     backgroundColor: '#2968FF',
-    padding: 20,
+    paddingLeft: 20,
     position: 'absolute',
     left: 0,
     top: 0,
+    paddingTop: 50, // Add top padding to adjust spacing
   },
   closeButton: {
     alignSelf: 'flex-end',
@@ -120,16 +160,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
   },
-  menuTitle: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 20,
+  menuItemsContainer: {
+    marginTop: 20, // Add space at the top of the menu items
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 25, // Increased spacing between items
   },
   icon: {
     marginRight: 10, // Add margin to create space between icon and text

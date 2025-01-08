@@ -169,30 +169,7 @@ export default function Appointment({ navigation }) {
   
   //   checkAuth();
   // }, []);
-  
-  const handleLogout = async () => {
-    try {
-
-      await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('remember_me');
-
-
-
-      Toast.show({
-        type: 'success',
-        position: 'top',
-        text1: 'Successfully logged out!',
-        text2: 'See you again!',
-        visibilityTime: 6000,
-        autoHide: true,
-      });
-      Navigation.navigate('Login');
-
-    } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Error', 'An error occurred while logging out.');
-    }
-  };
+ 
 
 
   return (
@@ -205,7 +182,7 @@ export default function Appointment({ navigation }) {
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.menuIconWrapper}>
             <View>
-            <MenuIcon onPress={() => setSidebarVisible(true)}/>
+            <MenuIcon onPress={() => navigation.openDrawer()}/>
             {isSidebarVisible && <SidebarMenu onClose={() => setSidebarVisible(false)} />}
 
             </View>
@@ -213,7 +190,7 @@ export default function Appointment({ navigation }) {
           <Text style={styles.headerText}>Appointments</Text>
         </View>
 
-        <TouchableOpacity onPress={handleLogout}>
+        <TouchableOpacity> 
           <AppointmentUserIcon style={styles.headerAvatar} />
 
         </TouchableOpacity>
@@ -264,25 +241,39 @@ const styles = ScaledSheet.create({
     paddingHorizontal: moderateScale(15),
     paddingTop: Platform.OS === 'ios' ? moderateScale(45) : moderateScale(10),
     paddingBottom: moderateScale(10),
-    height: Platform.OS === 'ios' ? verticalScale(90) : verticalScale(65),
+    minHeight: Platform.OS === 'ios' ? verticalScale(90) : verticalScale(65),
+    width: '100%',
+    position: 'relative',
+    // zIndex: 1,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   headerLeft: { 
     flexDirection: 'row', 
     alignItems: 'center',
+    flex: 1,
   },
   menuIconWrapper: { 
     padding: moderateScale(5),
+    minWidth: moderateScale(40),
+    justifyContent: 'center',
   },
   headerText: { 
     color: '#fff', 
-    fontSize: moderateScale(20), 
+    fontSize: moderateScale(25), 
     fontWeight: '700', 
     marginLeft: moderateScale(10), 
-    fontFamily: 'Product Sans Bold Italic'
+    fontFamily: 'Product Sans Bold',
+    flexShrink: 1,
   },
   headerAvatar: { 
     alignItems: 'center',
     padding: moderateScale(5),
+    minWidth: moderateScale(40),
+    justifyContent: 'center',
   },
 
   tabs: {
@@ -294,9 +285,9 @@ const styles = ScaledSheet.create({
    
 
   },
-  tabText: { fontSize: 18, fontWeight: '400', paddingVertical: 10, color: '#fff', fontFamily: 'Product Sans Bold Italic' },
+  tabText: { fontSize: 18, fontWeight: '400', paddingVertical: 10, color: '#FFFFFF', fontFamily: 'Product Sans Bold Italic' },
   tabText1: { fontSize: 16, paddingVertical: 10, color: 'rgba(241,243,247,0.45)' ,fontFamily: 'Product Sans Bold Italic'},
-  activeTab: { fontWeight: 'bold', borderBottomWidth: 5, borderBottomColor: '#fff', padding: 70,borderRadius:4},
+  activeTab: { fontWeight: 'bold', borderBottomWidth: 5, borderBottomColor: '#fff', padding: 70,borderRadius:4,},
   tabSeparator: { height: 2, backgroundColor: '#ddd' },
 
   dateWrapper: {
@@ -307,10 +298,12 @@ const styles = ScaledSheet.create({
     marginTop: 15
   },
   dateText: {
-    fontSize: 12,
-    color: '#333',
-    fontWeight: 'bold',
+    fontSize: 15,
+    color: '#191919',
+    
     paddingHorizontal: 10,
+    fontFamily:'Product Sans  Italic',
+    fontWeight:400
 
   },
   line: {
@@ -332,7 +325,7 @@ const styles = ScaledSheet.create({
   cardHeader: { flexDirection: 'row', marginBottom: 15,margin:10 },
   avatar: {  borderRadius: 25, marginRight: 10,marginBottom:20 },
   nameRow: { flexDirection: 'row', alignItems: 'center' },
-  name: { fontSize: 20, fontWeight: '700', marginRight: 5,fontFamily: 'Product Sans Bold Italic' },
+  name: { fontSize: 20, fontWeight: '700', marginRight: 5,fontFamily: 'Product Sans Regular' },
   genderIcon: { width: 14, height: 14 },
 
   row: {
@@ -370,13 +363,13 @@ const styles = ScaledSheet.create({
     fontWeight: '400',
     color: '#fff',
     textAlign: 'center',
-    fontFamily:'SFPRODISPLAYLIGHTITALIC',
+    fontFamily:'SFPRODISPLAYREGULAR',
     
   },
 
-  description: { color: '#191919', fontSize: 14, marginBottom: 10 ,fontWeight:400,fontFamily:'SFPRODISPLAYLIGHTITALIC'},
+  description: { color: '#191919', fontSize: 15, marginBottom: 10 ,fontWeight:400,fontFamily:'SFPRODISPLAYLIGHTITALIC'},
   actionButton: { padding: 16, borderRadius: 5, },
-  actionButtonText: { fontWeight: '400', textAlign: 'center',fontFamily:'Product Sans Italic',fontSize:18 },
+  actionButtonText: { fontWeight: '400', textAlign: 'center',fontFamily:'Product Sans Regular',fontSize:18 },
   genderWrapper: {
     flexDirection: 'row',
     alignItems: 'center',

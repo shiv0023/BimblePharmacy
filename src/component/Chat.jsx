@@ -187,9 +187,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     color: '#fff',
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: '700',
     marginLeft: 12,
+    fontFamily:'Product Sans Bold'
   },
   menuIcon: {
     width: 24,
@@ -214,6 +215,7 @@ const styles = StyleSheet.create({
     color: '#191919',
     fontSize: 17,
     fontWeight: '600',
+    fontFamily:'SFPRODISPLAYLIGHTITALIC'
   },
   newButtonContainer: {
     backgroundColor: '#0057FF',
@@ -239,10 +241,10 @@ const styles = StyleSheet.create({
   },
   dateText: {
     marginHorizontal: 12,
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '400',
-    fontFamily:'Product Sans Bold Italic'
+    color: '#191919',
+    fontSize: 15,
+    fontWeight: '450',
+    fontFamily:'Product Sans Regular'
   },
   messageList: {
     flex: 1,
@@ -267,10 +269,12 @@ const styles = StyleSheet.create({
   messageBox: {
     borderRadius: 12,
     padding: 12,
+    
   },
   doctorMessage: {
-    backgroundColor: '#0057FF',
+    backgroundColor: '#0049F8',
     alignSelf: 'flex-end',
+
   },
   patientMessage: {
   
@@ -280,13 +284,13 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 15,
     lineHeight: 20,
-    color:'black',
+    color:'#FFFFFF',
     fontWeight:400,
     fontSize:16,
     fontFamily:'SFPRODISPLAYLIGHTITALIC'
   },
   doctorText: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
   patientText: {
     color: '#191919',

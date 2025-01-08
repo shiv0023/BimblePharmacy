@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Dimensions } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Login from '../component/Login';
 import Appointment from '../component/Appointment';
@@ -10,33 +10,80 @@ import FollowUpChat from '../component/FollowUpChat';
 import PDFViewer from '../component/PdfViewer';
 
 const Stack = createStackNavigator();
-
-
-
-
-
-
+const { width, height } = Dimensions.get('window');
 
 export default function MyStack() {
   return (
-  
-      <Stack.Navigator initialRouteName="Splash" >
-        <Stack.Screen name='Splash' component={SplashScreen} options={{headerShown:false,}}/>
-        <Stack.Screen name="Login" options={{headerShown:false}}  component={Login} />
-        <Stack.Screen name="Appointment" options={{headerShown:false}} component={Appointment} />
-        <Stack.Screen name="Chat" options={{headerShown:false}} component={Chat} />
-        <Stack.Screen name="PatientReport" options={{headerShown:false}} component={PatientReport} />
-        <Stack.Screen name="followupchat" options={{headerShown:false}} component={FollowUpChat} />
-        <Stack.Screen name="PDFViewer" options={{ headerShown: false }} component={PDFViewer} />
-
-
-
-
-
-
-
-      </Stack.Navigator>
-      
-  
+    <Stack.Navigator 
+      screenOptions={{
+        headerShown: false,
+        animationEnabled: true,
+        detachPreviousScreen: true,
+        presentation: 'card',
+        cardStyle: {
+          width: width,
+          height: height
+        }
+      }} 
+      initialRouteName="Splash"
+    >
+      <Stack.Screen 
+        name='Splash' 
+        component={SplashScreen} 
+        options={{
+          animationEnabled: false,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+      <Stack.Screen 
+        name="Login" 
+        component={Login} 
+        options={{
+          headerLeft: null,
+          unmountOnBlur: true,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+      <Stack.Screen 
+        name="Appointment" 
+        component={Appointment} 
+        options={{
+          headerLeft: null,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+      <Stack.Screen 
+        name="Chat" 
+        component={Chat} 
+        options={{
+          headerLeft: null,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+      <Stack.Screen 
+        name="PatientReport" 
+        component={PatientReport} 
+        options={{
+          headerLeft: null,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+      <Stack.Screen 
+        name="followupchat" 
+        component={FollowUpChat} 
+        options={{
+          headerLeft: null,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+      <Stack.Screen 
+        name="PDFViewer" 
+        component={PDFViewer} 
+        options={{
+          headerLeft: null,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+    </Stack.Navigator>
   );
 }

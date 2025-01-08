@@ -10,18 +10,17 @@ import Login from './src/component/Login'
 
 import Stack from './src/Navigation/StackNavigation'
 import MyStack from './src/Navigation/StackNavigation'
-import Toast from 'react-native-toast-message'
 
+import DrawerNavigator from './src/Navigation/DrawerNavigation'
 
 
 const App = () => {
   return (
 
     <View style={{flex:1}}>
-     {/* <Toast/> */}
-<MyStack/>
-{/* <Chat/> */}
-{/* <Appointment/> */}
+  <DrawerNavigator/>
+
+
     </View>
    
  

@@ -6,7 +6,6 @@ import { NavigationContainer } from '@react-navigation/native'; // Import Naviga
 import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';
 import {store} from './src/Redux/Store';
-
 const AppWithNavigation = () => {
   return (
     <>
