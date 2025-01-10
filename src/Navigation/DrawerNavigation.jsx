@@ -50,7 +50,7 @@ const CustomDrawerContent = (props) => {
       >
         <View style={styles.iconTextWrapper}>
           <HomeIcon color="#fff" />
-          <Text style={styles.drawerItemText}>Stack</Text>
+          <Text  variant='accent'style={styles.drawerItemText}>Stack</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity
@@ -59,7 +59,7 @@ const CustomDrawerContent = (props) => {
       >
         <View style={styles.iconTextWrapper}>
           <ProfileIcon color="#fff" />
-          <Text style={styles.drawerItemText}>Home</Text>
+          <Text variant='accent' style={styles.drawerItemText}>Home</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity
@@ -68,7 +68,7 @@ const CustomDrawerContent = (props) => {
       >
         <View style={styles.iconTextWrapper}>
           <SettingIcon color="#fff" />
-          <Text style={styles.drawerItemText}>Profile</Text>
+          <Text variant='accent' style={styles.drawerItemText}>Profile</Text>
         </View>
       </TouchableOpacity>
 
@@ -76,7 +76,7 @@ const CustomDrawerContent = (props) => {
       <TouchableOpacity style={[styles.drawerItem, styles.logoutItem]} onPress={handleLogout}>
         <View style={styles.iconTextWrapper}>
           <LogoutIcon color="#fff" />
-          <Text style={styles.drawerItemText}>Logout</Text>
+          <Text variant='accent' style={styles.drawerItemText}>Logout</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: width * 0.04,
     marginLeft: width * 0.03,
+   
   },
   logoutItem: {
     marginTop: 'auto',

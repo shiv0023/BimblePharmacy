@@ -5,7 +5,7 @@ import Login from '../component/Login';
 import Appointment from '../component/Appointment';
 import SplashScreen from '../Screens/SplashScreen';
 import Chat from '../component/Chat';
-import PatientReport from '../component/PatientForm';
+
 import FollowUpChat from '../component/FollowUpChat';
 import PDFViewer from '../component/PdfViewer';
 
@@ -60,14 +60,7 @@ export default function MyStack() {
           cardStyle: { width: width, height: height }
         }}
       />
-      <Stack.Screen 
-        name="PatientReport" 
-        component={PatientReport} 
-        options={{
-          headerLeft: null,
-          cardStyle: { width: width, height: height }
-        }}
-      />
+   
       <Stack.Screen 
         name="followupchat" 
         component={FollowUpChat} 

@@ -4,14 +4,14 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Image,
+
   TouchableOpacity,
   Platform,
   SafeAreaView,
   StatusBar,
 } from 'react-native'
-import Call from './svgComponent'
-import { FileIcon, MenuIcon, Union, Union2,PatientFemaleImg } from './svgComponent'
+import Call, { AppointmentUserIcon } from './svgComponent'
+import { FileIcon, MenuIcon, Union, Union2,PatientFemaleImg, } from './svgComponent'
 
 const FollowupChat = ({ navigation }) => {
   const messages = [
@@ -26,21 +26,21 @@ const FollowupChat = ({ navigation }) => {
       type: 'doctor',
       text: 'Lorem Ipsum available the majority',
       files: [],
-      profile: require('../Assets/logo.svg'),
+      profile: AppointmentUserIcon 
     },
     {
       id: 3,
       type: 'patient',
       text: 'Lorem Ipsum available the majority',
-      files: ['Outbundle.zip', 'Intakeform.pdf', 'CBC.pdf', 'KFTReport.pdf'],
+      files: ['Outbundle.pdf', 'Intakeform.pdf', 'CBC.pdf', 'KFTReport.pdf'],
       profile:PatientFemaleImg
     },
     {
       id: 4,
       type: 'doctor',
       text: 'Lorem Ipsum available the majority',
-      files: ['Prescription.pdf'],
-      profile: require('../Assets/logo.svg'),
+      files: ['Prescription....'],
+      profile: AppointmentUserIcon
     },
   ]
 
@@ -105,7 +105,7 @@ const FollowupChat = ({ navigation }) => {
          </View>
       </View>
       {item.type === 'doctor' && (
-        <Image source={item.profile} style={styles.profileImage} />
+        <AppointmentUserIcon style={styles.profileImage} />
       )}
     </View>
   )
@@ -123,7 +123,7 @@ const FollowupChat = ({ navigation }) => {
           <TouchableOpacity>
             <MenuIcon style={styles.menuIcon} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Sophia Christopher</Text>
+          <Text variant="pageHeading" style={styles.headerTitle}>Sophia Christopher</Text>
           <TouchableOpacity>
             <Call style={styles.phoneIcon} />
           </TouchableOpacity>
@@ -134,13 +134,13 @@ const FollowupChat = ({ navigation }) => {
             <Text style={styles.phnLabel}>PHN:</Text> 5436789567 / F / 30 Years
           </Text>
           <View style={styles.newButtonContainer}>
-            <Text style={styles.newButton}>FollowUp</Text>
+            <Text style={styles.newButton}>Followup</Text>
           </View>
         </View>
 
         <View style={styles.dateContainer}>
           <View style={styles.line} />
-          <Text style={styles.dateText}>Thu, Nov 7, 2024</Text>
+          <Text variant="accent" style={styles.dateText}>Thu, Nov 7, 2024</Text>
           <View style={styles.line} />
         </View>
 
@@ -152,28 +152,37 @@ const FollowupChat = ({ navigation }) => {
         />
 
 <View style={styles.footer}>
+  <View style={styles.footerButtonContainer}>
+    <TouchableOpacity style={styles.footerButton}>
+      <Union style={styles.footerIcon} />
+      <Text style={styles.footerButtonText}>
+        Start{'\n'}Assessment
+      </Text>
+    </TouchableOpacity>
+  </View>
+  <View style={styles.footerButtonContainer}>
+    <TouchableOpacity style={styles.footerButton}>
+      <Union2 style={styles.footerIcon} />
+      <Text style={styles.footerButtonText}>
+        Write{'\n'}Prescription
+      </Text>  
+    </TouchableOpacity>
+  </View>
+</View>
+
+  {/* <View style={styles.footerButtonContainer}>
           <TouchableOpacity style={styles.footerButton}>
             <Union style={styles.footerIcon} />
-            <Text style={styles.footerButtonText}>Start 
-             
-             </Text>
-             <Text style={{   fontSize: 15,
-    fontWeight: '600',
-    color: '#191919',}}>Assessment</Text>
+            <Text style={styles.footerButtonText}>
+              Start{'\n'}Assessment
+            </Text>
           </TouchableOpacity>
          
           <TouchableOpacity style={styles.footerButton}>
             <Union2 style={styles.footerIcon} />
-            <Text style={styles.footerButtonText}>Write </Text>
-              
-            <Text style={{  fontSize: 15,
-    fontWeight: '600',
-    color: '#191919',
-    fontFamily:'Product Sans Bold Italic',
-    }}>
-            Prescription</Text>  
+            <Text style={styles.footerButtonText}>Write{'\n'}Prescription</Text>  
           </TouchableOpacity>
-        </View>
+        </View> */}
       </SafeAreaView>
     </>
   )
@@ -196,11 +205,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    color: '#fff',
-    fontSize: 25,
-    fontWeight: '700',
     marginLeft: 12,
-    fontFamily:'Product Sans Regular'
+    marginTop:5
   },
   menuIcon: {
     width: 24,
@@ -218,25 +224,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(220, 232, 221, 1)',
   },
   patientInfoText: {
-    fontSize: 15,
-    color: '#666',
+    fontSize: 18,
+    color: '#191919',
+    
   },
   phnLabel: {
     color: '#191919',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
-    fontFamily:'SFPRODISPLAYLIGHTITALIC'
   },
   newButtonContainer: {
-    backgroundColor: 'green',
+    backgroundColor: '#008D00',
     borderRadius: 4,
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
   newButton: {
-    color: '#fff',
-    fontSize: 14,
-    fontFamily:'SFPRODISPLAYLIGHTREGULAR'
+    color: '#ffffff',
+    fontSize: 12,
   },
   dateContainer: {
     flexDirection: 'row',
@@ -251,9 +256,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     marginHorizontal: 12,
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
   },
   messageList: {
     flex: 1,
@@ -276,15 +278,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
   },
   messageBox: {
-    borderRadius: 12,
+  
     padding: 12,
   },
   doctorMessage: {
     backgroundColor: '#0057FF',
     alignSelf: 'flex-end',
+    borderTopLeftRadius: 10,
+   
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
   },
   patientMessage: {
-  
+    borderTopRightRadius: 10,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(248, 94, 173, 0.4)',
   },
@@ -299,6 +307,7 @@ const styles = StyleSheet.create({
     fontWeight:400,
     fontFamily:'Product Sans Regular',
     fontSize:15
+    
   },
   patientText: {
     color: '#191919',
@@ -323,8 +332,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#E5E5E5',
-    borderRadius: 6,
-    padding: 8,
+    borderRadius: 4,
+    padding: 6,
     borderColor: 'rgba(248, 94, 173, 0.4)',
    
   },
@@ -338,30 +347,56 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 13,
-    paddingBottom: 32,
-    gap: 16,
-  
+    padding: 10,
+  },
+  footerButtonContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+    justifyContent:'space-between',
+    margin:10
   },
   footerButton: {
-    flex: 1,
-    aspectRatio: 1,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent:'space-between',
+    borderWidth: 1/2,
+    borderColor: '#E6E8EC',
     borderRadius: 20,
-    padding: 16,
-   
+    gap:30,
+    paddingTop: 28,
+    paddingBottom: 18,
+    paddingLeft: 18,
+    paddingRight: 18,
+    marginHorizontal: 0,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   footerIcon: {
-    marginTop: 13,
+    marginBottom: 5,
+    width: 24,
+    height: 24,
   },
   footerButtonText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#191919',
-    marginTop:40,
-    fontFamily:'Product Sans Regular'
+    textAlign: 'left',
+    fontWeight:500,
+    fontSize:18,
+    fontFamily:'SF Pro Display'
+  },
+  profileImageContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
 })
 

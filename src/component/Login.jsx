@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Platform,
   ScrollView,
   KeyboardAvoidingView,
@@ -13,10 +12,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { useDispatch, useSelector } from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginUser, authenticateUser } from '../Redux/Slices/AuthSlice';
-import { fetchSubdomains } from '../Redux/Slices/ClinicSlice';
+import {loginUser, authenticateUser} from '../Redux/Slices/AuthSlice';
+import {fetchSubdomains} from '../Redux/Slices/ClinicSlice';
 import {
   Cliniccon,
   CloseEyeIcon,
@@ -32,8 +31,7 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 
-export default function Login({ navigation }) {
-
+export default function Login({navigation}) {
   const [subdomainBimble, setSubdomain] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -46,20 +44,18 @@ export default function Login({ navigation }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [clinicDisplayName, setClinicDisplayName] = useState('');
 
-  // Redux hooks
+  //
   const dispatch = useDispatch();
-  const authResponse = useSelector((state) => state?.user);
+  const authResponse = useSelector(state => state?.user);
   const error = authResponse?.error || null;
-  const reduxState = useSelector(state => {
-    console.log('Complete Redux State:', JSON.stringify(state, null, 2));
-    return state;
-  });
+
   const clinicState = useSelector(state => {
     const clinicData = state?.auth?.clinic;
+
     console.log('Clinic Data:', JSON.stringify(clinicData));
     return clinicData || {};
   });
-  const { subdomains = [], loading = false } = clinicState;
+  const {subdomains = [], loading = false} = clinicState;
 
   // Log whenever subdomains changes
   useEffect(() => {
@@ -78,21 +74,19 @@ export default function Login({ navigation }) {
     }
   };
 
-  // Call API on mount
   useEffect(() => {
     testApiCall();
   }, []);
 
-  // Add these debug logs
   useEffect(() => {
     console.log('Current Subdomains State:', subdomains);
     console.log('Loading State:', loading);
-  }, [subdomains, loading])
+  }, [subdomains, loading]);
   useEffect(() => {
     const checkAuthToken = async () => {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
-        dispatch(authenticateUser({ token }));
+        dispatch(authenticateUser({token}));
         navigation.navigate('Appointment');
       }
     };
@@ -100,23 +94,20 @@ export default function Login({ navigation }) {
     checkAuthToken();
   }, [dispatch, navigation]);
 
-
-
-  // Check for saved credentials when component mounts
   useEffect(() => {
     const checkSavedCredentials = async () => {
       try {
         const savedCredentials = await AsyncStorage.getItem('userCredentials');
         if (savedCredentials) {
-          const { subdomain, username, password, pin,clinicDisplayName } = JSON.parse(savedCredentials);
+          const {subdomain, username, password, pin, clinicDisplayName} =
+            JSON.parse(savedCredentials);
           console.log('Remember Me - Saved User Data:', {
             subdomain,
             username,
             pin,
-            hasPassword: !!password
+            hasPassword: !!password,
           });
-          
-          // Auto-fill the fields
+
           setSubdomain(subdomain);
           setUsername(username);
           setPassword(password);
@@ -132,16 +123,14 @@ export default function Login({ navigation }) {
     checkSavedCredentials();
   }, []);
 
-  // Add new state for tracking validation errors
   const [errors, setErrors] = useState({
     subdomain: false,
     username: false,
     password: false,
     pin: false,
-    terms: { isError: false, message: '' }
+    terms: {isError: false, message: ''},
   });
 
-  // Replace all validate functions with this single function
   const validateInputs = () => {
     let isValid = true;
     const newErrors = {
@@ -149,10 +138,9 @@ export default function Login({ navigation }) {
       username: false,
       password: false,
       pin: false,
-      terms: { isError: false, message: '' }
+      terms: {isError: false, message: ''},
     };
 
-    // Check fields in sequential order
     if (!subdomainBimble) {
       newErrors.subdomain = true;
       isValid = false;
@@ -168,7 +156,7 @@ export default function Login({ navigation }) {
     } else if (!acceptedTerms) {
       newErrors.terms = {
         isError: true,
-        message: 'Please accept terms and conditions'
+        message: 'Please accept terms and conditions',
       };
       isValid = false;
     }
@@ -177,10 +165,7 @@ export default function Login({ navigation }) {
     return isValid;
   };
 
-  // Handle login action
   const handleLogin = async () => {
- 
-
     if (validateInputs()) {
       setIsLoading(true);
       try {
@@ -191,26 +176,25 @@ export default function Login({ navigation }) {
           pin,
         };
 
-        const response = await dispatch(loginUser({ requestedData }))
-          .unwrap();
+        const response = await dispatch(loginUser({requestedData})).unwrap();
 
-        // Always save the auth token, regardless of remember me
         await AsyncStorage.setItem('auth_token', response.access_token);
-        
-        // Only save credentials if remember me is checked
+
         if (rememberMe) {
-          await AsyncStorage.setItem('userCredentials', JSON.stringify({
-            subdomain: subdomainBimble,
-            username,
-            password,
-            pin,
-            clinicDisplayName:clinicDisplayName
-          }));
+          await AsyncStorage.setItem(
+            'userCredentials',
+            JSON.stringify({
+              subdomain: subdomainBimble,
+              username,
+              password,
+              pin,
+              clinicDisplayName: clinicDisplayName,
+            }),
+          );
         } else {
-          // Clear saved credentials if remember me is unchecked
           await AsyncStorage.removeItem('userCredentials');
         }
-        
+
         navigation.navigate('Appointment');
       } catch (error) {
         console.error('Login error:', error);
@@ -220,11 +204,8 @@ export default function Login({ navigation }) {
     }
   };
 
-  // Add logout function (to be used in other components)
- 
-
   const handleInputChange = (field, value) => {
-    switch(field) {
+    switch (field) {
       case 'subdomain':
         setSubdomain(value);
         break;
@@ -240,30 +221,6 @@ export default function Login({ navigation }) {
     }
   };
 
-  // Update validation rules with specific messages
-  const validationRules = {
-    subdomain: {
-      validate: (value) => !!value,
-      message: 'Please enter your subdomain'
-    },
-    username: {
-      validate: (value) => !!value,
-      message: 'Please enter your username'
-    },
-    password: {
-      validate: (value) => !!value,
-      message: 'Please enter your password'
-    },
-    pin: {
-      validate: (value) => !!value,
-      message: 'Please enter your PIN'
-    },
-    terms: {
-      validate: (value) => value === true,
-      message: 'Please accept terms and conditions'
-    }
-  };
-
   const renderSubdomainInput = () => (
     <View style={[styles.inputWrapper, errors.subdomain && styles.inputError]}>
       <Cliniccon style={styles.icon} />
@@ -276,14 +233,10 @@ export default function Login({ navigation }) {
             console.log('Input Changed:', text);
             setSubdomain(text);
             setClinicDisplayName('');
-            setErrors(prev => ({...prev, subdomain: false}));
-             // Stop loading state
-            
+            setErrors((prev) => ({ ...prev, subdomain: false }));
+
             if (text.length > 0) {
               setShowSuggestions(true);
-              setTimeout(() => {
-                // testApiCall();
-              }, 300);
             } else {
               setShowSuggestions(false);
             }
@@ -292,7 +245,6 @@ export default function Login({ navigation }) {
             console.log('Input Focused');
             if (subdomainBimble.length > 0) {
               setShowSuggestions(true);
-              testApiCall();
             }
           }}
           placeholderTextColor={'black'}
@@ -307,10 +259,12 @@ export default function Login({ navigation }) {
               <>
                 {subdomains?.data && subdomains.data.length > 0 ? (
                   subdomains.data
-                    .filter(clinic =>
-                      clinic.subdomainBimble?.toLowerCase().includes(subdomainBimble?.toLowerCase() || '') ||
-                      clinic.clinicName?.toLowerCase().includes(subdomainBimble?.toLowerCase() || '')
-                    )
+                    .filter((clinic) => {
+                      // Ensure the subdomainBimble is defined and perform a case-insensitive match
+                      return clinic.subdomainBimble
+                        ?.toLowerCase()
+                        .startsWith(subdomainBimble.toLowerCase());
+                    })
                     .map((clinic, index) => (
                       <TouchableOpacity
                         key={index}
@@ -340,12 +294,12 @@ export default function Login({ navigation }) {
       </View>
     </View>
   );
+  
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar translucent backgroundColor="#fff" barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
@@ -357,22 +311,20 @@ export default function Login({ navigation }) {
           </View>
         </View>
 
-        <Text style={styles.welcomeText}>Welcome Back!</Text>
+        <Text variant="heading">Welcome Back!</Text>
         <Text style={styles.subText}>Login to continue</Text>
 
         <View style={styles.inputContainer}>
           {renderSubdomainInput()}
 
-          <View style={[
-            styles.inputWrapper,
-            errors.username && styles.inputError
-          ]}>
+          <View
+            style={[styles.inputWrapper, errors.username && styles.inputError]}>
             <UserIcon style={styles.icon} />
             <TextInput
               style={styles.input}
               placeholder="Username"
               value={username}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 handleInputChange('username', text);
                 setErrors(prev => ({...prev, username: false}));
               }}
@@ -381,35 +333,28 @@ export default function Login({ navigation }) {
             />
           </View>
 
-          <View style={[
-            styles.inputWrapper,
-            errors.password && styles.inputError
-          ]}>
+          <View
+            style={[styles.inputWrapper, errors.password && styles.inputError]}>
             <PasswordLockIcon style={styles.icon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
               secureTextEntry={!passwordVisible}
               value={password}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 handleInputChange('password', text);
                 setErrors(prev => ({...prev, password: false}));
               }}
               placeholderTextColor={'black'}
-
             />
             <TouchableOpacity
               onPress={() => setPasswordVisible(!passwordVisible)}
-              style={styles.passwordToggle}
-            >
+              style={styles.passwordToggle}>
               {passwordVisible ? <EyeIcon /> : <CloseEyeIcon />}
             </TouchableOpacity>
           </View>
 
-          <View style={[
-            styles.inputWrapper,
-            errors.pin && styles.inputError
-          ]}>
+          <View style={[styles.inputWrapper, errors.pin && styles.inputError]}>
             <ConfirmPasswordIcon style={styles.icon} />
             <TextInput
               style={styles.input}
@@ -418,17 +363,15 @@ export default function Login({ navigation }) {
               keyboardType="numeric"
               maxLength={6}
               value={pin}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 handleInputChange('pin', text);
                 setErrors(prev => ({...prev, pin: false}));
               }}
               placeholderTextColor={'black'}
-
             />
             <TouchableOpacity
               onPress={() => setPinVisible(!pinVisible)}
-              style={styles.passwordToggle}
-            >
+              style={styles.passwordToggle}>
               {pinVisible ? <EyeIcon /> : <CloseEyeIcon />}
             </TouchableOpacity>
           </View>
@@ -439,22 +382,26 @@ export default function Login({ navigation }) {
                 styles.checkbox,
                 rememberMe ? styles.checkboxChecked : styles.checkboxUnchecked,
               ]}
-              onPress={() => setRememberMe(!rememberMe)}
-            >
+              onPress={() => setRememberMe(!rememberMe)}>
               {rememberMe && <Text style={styles.checkboxCheckmark}>✓</Text>}
             </TouchableOpacity>
-            <Text style={styles.checkboxText}>Remember for 30 days</Text>
+            <Text variant="accent">
+              Remember for 30 days
+            </Text>
           </View>
 
           <View>
-            <View style={[
-              styles.checkboxContainer, 
-              errors.terms.isError && styles.checkboxError
-            ]}>
+            <View
+              style={[
+                styles.checkboxContainer,
+                errors.terms.isError && styles.checkboxError,
+              ]}>
               <TouchableOpacity
                 style={[
                   styles.checkbox,
-                  acceptedTerms ? styles.checkboxChecked : styles.checkboxUnchecked,
+                  acceptedTerms
+                    ? styles.checkboxChecked
+                    : styles.checkboxUnchecked,
                 ]}
                 onPress={() => {
                   const newTermsState = !acceptedTerms;
@@ -462,28 +409,35 @@ export default function Login({ navigation }) {
                   if (newTermsState) {
                     setErrors(prev => ({
                       ...prev,
-                      terms: { isError: false, message: '' }
+                      terms: {isError: false, message: ''},
                     }));
                   } else {
                     setErrors(prev => ({
                       ...prev,
-                      terms: { 
-                        isError: true, 
-                        message: 'Please accept terms and conditions' 
-                      }
+                      terms: {
+                        isError: true,
+                        message: 'Please accept terms and conditions',
+                      },
                     }));
                   }
-                }}
-              >
-                {acceptedTerms && <Text style={styles.checkboxCheckmark}>✓</Text>}
+                }}>
+                {acceptedTerms && (
+                  <Text style={styles.checkboxCheckmark}>✓</Text>
+                )}
               </TouchableOpacity>
               <View style={styles.termsTextContainer}>
-                <Text style={styles.checkboxText}>I agree to the </Text>
-                <TouchableOpacity onPress={() => {/* Navigate to Terms */}}>
+                <Text variant="accent">I agree to the </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    /* Navigate to Terms */
+                  }}>
                   <Text style={styles.termsLink}>Terms & Conditions</Text>
                 </TouchableOpacity>
-                <Text style={styles.checkboxText}> and </Text>
-                <TouchableOpacity onPress={() => {/* Navigate to Privacy Policy */}}>
+                <Text variant="accent"> and </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    /* Navigate to Privacy Policy */
+                  }}>
                   <Text style={styles.termsLink}>Privacy Policy</Text>
                 </TouchableOpacity>
               </View>
@@ -496,8 +450,8 @@ export default function Login({ navigation }) {
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={styles.loginButton} 
+        <TouchableOpacity
+          style={styles.loginButton}
           onPress={handleLogin}
           disabled={isLoading} // Disable button while loading
         >
@@ -511,7 +465,7 @@ export default function Login({ navigation }) {
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity>
-          <Text style={styles.forgotPassword}>Forgot Password?</Text>
+          <Text variant="accent" style={styles.forgotPassword}>Forgot Password?</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -534,7 +488,7 @@ const styles = StyleSheet.create({
   },
   headerImageWrapper: {
     position: 'relative',
-    marginTop:25
+    marginTop: 25,
   },
   image: {
     width: 120,
@@ -550,26 +504,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#004AAD',
   },
-  welcomeText: {
-    fontSize: 30,
-    fontWeight: 700,
-    color: '#191919',
-    marginTop: 10,
-   fontFamily: 'Product Sans Bold',
-      
-  },
-
+ 
   subText: {
-    fontSize: 19,
-    color: '#191919',
     marginBottom: 30,
-    fontWeight: '400',
-    fontFamily: 'Product Sans Regular',
-
+    marginTop:4
   },
   inputContainer: {
     marginBottom: 20,
-    
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -624,14 +565,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
   },
-  checkboxText: {
-   fontSize:15,
-    color: '#151515',
-    fontFamily: 'Product Sans Regular',
-    fontWeight: '400',
-    lineHeight: wp('4.5%'),
- 
-  },
+  // checkboxText: {
+  //  fontSize:15,
+  //   color: '#151515',
+  //   fontFamily: 'Product Sans Regular',
+  //   fontWeight: '400',
+  //   lineHeight: wp('4.5%'),
+
+  // },
   loginButton: {
     backgroundColor: '#2968FF',
     paddingVertical: 15,
@@ -648,10 +589,6 @@ const styles = StyleSheet.create({
   forgotPassword: {
     textAlign: 'center',
     color: '#797979',
-    fontSize: 18,
-    marginTop: 10,
-    fontFamily: 'Product Sans Regular',
-    fontWeight: 500
   },
   termsTextContainer: {
     flex: 1,
@@ -736,6 +673,5 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
     fontFamily: 'Product Sans Regular',
-  }
+  },
 });
-

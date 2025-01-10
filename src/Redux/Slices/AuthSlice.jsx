@@ -7,7 +7,7 @@ const initialState = {
   loading:false
 };
 
-// Async thunk for login API call
+
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({ requestedData }, { rejectWithValue }) => {
@@ -16,7 +16,7 @@ export const loginUser = createAsyncThunk(
         '/authentication/loginClinic/',
         requestedData
       );
-      return response.data; // User data
+      return response.data; 
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Login failed');
     }

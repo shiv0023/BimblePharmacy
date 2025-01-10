@@ -41,7 +41,7 @@ axiosInstance.interceptors.response.use(
       console.error('HTTP Error:', error.response.status);
       if (error.response.status === 401) {
       
-        console.log('Token expired. Redirecting to login...');
+       
       }
     } else if (error.request) {
  

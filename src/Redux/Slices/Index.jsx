@@ -6,6 +6,6 @@ const rootReducer = combineReducers({
   clinic:ClinicReducer
   
 });
-// console.log('Clinic Reducer:', clinic);
+
 
 export default rootReducer;

@@ -1,17 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../Api/AxiosInstance';
 
-// Debug axios instance
+
 console.log('Axios Instance:', axiosInstance.defaults.baseURL);
 
 export const fetchSubdomains = createAsyncThunk(
   'clinic/fetchSubdomains',
   async (_, { rejectWithValue }) => {
     try {
-      console.log('Fetching subdomains...'); // Debug fetch start
+      console.log('Fetching subdomains...'); 
       const response = await axiosInstance.get('bimbleProAdmin/fetchAllClinicsSubdomains/');
-      console.log('Raw Response:', response); // Debug full response
-      console.log('Response Data:', response.data); // Debug response data
+      console.log('Raw Response:', response); 
+      console.log('Response Data:', response.data); 
       return response.data;
     } catch (error) {
       console.error('API Error Details:', {
@@ -35,17 +35,17 @@ const clinicSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchSubdomains.pending, (state) => {
-        console.log('Loading started'); // Debug loading
+      
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchSubdomains.fulfilled, (state, action) => {
-        console.log('Success with payload:', action.payload); // Debug success
+    
         state.loading = false;
         state.subdomains = action.payload;
       })
       .addCase(fetchSubdomains.rejected, (state, action) => {
-        console.log('Failed with error:', action.payload); // Debug failure
+ 
         state.loading = false;
         state.error = action.payload;
       });
