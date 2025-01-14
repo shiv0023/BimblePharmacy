@@ -28,6 +28,7 @@ import {
   verticalScale,
   scale,
 } from 'react-native-size-matters';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 const appointments = [
   {
@@ -70,6 +71,9 @@ export default function Appointment({navigation}) {
   const [currentDate, setCurrentDate] = useState('');
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTabIndex, setCurrentTabIndex] = useState(0);
+
+  const tabs = ['Today', 'Upcoming'];
 
   useEffect(() => {
     const date = new Date();
@@ -99,6 +103,15 @@ export default function Appointment({navigation}) {
 
     checkAuth();
   }, [navigation]);
+
+  const handleSwipe = (event) => {
+    const { translationX } = event.nativeEvent;
+    if (translationX > 50) {
+      setCurrentTabIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+    } else if (translationX < -50) {
+      setCurrentTabIndex((prevIndex) => Math.min(prevIndex + 1, tabs.length - 1));
+    }
+  };
 
   const renderItem = ({item}) => (
     <View
@@ -183,58 +196,59 @@ export default function Appointment({navigation}) {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor="#0049F8" barStyle="light-content" />
+    <PanGestureHandler onGestureEvent={handleSwipe}>
+      <View style={styles.container}>
+        <StatusBar backgroundColor="#0049F8" barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.menuIconWrapper}>
-            <View>
-              <MenuIcon onPress={() => navigation.openDrawer()} />
-              {isSidebarVisible && (
-                <SidebarMenu onClose={() => setSidebarVisible(false)} />
-              )}
-            </View>
-          </TouchableOpacity>
-          <Text  variant ="pageHeading" style={styles.headerText}>Appointments</Text>
-        </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.menuIconWrapper}>
+              <View>
+                <MenuIcon onPress={() => navigation.openDrawer()} />
+                {isSidebarVisible && (
+                  <SidebarMenu onClose={() => setSidebarVisible(false)} />
+                )}
+              </View>
+            </TouchableOpacity>
+            <Text  variant ="pageHeading" style={styles.headerText}>Appointments</Text>
+          </View>
 
         <TouchableOpacity>
           <AppointmentUserIcon style={styles.headerAvatar} />
         </TouchableOpacity>
       </View>
 
-      {/* Tabs */}
-     <View style={styles.tabs}>
-  <View style={styles.tabWrapper}>
-    <Text style={styles.tabText}>Today</Text>
-    <View style={styles.activeTab}></View>
-    <View style={styles.underline}></View>
-  </View>
-  <Text
-    onPress={() => navigation.navigate('followupchat')}
-    style={styles.tabText1}>
-    Upcoming
-  </Text>
-</View>
-<View style={styles.tabSeparator} />
+        {/* Tabs */}
+        <View style={styles.tabs}>
+          {tabs.map((tab, index) => (
+            <TouchableOpacity 
+              key={index} 
+              onPress={() => setCurrentTabIndex(index)} 
+              style={styles.tabWrapper}
+            >
+              <Text style={styles.tabText}>{tab}</Text>
+              {currentTabIndex === index && <View style={styles.activeTab}></View>}
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.tabSeparator} />
 
+        {/* Current Date */}
+        <View style={styles.dateWrapper}>
+          <View style={styles.line} />
+          <Text variant="accent" style={styles.dateText}>{currentDate}</Text>
+          <View style={styles.line} />
+        </View>
 
-      {/* Current Date */}
-      <View style={styles.dateWrapper}>
-        <View style={styles.line} />
-        <Text  variant="accent" style={styles.dateText}>{currentDate}</Text>
-        <View style={styles.line} />
+        {/* Appointment List */}
+        <FlatList
+          data={appointments.filter(item => (currentTabIndex === 0 ? item.status === 'N' : item.status === 'F'))}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+        />
       </View>
-
-      {/* Appointment List */}
-      <FlatList
-        data={appointments}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-      />
-    </View>
+    </PanGestureHandler>
   );
 }
 
@@ -288,6 +302,7 @@ const styles = ScaledSheet.create({
     justifyContent: 'space-around',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
+    
   },
   tabText: {
     fontSize: 18,
@@ -307,9 +322,9 @@ const styles = ScaledSheet.create({
     color: 'rgba(241,243,247,0.45)',
     fontFamily: 'Product Sans Regular',
     paddingTop:0,
+    
   },
   activeTab: {
-
     position:'absolute',
     bottom:0,
     left:0,
@@ -317,7 +332,9 @@ const styles = ScaledSheet.create({
     backgroundColor:'#FFFFFF',
     borderTopRightRadius:5,
     borderTopLeftRadius:5,
-    height:4
+    height:4,
+    marginLeft:10,
+
     
   },
   tabSeparator: {height: 2, backgroundColor: '#ddd'},

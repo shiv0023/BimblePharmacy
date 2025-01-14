@@ -9,7 +9,7 @@ export const fetchSubdomains = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Fetching subdomains...'); 
-      const response = await axiosInstance.get('bimbleProAdmin/fetchAllClinicsSubdomains/');
+      const response = await axiosInstance.get('/team/fetchAllClinicsSubdomains/');
       console.log('Raw Response:', response); 
       console.log('Response Data:', response.data); 
       return response.data;

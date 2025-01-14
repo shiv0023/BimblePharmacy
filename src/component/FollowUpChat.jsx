@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent:'space-between',
-    borderWidth: 1/2,
+    borderWidth: 1,
     borderColor: '#E6E8EC',
     borderRadius: 20,
     gap:30,
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    // elevation: 2,
   },
   footerIcon: {
     marginBottom: 5,

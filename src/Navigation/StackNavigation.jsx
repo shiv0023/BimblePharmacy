@@ -8,7 +8,7 @@ import Chat from '../component/Chat';
 
 import FollowUpChat from '../component/FollowUpChat';
 import PDFViewer from '../component/PdfViewer';
-
+import TabViewExample from './TabView';
 const Stack = createStackNavigator();
 const { width, height } = Dimensions.get('window');
 
@@ -72,6 +72,14 @@ export default function MyStack() {
       <Stack.Screen 
         name="PDFViewer" 
         component={PDFViewer} 
+        options={{
+          headerLeft: null,
+          cardStyle: { width: width, height: height }
+        }}
+      />
+       <Stack.Screen 
+        name="TabView" 
+        component={TabViewExample} 
         options={{
           headerLeft: null,
           cardStyle: { width: width, height: height }

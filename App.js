@@ -1,24 +1,18 @@
-
-
-import { StyleSheet ,View } from 'react-native'
-import React from 'react'
-import DrawerNavigator from './src/Navigation/DrawerNavigation'
-
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import DrawerNavigator from './src/Navigation/DrawerNavigation';
+import TabViewExample from './src/Navigation/TabView';
 
 const App = () => {
   return (
-
-    <View style={{flex:1}}>
-  <DrawerNavigator/>
-
-
+    <View style={{ flex: 1 }}>
+      <DrawerNavigator>
+        <TabViewExample />
+      </DrawerNavigator>
     </View>
-   
- 
-    
-  )
-}
+  );
+};
 
-export default App
+export default App;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});
