@@ -180,7 +180,9 @@ export default function Appointment({navigation}) {
           },
         ]}
         onPress={() =>
-          navigation.navigate(item.status === 'N' ? 'Chat' : 'followupchat')
+          navigation.navigate("Chat",{
+            from:item.status == "N"?"NEW":"OLD"
+          })
         }>
         <Text
           style={[

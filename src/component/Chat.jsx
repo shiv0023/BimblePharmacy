@@ -12,6 +12,7 @@ import {
 import Call, {AppointmentUserIcon, PatientFemaleImg} from './svgComponent';
 import {FileIcon, MenuIcon, Union, Union2} from './svgComponent';
 import CustomText from './CustomText';
+import { useRoute } from '@react-navigation/native';
 
 const Chat = ({navigation}) => {
   const messages = [
@@ -101,6 +102,7 @@ const Chat = ({navigation}) => {
     </View>
   );
 
+  const routes = useRoute()
   return (
     <>
       {Platform.OS === 'ios' && (
@@ -122,15 +124,19 @@ const Chat = ({navigation}) => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.patientInfo}>
+        <View style={[styles.patientInfo,{backgroundColor:routes?.params?.from=="NEW"?"rgba(223, 233, 252, 1)":"rgba(220, 232, 221, 1)"}]}>
           <Text style={styles.patientInfoText}>
             <Text style={styles.phnLabel}>PHN:</Text>{' '}
             <Text style={{color: 'black', fontSize: 18}}>
               5436789567 / F / 30 Years
             </Text>
           </Text>
-          <View style={styles.newButtonContainer}>
-            <Text style={styles.newButton}>New</Text>
+          <View style={[styles.newButtonContainer,{backgroundColor:routes?.params?.from=="NEW"?"#0057FF":"#008D00"}]}>
+            <Text style={styles.newButton}>{
+              routes?.params?.from == "NEW"?"New":"Follow up"
+              }
+
+            </Text>
           </View>
         </View>
 
@@ -206,7 +212,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: 'rgba(223, 233, 252, 1)',
+    // backgroundColor: 'rgba(223, 233, 252, 1)',
   },
   patientInfoText: {
     fontSize: 15,
