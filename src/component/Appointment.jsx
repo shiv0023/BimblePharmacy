@@ -7,8 +7,9 @@ import {
   Image,
   StatusBar,
   Platform,
-  Alert,
-  Modal,
+
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import {
   AppointmentStatus,
@@ -29,6 +30,7 @@ import {
   scale,
 } from 'react-native-size-matters';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+
 
 const appointments = [
   {
@@ -66,6 +68,9 @@ const appointments = [
     genderIcon: 'https://example.com/icons/male.png',
   },
 ];
+
+// Get window dimensions
+const { width, height } = Dimensions.get('window');
 
 export default function Appointment({navigation}) {
   const [currentDate, setCurrentDate] = useState('');
@@ -199,9 +204,9 @@ export default function Appointment({navigation}) {
     <PanGestureHandler onGestureEvent={handleSwipe}>
       <View style={styles.container}>
         <StatusBar backgroundColor="#0049F8" barStyle="light-content" />
-
+<SafeAreaView>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { width: width }]}>
           <View style={styles.headerLeft}>
             <TouchableOpacity style={styles.menuIconWrapper}>
               <View>
@@ -211,7 +216,7 @@ export default function Appointment({navigation}) {
                 )}
               </View>
             </TouchableOpacity>
-            <Text  variant ="pageHeading" style={styles.headerText}>Appointments</Text>
+            <Text variant="pageHeading" style={styles.headerText}>Appointments</Text>
           </View>
 
         <TouchableOpacity>
@@ -219,7 +224,10 @@ export default function Appointment({navigation}) {
         </TouchableOpacity>
       </View>
 
-        {/* Tabs */}
+   
+        {/* Appointment List */}
+        <View style={{backgroundColor:'#f8f9fa',height:'100%'}}>
+               {/* Tabs */}
         <View style={styles.tabs}>
           {tabs.map((tab, index) => (
             <TouchableOpacity 
@@ -241,19 +249,20 @@ export default function Appointment({navigation}) {
           <View style={styles.line} />
         </View>
 
-        {/* Appointment List */}
         <FlatList
           data={appointments.filter(item => (currentTabIndex === 0 ? item.status === 'N' : item.status === 'F'))}
           renderItem={renderItem}
           keyExtractor={item => item.id}
         />
+        </View>
+        </SafeAreaView>
       </View>
     </PanGestureHandler>
   );
 }
 
 const styles = ScaledSheet.create({
-  container: {flex: 1, backgroundColor: '#f8f9fa'},
+  container: {flex: 1, backgroundColor: '#0049F8',paddingTop:20},
   header: {
     backgroundColor: '#0049F8',
     flexDirection: 'row',
@@ -263,9 +272,8 @@ const styles = ScaledSheet.create({
     paddingTop: Platform.OS === 'ios' ? moderateScale(45) : moderateScale(10),
     paddingBottom: moderateScale(10),
     minHeight: Platform.OS === 'ios' ? verticalScale(90) : verticalScale(70),
-    width: '100%',
+    width: width,
     position: 'relative',
-    // zIndex: 1,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},

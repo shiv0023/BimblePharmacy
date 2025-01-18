@@ -6,12 +6,13 @@ import Toast from 'react-native-toast-message';
 import {Provider} from 'react-redux';
 import {store} from './src/Redux/Store';
 import {ThemeProvider} from './src/theme';
+import {linking} from './src/Navigation/StackNavigation';
 const AppWithNavigation = () => {
   return (
     <>
       <ThemeProvider>
         <Provider store={store}>
-          <NavigationContainer>
+          <NavigationContainer linking={linking}>
             <App />
           </NavigationContainer>
           <Toast />

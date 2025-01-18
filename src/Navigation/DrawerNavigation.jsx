@@ -43,32 +43,33 @@ const CustomDrawerContent = (props) => {
 
   return (
     <View style={styles.drawerContainer}>
-      {/* Navigation Items */}
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => props.navigation.navigate('stack')}
+        onPress={() => props.navigation.navigate('stack', { screen: 'Appointment' })}
       >
         <View style={styles.iconTextWrapper}>
           <HomeIcon color="#fff" />
-          <Text  variant='accent'style={styles.drawerItemText}>Stack</Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.drawerItem}
-        onPress={() => props.navigation.navigate('Home')}
-      >
-        <View style={styles.iconTextWrapper}>
-          <ProfileIcon color="#fff" />
           <Text variant='accent' style={styles.drawerItemText}>Home</Text>
         </View>
       </TouchableOpacity>
+      
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => props.navigation.navigate('Profile')}
+        onPress={() => props.navigation.navigate('stack', { screen: 'Chat' })}
+      >
+        <View style={styles.iconTextWrapper}>
+          <ProfileIcon color="#fff" />
+          <Text variant='accent' style={styles.drawerItemText}>Profile</Text>
+        </View>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={styles.drawerItem}
+        onPress={() => props.navigation.navigate('stack', { screen: 'Chat' })}
       >
         <View style={styles.iconTextWrapper}>
           <SettingIcon color="#fff" />
-          <Text variant='accent' style={styles.drawerItemText}>Profile</Text>
+          <Text variant='accent' style={styles.drawerItemText}>Setting</Text>
         </View>
       </TouchableOpacity>
 
@@ -101,22 +102,6 @@ const DrawerNavigator = () => {
       <Drawer.Screen 
         name="stack" 
         component={MyStack}
-        options={{
-          swipeEnabled: false,
-          gestureEnabled: false
-        }}
-      />
-      <Drawer.Screen 
-        name="Home" 
-        component={Appointment}
-        options={{
-          swipeEnabled: false,
-          gestureEnabled: false
-        }}
-      />
-      <Drawer.Screen 
-        name="Profile" 
-        component={Chat}
         options={{
           swipeEnabled: false,
           gestureEnabled: false

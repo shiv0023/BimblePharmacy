@@ -4,14 +4,16 @@ import {
   Text,
   StyleSheet,
   FlatList,
-
   TouchableOpacity,
   Platform,
   SafeAreaView,
   StatusBar,
+  Dimensions,
 } from 'react-native'
-import Call, { AppointmentUserIcon } from './svgComponent'
-import { FileIcon, MenuIcon, Union, Union2,PatientFemaleImg, } from './svgComponent'
+
+import { FileIcon, MenuIcon, Union, Union2,PatientFemaleImg,AppointmentUserIcon,Call } from './svgComponent'
+
+const { width, height } = Dimensions.get('window')
 
 const FollowupChat = ({ navigation }) => {
   const messages = [
@@ -121,7 +123,7 @@ const FollowupChat = ({ navigation }) => {
         />
         <View style={styles.header}>
           <TouchableOpacity>
-            <MenuIcon style={styles.menuIcon} />
+          <MenuIcon onPress={() => navigation.openDrawer()} />
           </TouchableOpacity>
           <Text variant="pageHeading" style={styles.headerTitle}>Sophia Christopher</Text>
           <TouchableOpacity>
@@ -192,6 +194,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    padding: width > 600 ? 0 : 0,
   },
   statusBarBackground: {
     backgroundColor: '#0057FF',
@@ -201,12 +204,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#0057FF',
     paddingVertical: 15,
-    paddingHorizontal: 16,
+    paddingHorizontal: width > 600 ? 20 : 16,
   },
   headerTitle: {
     flex: 1,
     marginLeft: 12,
-    marginTop:5
+   
+    fontSize: width > 600 ? 20 : 20,
   },
   menuIcon: {
     width: 24,
@@ -224,13 +228,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(220, 232, 221, 1)',
   },
   patientInfoText: {
-    fontSize: 18,
+    fontSize: width > 600 ? 20 : 18,
     color: '#191919',
-    
   },
   phnLabel: {
     color: '#191919',
-    fontSize: 18,
+    fontSize: width > 600 ? 20 : 18,
     fontWeight: '700',
   },
   newButtonContainer: {
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
   },
   newButton: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: width > 600 ? 14 : 12,
   },
   dateContainer: {
     flexDirection: 'row',
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E5E5',
   },
   dateText: {
-    marginHorizontal: 12,
+    fontSize: width > 600 ? 16 : 14,
   },
   messageList: {
     flex: 1,
@@ -265,6 +268,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
     alignItems: 'flex-start',
+    paddingHorizontal: width > 600 ? 20 : 10,
   },
   doctorMessageContainer: {
     justifyContent: 'flex-end',
@@ -274,7 +278,7 @@ const styles = StyleSheet.create({
   },
   messageContent: {
     flex: 1,
-    maxWidth: '75%',
+    maxWidth: width > 600 ? '60%' : '75%',
     marginHorizontal: 12,
   },
   messageBox: {
@@ -297,23 +301,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(248, 94, 173, 0.4)',
   },
   messageText: {
-    fontSize: 15,
+    fontSize: width > 600 ? 17 : 15,
     lineHeight: 20,
-    color:'#FFFFFF',
-    fontFamily:'SFPRODISPLAYLIGHTITALIC'
+    color: '#FFFFFF',
+    fontFamily: 'SFPRODISPLAYLIGHTITALIC',
   },
   doctorText: {
     color: '#FFFFFF',
-    fontWeight:400,
-    fontFamily:'Product Sans Regular',
-    fontSize:15
-    
+    fontWeight: 400,
+    fontFamily: 'Product Sans Regular',
+    fontSize: width > 600 ? 17 : 15,
   },
   patientText: {
     color: '#191919',
-    fontWeight:400,
-    fontFamily:'Product Sans Regular',
-    fontSize:15
+    fontWeight: 400,
+    fontFamily: 'Product Sans Regular',
+    fontSize: width > 600 ? 17 : 15,
   },
   profileImage: {
     width: 36,
@@ -338,7 +341,7 @@ const styles = StyleSheet.create({
    
   },
   fileName: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#191919',
     marginLeft: 6,
     fontWeight:400,
@@ -347,7 +350,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 10,
+    padding: width > 600 ? 20 : 10,
   },
   footerButtonContainer: {
     flex: 1,
@@ -358,16 +361,15 @@ const styles = StyleSheet.create({
   footerButton: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    justifyContent:'space-between',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#E6E8EC',
     borderRadius: 20,
-    gap:30,
-    paddingTop: 28,
-    paddingBottom: 18,
-    paddingLeft: 18,
-    paddingRight: 18,
-    marginHorizontal: 0,
+    gap: width > 600 ? 40 : 30,
+    paddingTop: width > 600 ? 28 : 20,
+    paddingBottom: width > 600 ? 28 : 18,
+    paddingLeft: width > 600 ? 28 : 18,
+    paddingRight: width > 600 ? 28 : 18,
     width: '100%',
     shadowColor: '#000',
     shadowOffset: {
@@ -385,9 +387,9 @@ const styles = StyleSheet.create({
   },
   footerButtonText: {
     textAlign: 'left',
-    fontWeight:500,
-    fontSize:18,
-    fontFamily:'SF Pro Display'
+    fontWeight: 500,
+    fontSize: width > 600 ? 20 : 18,
+    fontFamily: 'SF Pro Display',
   },
   profileImageContainer: {
     width: 36,

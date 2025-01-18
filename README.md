@@ -83,33 +83,5 @@ To learn more about React Native, take a look at the following resources:
 
 
   
-Today's Update : Shiv
-
-1. Yesterday’s Accomplishments 
-Bimble Pro
-weldonRx & Pharmacy24
-- working in insurance card and prefered & Reward component pharmacy in both project (1hrs)
-- working on search functionality in weldonRx and pharmacy24 in preffered pharmacy list (1hr)
-- test the ui and functionality weldonRx & pharmacy24 (1hr)
-- fix bugs while making build in weldonRx and pharmacy24 (1hr)
-- updation in ui in weldonRx and pharmacy24 (2hr)
-- build the app on simulator (1hr)
-
-   
-2. Today’s Completed Tasks 
-- testing the ui in weldonRx and pharmacy24 (1hr)
-- working in tabview in appointment component (1hr)
-- working in responsivness in appointment component (1hr)
-3. In Progress 
- weldonRx and Pharmacy24
-  
-4. Next Steps  
- -  WeldonRx and Pharmacy24
-
-5. Issues/Blockers  
-   none
-
-
-
 
 

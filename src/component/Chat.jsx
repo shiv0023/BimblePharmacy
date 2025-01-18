@@ -8,10 +8,13 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
+  Dimensions,
 } from 'react-native';
-import Call, {AppointmentUserIcon, PatientFemaleImg} from './svgComponent';
+import  {Call,AppointmentUserIcon, PatientFemaleImg} from './svgComponent';
 import {FileIcon, MenuIcon, Union, Union2} from './svgComponent';
 import CustomText from './CustomText';
+
+const { width } = Dimensions.get('window');
 
 const Chat = ({navigation}) => {
   const messages = [
@@ -52,6 +55,10 @@ const Chat = ({navigation}) => {
       StatusBar.setBarStyle('light-content');
     }
   }, []);
+
+
+ 
+
 
   const renderMessage = ({item}) => (
     <View
@@ -114,11 +121,11 @@ const Chat = ({navigation}) => {
         />
         <View style={styles.header}>
           <TouchableOpacity>
-            <MenuIcon style={styles.menuIcon} />
+            <MenuIcon onPress={() => navigation.openDrawer()} />
           </TouchableOpacity>
           <Text variant='pageHeading' style={styles.headerTitle}>Sophia Christopher</Text>
-          <TouchableOpacity>
-            <Call style={styles.phoneIcon} />
+          <TouchableOpacity onPress={() => navigation.navigate('Call')}>
+            <Call  style={styles.phoneIcon} />
           </TouchableOpacity>
         </View>
 
@@ -172,10 +179,22 @@ const Chat = ({navigation}) => {
   );
 };
 
+
+export const makeCall = (phoneNumber) => {
+  const phoneURL = `tel:${phoneNumber}`;
+  Linking.openURL(phoneURL).catch((err) =>
+    Alert.alert('Error', 'Unable to open dialer')
+  );
+};
+
+
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    padding: width > 600 ? 0 : 0,
   },
   statusBarBackground: {
     backgroundColor: '#0057FF',
@@ -185,7 +204,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#0057FF',
     paddingVertical: 15,
-    paddingHorizontal: 16,
+    paddingHorizontal: width > 600 ? 20 : 16,
   },
   headerTitle: {
     flex: 1,
@@ -256,6 +275,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
     alignItems: 'flex-start',
+    maxWidth: width > 600 ? '70%' : '90%',
   },
   doctorMessageContainer: {
     justifyContent: 'flex-end',
@@ -324,7 +344,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(248, 94, 173, 0.4)',
   },
   fileName: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#666',
     marginLeft: 6,
     color: 'black',

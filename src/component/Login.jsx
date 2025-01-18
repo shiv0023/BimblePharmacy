@@ -563,7 +563,10 @@ const styles = StyleSheet.create({
   },
   checkboxCheckmark: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 12,
+    lineHeight: 12,
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
   // checkboxText: {
   //  fontSize:15,
