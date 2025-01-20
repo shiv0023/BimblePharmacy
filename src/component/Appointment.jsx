@@ -15,7 +15,7 @@ import {
   AppointmentStatus,
   AppointmentStatus2,
   AppointmentUserIcon,
-  MenuIcon,
+
   PatientFemaleImg,
   PatientImage,
   UserIcon,
@@ -30,6 +30,8 @@ import {
   scale,
 } from 'react-native-size-matters';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import CustomHeader from './CustomHeader';
+import { SafeAreaView as SafeAreaViewSafeAreaContext } from 'react-native-safe-area-context';
 
 
 const appointments = [
@@ -124,7 +126,7 @@ export default function Appointment({navigation}) {
         styles.card,
         {borderColor: item.status === 'N' ? '#0049F8' : 'grey'},
       ]}>
-      <View style={{}}>
+      <View>
         <View style={styles.cardHeader}>
           <View style={styles.avatar}>{item.avatar}</View>
           <View style={{flex: 1}}>
@@ -185,7 +187,9 @@ export default function Appointment({navigation}) {
           },
         ]}
         onPress={() =>
-          navigation.navigate(item.status === 'N' ? 'Chat' : 'followupchat')
+          navigation.navigate("Chat",{
+            from:item.status == "N"?"NEW":"OLD"
+          })
         }>
         <Text
           style={[
@@ -202,108 +206,47 @@ export default function Appointment({navigation}) {
 
   return (
     <PanGestureHandler onGestureEvent={handleSwipe}>
-      <View style={styles.container}>
-        <StatusBar backgroundColor="#0049F8" barStyle="light-content" />
-<SafeAreaView>
-        {/* Header */}
-        <View style={[styles.header, { width: width }]}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.menuIconWrapper}>
-              <View>
-                <MenuIcon onPress={() => navigation.openDrawer()} />
-                {isSidebarVisible && (
-                  <SidebarMenu onClose={() => setSidebarVisible(false)} />
-                )}
-              </View>
-            </TouchableOpacity>
-            <Text variant="pageHeading" style={styles.headerText}>Appointments</Text>
+      <SafeAreaViewSafeAreaContext style={styles.safeArea}>
+        <StatusBar backgroundColor={Platform.OS === 'ios' ? 'red' : '#0049F8'} barStyle="light-content" />
+        <CustomHeader title="Appointments" IconComponent={AppointmentUserIcon} />
+        {/* Appointment List */}
+        <View style={styles.content}>
+          {/* Tabs */}
+          <View style={styles.tabs}>
+            {tabs.map((tab, index) => (
+              <TouchableOpacity 
+                key={index} 
+                onPress={() => setCurrentTabIndex(index)} 
+                style={styles.tabWrapper}
+              >
+                <Text style={styles.tabText}>{tab}</Text>
+                {currentTabIndex === index && <View style={styles.activeTab}></View>}
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.tabSeparator} />
+
+          {/* Current Date */}
+          <View style={styles.dateWrapper}>
+            <View style={styles.line} />
+            <Text variant="accent" style={styles.dateText}>{currentDate}</Text>
+            <View style={styles.line} />
           </View>
 
-        <TouchableOpacity>
-          <AppointmentUserIcon style={styles.headerAvatar} />
-        </TouchableOpacity>
-      </View>
-
-   
-        {/* Appointment List */}
-        <View style={{backgroundColor:'#f8f9fa',height:'100%'}}>
-               {/* Tabs */}
-        <View style={styles.tabs}>
-          {tabs.map((tab, index) => (
-            <TouchableOpacity 
-              key={index} 
-              onPress={() => setCurrentTabIndex(index)} 
-              style={styles.tabWrapper}
-            >
-              <Text style={styles.tabText}>{tab}</Text>
-              {currentTabIndex === index && <View style={styles.activeTab}></View>}
-            </TouchableOpacity>
-          ))}
+          <FlatList
+            data={appointments.filter(item => (currentTabIndex === 0 ? item.status === 'N' : item.status === 'F'))}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+          />
         </View>
-        <View style={styles.tabSeparator} />
-
-        {/* Current Date */}
-        <View style={styles.dateWrapper}>
-          <View style={styles.line} />
-          <Text variant="accent" style={styles.dateText}>{currentDate}</Text>
-          <View style={styles.line} />
-        </View>
-
-        <FlatList
-          data={appointments.filter(item => (currentTabIndex === 0 ? item.status === 'N' : item.status === 'F'))}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-        />
-        </View>
-        </SafeAreaView>
-      </View>
+      </SafeAreaViewSafeAreaContext>
     </PanGestureHandler>
   );
 }
 
 const styles = ScaledSheet.create({
-  container: {flex: 1, backgroundColor: '#0049F8',paddingTop:20},
-  header: {
-    backgroundColor: '#0049F8',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: moderateScale(15),
-    paddingTop: Platform.OS === 'ios' ? moderateScale(45) : moderateScale(10),
-    paddingBottom: moderateScale(10),
-    minHeight: Platform.OS === 'ios' ? verticalScale(90) : verticalScale(70),
-    width: width,
-    position: 'relative',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  menuIconWrapper: {
-    padding: moderateScale(5),
-    minWidth: moderateScale(40),
-    justifyContent: 'center',
-  },
-  headerText: {
-    color: '#fff',
-    // fontWeight: '700',
-    marginLeft: moderateScale(0),
-    marginTop: moderateScale(5),
-    flexShrink: 1,
-  },
-  headerAvatar: {
-    alignItems: 'center',
-    padding: moderateScale(5),
-    minWidth: moderateScale(40),
-    justifyContent: 'center',
-  },
-
+  safeArea: {flex: 1, backgroundColor: '#0049F8'},
+  content: {flex: 1, backgroundColor: '#f8f9fa',    paddingBottom: verticalScale(20),},
   tabs: {
     flexDirection: 'row',
     backgroundColor: '#0049F8',

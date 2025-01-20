@@ -1267,7 +1267,7 @@ PODS:
     - Yoga
   - react-native-html-to-pdf (0.12.0):
     - React-Core
-  - react-native-pager-view (6.6.1):
+  - react-native-pager-view (6.7.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2182,7 +2182,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 1364ae5354f51b3ecee8eb718b5b6d1686d2ff4d
   react-native-blob-util: caa7203c370bbf76ae63b67300d1b489b1a62511
   react-native-html-to-pdf: 4c5c6e26819fe202971061594058877aa9b25265
-  react-native-pager-view: 9dbdfdc85d9409c054ee2581c6837c193fbadccc
+  react-native-pager-view: c89e08cdd49b04c65c108108779c56acc25c2700
   react-native-pdf: 612757482d19b59e9c2ff42148118248b9080950
   react-native-safe-area-context: 782fec0553f14a630a2bac87b116e512a9f35500
   React-nativeconfig: 539ff4de6ce3b694e8e751080568c281c84903ce

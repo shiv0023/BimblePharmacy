@@ -13,6 +13,29 @@ const { width, height } = Dimensions.get('window');
 const isIOS = Platform.OS === 'ios';
 
 const CustomDrawerContent = (props) => {
+  // Pre-warm the navigation immediately on mount
+  React.useEffect(() => {
+    // Preload all main screens
+    const preloadScreens = async () => {
+      await Promise.all([
+        props.navigation.prefetch('stack', { screen: 'Chat' }),
+        props.navigation.prefetch('stack', { screen: 'Appointment' })
+        
+      ]);
+    };
+    preloadScreens();
+  }, []);
+
+  const navigateToScreen = React.useCallback((screenName) => {
+    requestAnimationFrame(() => {
+      props.navigation.navigate('stack', {
+        screen: screenName,
+        immediate: true,
+        params: { timestamp: Date.now() } // Force re-render
+      });
+    });
+  }, [props.navigation]);
+
   const handleLogout = async () => {
     Alert.alert(
       "Logout",
@@ -45,7 +68,7 @@ const CustomDrawerContent = (props) => {
     <View style={styles.drawerContainer}>
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => props.navigation.navigate('stack', { screen: 'Appointment' })}
+        onPress={() => navigateToScreen('Appointment')}
       >
         <View style={styles.iconTextWrapper}>
           <HomeIcon color="#fff" />
@@ -55,7 +78,7 @@ const CustomDrawerContent = (props) => {
       
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => props.navigation.navigate('stack', { screen: 'Chat' })}
+        onPress={() => navigateToScreen('Chat')}
       >
         <View style={styles.iconTextWrapper}>
           <ProfileIcon color="#fff" />
@@ -65,11 +88,11 @@ const CustomDrawerContent = (props) => {
       
       <TouchableOpacity
         style={styles.drawerItem}
-        onPress={() => props.navigation.navigate('stack', { screen: 'Chat' })}
+        onPress={() => navigateToScreen('Chat')}
       >
         <View style={styles.iconTextWrapper}>
           <SettingIcon color="#fff" />
-          <Text variant='accent' style={styles.drawerItemText}>Setting</Text>
+          <Text variant='accent' style={styles.drawerItemText}>Settings</Text>
         </View>
       </TouchableOpacity>
 
@@ -97,6 +120,7 @@ const DrawerNavigator = () => {
         drawerActiveTintColor: '#fff',
         drawerInactiveTintColor: '#ccc',
         headerShown: false,
+        lazy: false, // Disable lazy loading
       }}
     >
       <Drawer.Screen 
@@ -104,7 +128,8 @@ const DrawerNavigator = () => {
         component={MyStack}
         options={{
           swipeEnabled: false,
-          gestureEnabled: false
+          gestureEnabled: false,
+          unmountOnBlur: false // Keep the screen mounted
         }}
       />
     </Drawer.Navigator>

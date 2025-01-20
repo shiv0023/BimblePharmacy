@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import  {Call,AppointmentUserIcon, PatientFemaleImg} from './svgComponent';
 import {FileIcon, MenuIcon, Union, Union2} from './svgComponent';
-import CustomText from './CustomText';
+import CustomHeader from './CustomHeader';
+import { useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -57,7 +58,11 @@ const Chat = ({navigation}) => {
   }, []);
 
 
- 
+  const openPDF = ({uri}) => {
+  
+    navigation.navigate('PDFViewer', { uri });
+
+  };
 
 
   const renderMessage = ({item}) => (
@@ -91,7 +96,7 @@ const Chat = ({navigation}) => {
             <View style={styles.fileContainer}>
               {item.files.map((file, index) => (
                 <TouchableOpacity
-                  // onPress={() => navigation.navigate('PatientReport')}
+                  onPress={() => openPDF('https://example.com/Prescription.pdf')}
                   key={index}
                   style={styles.fileButton}>
                   <FileIcon />
@@ -107,7 +112,7 @@ const Chat = ({navigation}) => {
       )}
     </View>
   );
-
+  const routes = useRoute()
   return (
     <>
       {Platform.OS === 'ios' && (
@@ -116,28 +121,22 @@ const Chat = ({navigation}) => {
       <SafeAreaView style={styles.container}>
         <StatusBar
           translucent={false}
-          backgroundColor="#0057FF"
+          backgroundColor="#0049F8"
           barStyle="light-content"
         />
-        <View style={styles.header}>
-          <TouchableOpacity>
-            <MenuIcon onPress={() => navigation.openDrawer()} />
-          </TouchableOpacity>
-          <Text variant='pageHeading' style={styles.headerTitle}>Sophia Christopher</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Call')}>
-            <Call  style={styles.phoneIcon} />
-          </TouchableOpacity>
-        </View>
+        <CustomHeader  title="Sophia Christopher" phoneNumber="1234567890"  IconComponent={Call} />
 
-        <View style={styles.patientInfo}>
+        <View style={[styles.patientInfo,{backgroundColor:routes.params.from == "NEW"?"rgba(223, 233, 252, 1)":"rgba(220,232,221,1)"}]}>
           <Text style={styles.patientInfoText}>
             <Text style={styles.phnLabel}>PHN:</Text>{' '}
             <Text style={{color: 'black', fontSize: 18}}>
               5436789567 / F / 30 Years
             </Text>
           </Text>
-          <View style={styles.newButtonContainer}>
-            <Text style={styles.newButton}>New</Text>
+          <View style={[styles.newButtonContainer,{backgroundColor:routes.params.from == "NEW"?"#0057FF":"#008D00"}]}>
+            <Text style={styles.newButton}>{
+              routes?.params?.from == "NEW"?"New":"Followup"
+              }</Text>
           </View>
         </View>
 
@@ -199,27 +198,7 @@ const styles = StyleSheet.create({
   statusBarBackground: {
     backgroundColor: '#0057FF',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0057FF',
-    paddingVertical: 15,
-    paddingHorizontal: width > 600 ? 20 : 16,
-  },
-  headerTitle: {
-    flex: 1,
-   marginTop:4,
-    marginLeft: 12,
-   
-  },
-  menuIcon: {
-    width: 24,
-    height: 24,
-  },
-  phoneIcon: {
-    width: 24,
-    height: 24,
-  },
+  
   patientInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -328,10 +307,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   fileContainer: {
-    marginTop: 8,
+    marginTop: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  
   },
   fileButton: {
     flexDirection: 'row',

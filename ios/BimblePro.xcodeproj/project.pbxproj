@@ -20,14 +20,14 @@
 		3C69E0D32E234A29A526D91B /* SFPRODISPLAYBLACKITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = 8C969115A0B44E83AC648118 /* SFPRODISPLAYBLACKITALIC.OTF */; };
 		3D28827E657645EFABF85237 /* SFPRODISPLAYTHINITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = 759183ACF8EF49D2A3939782 /* SFPRODISPLAYTHINITALIC.OTF */; };
 		3EF4F91AC5D44FCF9C3B2E63 /* Product Sans Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A9AFC0DD94DE419BA3587BFA /* Product Sans Regular.ttf */; };
+		55134E3E5D1A423895148632 /* libPods-BimblePro-BimbleProTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76B9F3F7F7BBEE251E1374B5 /* libPods-BimblePro-BimbleProTests.a */; };
 		5C9F7E8AE434466287C8F495 /* SFPRODISPLAYSEMIBOLDITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = FE8DBAB6D6E247D4AC9D55EC /* SFPRODISPLAYSEMIBOLDITALIC.OTF */; };
+		5E1FE846C48BAF7A3283A5A9 /* libPods-BimblePro.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 879E28AFE5F9632F3728B6F2 /* libPods-BimblePro.a */; };
 		6810B4EACB8A45F4960A00CE /* Product Sans Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8229898668FD47BEAC106492 /* Product Sans Italic.ttf */; };
-		764461E339F68154CE74893B /* libPods-BimblePro.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E4DD284D5D616E61AA35140 /* libPods-BimblePro.a */; };
 		7E0D1671A2244F9A93087737 /* SFPRODISPLAYULTRALIGHTITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = 5F22721868644413B33B960C /* SFPRODISPLAYULTRALIGHTITALIC.OTF */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A1AD72511C5171C373AF1DDD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		D13F8EDFED114A10AB2F2C24 /* SFPRODISPLAYHEAVYITALIC.OTF in Resources */ = {isa = PBXBuildFile; fileRef = CA0DAF785B474BBB80D755EB /* SFPRODISPLAYHEAVYITALIC.OTF */; };
-		E8CE5F5A42543F35C32F427D /* libPods-BimblePro-BimbleProTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D19FB1A156C7739AC4475AB2 /* libPods-BimblePro-BimbleProTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,23 +53,23 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = BimblePro/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = BimblePro/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3FA591FE358D41FBBBA586C1 /* SFPRODISPLAYMEDIUM.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYMEDIUM.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYMEDIUM.OTF; sourceTree = "<group>"; };
-		430D3009BC01C00CFB85E8F8 /* Pods-BimblePro-BimbleProTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.release.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.release.xcconfig"; sourceTree = "<group>"; };
-		5B7D734001944F79C567A427 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.debug.xcconfig"; sourceTree = "<group>"; };
-		5E4DD284D5D616E61AA35140 /* libPods-BimblePro.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5F22721868644413B33B960C /* SFPRODISPLAYULTRALIGHTITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYULTRALIGHTITALIC.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYULTRALIGHTITALIC.OTF; sourceTree = "<group>"; };
+		6B8805CAF5F754C5F8D60A06 /* Pods-BimblePro-BimbleProTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.release.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.release.xcconfig"; sourceTree = "<group>"; };
 		759183ACF8EF49D2A3939782 /* SFPRODISPLAYTHINITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYTHINITALIC.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYTHINITALIC.OTF; sourceTree = "<group>"; };
+		76B9F3F7F7BBEE251E1374B5 /* libPods-BimblePro-BimbleProTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro-BimbleProTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8021BC7207974B50B89BBFDD /* SFPRODISPLAYREGULAR.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYREGULAR.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYREGULAR.OTF; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = BimblePro/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8229898668FD47BEAC106492 /* Product Sans Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Product Sans Italic.ttf"; path = "../android/app/src/main/asset/fonts/Product Sans Italic.ttf"; sourceTree = "<group>"; };
+		870F252085BF427A1791837D /* Pods-BimblePro-BimbleProTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro-BimbleProTests.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests.debug.xcconfig"; sourceTree = "<group>"; };
+		879E28AFE5F9632F3728B6F2 /* libPods-BimblePro.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8C969115A0B44E83AC648118 /* SFPRODISPLAYBLACKITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYBLACKITALIC.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYBLACKITALIC.OTF; sourceTree = "<group>"; };
+		8D36062DA4915855B63802CF /* Pods-BimblePro.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.release.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.release.xcconfig"; sourceTree = "<group>"; };
 		A9AFC0DD94DE419BA3587BFA /* Product Sans Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Product Sans Regular.ttf"; path = "../android/app/src/main/asset/fonts/Product Sans Regular.ttf"; sourceTree = "<group>"; };
-		B73439AEA1A4C7C4D6D07B2B /* Pods-BimblePro.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.release.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.release.xcconfig"; sourceTree = "<group>"; };
+		B6A07A5F0E526728F312DD0B /* Pods-BimblePro.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.debug.xcconfig"; sourceTree = "<group>"; };
 		CA0DAF785B474BBB80D755EB /* SFPRODISPLAYHEAVYITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYHEAVYITALIC.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYHEAVYITALIC.OTF; sourceTree = "<group>"; };
 		CAF04BED7BEC4AA1B4C8C4CD /* SFPRODISPLAYLIGHTITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYLIGHTITALIC.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYLIGHTITALIC.OTF; sourceTree = "<group>"; };
-		D19FB1A156C7739AC4475AB2 /* libPods-BimblePro-BimbleProTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BimblePro-BimbleProTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D69ACBE97995446DB50CA6A6 /* SFPRODISPLAYBOLD.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYBOLD.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYBOLD.OTF; sourceTree = "<group>"; };
 		E3EEA8B264B547FD8DA35953 /* Product Sans Bold Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Product Sans Bold Italic.ttf"; path = "../android/app/src/main/asset/fonts/Product Sans Bold Italic.ttf"; sourceTree = "<group>"; };
-		E8A63E4CEFAACFC6A699145B /* Pods-BimblePro.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BimblePro.debug.xcconfig"; path = "Target Support Files/Pods-BimblePro/Pods-BimblePro.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FE8DBAB6D6E247D4AC9D55EC /* SFPRODISPLAYSEMIBOLDITALIC.OTF */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SFPRODISPLAYSEMIBOLDITALIC.OTF; path = ../android/app/src/main/asset/fonts/SFPRODISPLAYSEMIBOLDITALIC.OTF; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -79,7 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E8CE5F5A42543F35C32F427D /* libPods-BimblePro-BimbleProTests.a in Frameworks */,
+				55134E3E5D1A423895148632 /* libPods-BimblePro-BimbleProTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,7 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				764461E339F68154CE74893B /* libPods-BimblePro.a in Frameworks */,
+				5E1FE846C48BAF7A3283A5A9 /* libPods-BimblePro.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -129,8 +129,8 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5E4DD284D5D616E61AA35140 /* libPods-BimblePro.a */,
-				D19FB1A156C7739AC4475AB2 /* libPods-BimblePro-BimbleProTests.a */,
+				879E28AFE5F9632F3728B6F2 /* libPods-BimblePro.a */,
+				76B9F3F7F7BBEE251E1374B5 /* libPods-BimblePro-BimbleProTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -170,10 +170,10 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				E8A63E4CEFAACFC6A699145B /* Pods-BimblePro.debug.xcconfig */,
-				B73439AEA1A4C7C4D6D07B2B /* Pods-BimblePro.release.xcconfig */,
-				5B7D734001944F79C567A427 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */,
-				430D3009BC01C00CFB85E8F8 /* Pods-BimblePro-BimbleProTests.release.xcconfig */,
+				B6A07A5F0E526728F312DD0B /* Pods-BimblePro.debug.xcconfig */,
+				8D36062DA4915855B63802CF /* Pods-BimblePro.release.xcconfig */,
+				870F252085BF427A1791837D /* Pods-BimblePro-BimbleProTests.debug.xcconfig */,
+				6B8805CAF5F754C5F8D60A06 /* Pods-BimblePro-BimbleProTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -205,12 +205,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "BimbleProTests" */;
 			buildPhases = (
-				1185B32E1670B5296146D208 /* [CP] Check Pods Manifest.lock */,
+				57A5D5986149F07497F8C0D3 /* [CP] Check Pods Manifest.lock */,
 				00E356EA1AD99517003FC87E /* Sources */,
 				00E356EB1AD99517003FC87E /* Frameworks */,
 				00E356EC1AD99517003FC87E /* Resources */,
-				76267F3EC58B0AA30FBD2D02 /* [CP] Embed Pods Frameworks */,
-				C75CA063391F63CDD0FBC237 /* [CP] Copy Pods Resources */,
+				0BC94B947AF23169713088FE /* [CP] Embed Pods Frameworks */,
+				200FBDB50AB5EEA6109350B4 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -226,13 +226,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BimblePro" */;
 			buildPhases = (
-				D07D4F8ABF9C618652FE2242 /* [CP] Check Pods Manifest.lock */,
+				D1D796C36AE40882F81D1363 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				2FF0059DF4C1EE4E5DD5BBEA /* [CP] Embed Pods Frameworks */,
-				5574F21C0C8584DAF9C6218C /* [CP] Copy Pods Resources */,
+				9F4906E52D6A901234DE6474 /* [CP] Embed Pods Frameworks */,
+				DFC533E74E990721472D3C2B /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -329,7 +329,41 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		1185B32E1670B5296146D208 /* [CP] Check Pods Manifest.lock */ = {
+		0BC94B947AF23169713088FE /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		200FBDB50AB5EEA6109350B4 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		57A5D5986149F07497F8C0D3 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -351,7 +385,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		2FF0059DF4C1EE4E5DD5BBEA /* [CP] Embed Pods Frameworks */ = {
+		9F4906E52D6A901234DE6474 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -368,58 +402,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		5574F21C0C8584DAF9C6218C /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		76267F3EC58B0AA30FBD2D02 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C75CA063391F63CDD0FBC237 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro-BimbleProTests/Pods-BimblePro-BimbleProTests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		D07D4F8ABF9C618652FE2242 /* [CP] Check Pods Manifest.lock */ = {
+		D1D796C36AE40882F81D1363 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -439,6 +422,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DFC533E74E990721472D3C2B /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BimblePro/Pods-BimblePro-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -474,7 +474,7 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5B7D734001944F79C567A427 /* Pods-BimblePro-BimbleProTests.debug.xcconfig */;
+			baseConfigurationReference = 870F252085BF427A1791837D /* Pods-BimblePro-BimbleProTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -501,7 +501,7 @@
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 430D3009BC01C00CFB85E8F8 /* Pods-BimblePro-BimbleProTests.release.xcconfig */;
+			baseConfigurationReference = 6B8805CAF5F754C5F8D60A06 /* Pods-BimblePro-BimbleProTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
@@ -525,7 +525,7 @@
 		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E8A63E4CEFAACFC6A699145B /* Pods-BimblePro.debug.xcconfig */;
+			baseConfigurationReference = B6A07A5F0E526728F312DD0B /* Pods-BimblePro.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -553,7 +553,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B73439AEA1A4C7C4D6D07B2B /* Pods-BimblePro.release.xcconfig */;
+			baseConfigurationReference = 8D36062DA4915855B63802CF /* Pods-BimblePro.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
