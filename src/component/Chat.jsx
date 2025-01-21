@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: 'rgba(223, 233, 252, 1)',
+    // backgroundColor: 'rgba(223, 233, 252, 1)',
   },
   patientInfoText: {
     fontSize: 15,
