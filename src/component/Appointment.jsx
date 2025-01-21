@@ -411,14 +411,3 @@ const styles = StyleSheet.create({
   },
 });
 
-// If using navigation, add this to your navigation options:
-const screenOptions = {
-  headerShown: true,
-  cardStyle: { backgroundColor: 'white' },
-  // Remove bottom tab navigator line if using tab navigation
-  tabBarStyle: {
-    elevation: 0,
-    borderTopWidth: 0,
-    shadowColor: 'transparent',
-  }
-};
