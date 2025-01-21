@@ -10,6 +10,7 @@ import {
 
   SafeAreaView,
   Dimensions,
+  StyleSheet,
 } from 'react-native';
 import {
   AppointmentStatus,
@@ -244,7 +245,23 @@ export default function Appointment({navigation}) {
   );
 }
 
-const styles = ScaledSheet.create({
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  footer: {
+    backgroundColor: 'white',
+    borderTopWidth: 0,
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: {
+      height: 0,
+      width: 0
+    }
+  },
   safeArea: {flex: 1, backgroundColor: '#0049F8'},
   content: {flex: 1, backgroundColor: '#f8f9fa',    paddingBottom: verticalScale(20),},
   tabs: {
@@ -393,3 +410,15 @@ const styles = ScaledSheet.create({
     marginBottom: 15,
   },
 });
+
+// If using navigation, add this to your navigation options:
+const screenOptions = {
+  headerShown: true,
+  cardStyle: { backgroundColor: 'white' },
+  // Remove bottom tab navigator line if using tab navigation
+  tabBarStyle: {
+    elevation: 0,
+    borderTopWidth: 0,
+    shadowColor: 'transparent',
+  }
+};

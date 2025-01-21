@@ -1,15 +1,16 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import DrawerNavigator from './src/Navigation/DrawerNavigation';
-import TabViewExample from './src/Navigation/TabView';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 const App = () => {
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }} edges={['bottom']}>
       <DrawerNavigator>
-        <TabViewExample />
+    
       </DrawerNavigator>
-    </View>
+    </SafeAreaView>
   );
 };
 
