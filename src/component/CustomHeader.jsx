@@ -9,24 +9,29 @@ const CustomHeader = ({ title, IconComponent, phoneNumber }) => {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+  
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuIconWrapper}>
           <MenuIcon />
         </TouchableOpacity>
         <Text variant='pageHeading' style={styles.headerTitle}>{title}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Calls', { phoneNumber })}>
+        <TouchableOpacity onPress={() => {
+          if (phoneNumber) {
+            navigation.navigate('Calls', { phoneNumber });
+          } else{
+            console.log("Profile navigate")
+          }
+        }}>
           {IconComponent && <IconComponent style={styles.icon} />}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#0049F8',
-  },
+  // backgroundColor: '#0049F8',
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',

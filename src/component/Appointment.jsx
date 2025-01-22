@@ -33,7 +33,7 @@ import {
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import CustomHeader from './CustomHeader';
 import { SafeAreaView as SafeAreaViewSafeAreaContext } from 'react-native-safe-area-context';
-
+import { useSelector } from 'react-redux';
 
 const appointments = [
   {
@@ -80,6 +80,7 @@ export default function Appointment({navigation}) {
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTabIndex, setCurrentTabIndex] = useState(0);
+
 
   const tabs = ['Today', 'Upcoming'];
 
