@@ -33,7 +33,9 @@ import {
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import CustomHeader from './CustomHeader';
 import { SafeAreaView as SafeAreaViewSafeAreaContext } from 'react-native-safe-area-context';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAppointments } from '../Redux/Slices/AppointmentSlice';
+
 
 const appointments = [
   {
@@ -80,6 +82,12 @@ export default function Appointment({navigation}) {
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTabIndex, setCurrentTabIndex] = useState(0);
+  const dispatch = useDispatch();
+  const userData = useSelector((state) => state?.auth?.Appointment);
+  // const appointments = useSelector((state) => state?.appointments?.data || []);
+
+console.log(userData,'hh+++++++++g')
+
 
 
   const tabs = ['Today', 'Upcoming'];
@@ -95,6 +103,19 @@ export default function Appointment({navigation}) {
 
     setCurrentDate(formattedDate);
   }, []);
+         
+  
+  
+  useEffect(async() => {
+    const token = await AsyncStorage.getItem('auth_token');
+    console.log(token,'hh')
+    const startDate = new Date().toISOString().split('T')[0]; // Today's date
+    const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // A week later
+      .toISOString()
+      .split('T')[0];
+    
+    dispatch(fetchAppointments({ startDate, endDate,token }));
+  }, [dispatch]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -235,11 +256,15 @@ export default function Appointment({navigation}) {
             <View style={styles.line} />
           </View>
 
-          <FlatList
-            data={appointments.filter(item => (currentTabIndex === 0 ? item.status === 'N' : item.status === 'F'))}
-            renderItem={renderItem}
-            keyExtractor={item => item.id}
-          />
+          {appointments.length > 0 ? (
+            <FlatList
+              data={appointments.filter(item => (currentTabIndex === 0 ? item.status === 'N' : item.status === 'F'))}
+              renderItem={renderItem}
+              keyExtractor={item => item.id}
+            />
+          ) : (
+            <Text>No appointments available</Text>
+          )}
         </View>
       </SafeAreaViewSafeAreaContext>
     </PanGestureHandler>
