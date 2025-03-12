@@ -1,13 +1,15 @@
-import { combineReducers } from 'redux';
+import { combineReducers } from '@reduxjs/toolkit';
 import AuthReducer from "../Slices/AuthSlice"
 import ClinicReducer from "../Slices/ClinicSlice"
-import AppointmentReducer from './AppointmentSlice';
+import AppointmentReducer from '../Slices/AppointmentSlice';
+import patientDetailsReducer from './PatientDetailsSlice';
+
 const rootReducer = combineReducers({
   user: AuthReducer,
   clinic:ClinicReducer,
-  Appointment:AppointmentReducer
-  
-});
+  Appointment:AppointmentReducer,
+  patientDetails: patientDetailsReducer,
 
+});
 
 export default rootReducer;

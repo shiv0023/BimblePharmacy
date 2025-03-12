@@ -5,27 +5,29 @@ import { MenuIcon } from './svgComponent';
 
 const { width, height } = Dimensions.get('window');
 
-const CustomHeader = ({ title, IconComponent, phoneNumber }) => {
+const CustomHeader = ({ title, IconComponent, phoneNumber, chatType, onCall }) => {
   const navigation = useNavigation();
 
   return (
-  
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.menuIconWrapper}>
-          <MenuIcon />
+    <SafeAreaView >
+    <View style={styles.header}>
+      <TouchableOpacity 
+        onPress={() => navigation.openDrawer()} 
+        style={styles.menuIconWrapper}
+      >
+        <MenuIcon />
+      </TouchableOpacity>
+      <Text variant="heading" style={styles.headerTitle}>{title}</Text>
+      {IconComponent && (
+        <TouchableOpacity 
+          onPress={onCall}
+          style={styles.callButton}
+        >
+          <IconComponent style={styles.icon} />
         </TouchableOpacity>
-        <Text variant='pageHeading' style={styles.headerTitle}>{title}</Text>
-        <TouchableOpacity onPress={() => {
-          if (phoneNumber) {
-            navigation.navigate('Calls', { phoneNumber });
-          } else{
-            console.log("Profile navigate")
-          }
-        }}>
-          {IconComponent && <IconComponent style={styles.icon} />}
-        </TouchableOpacity>
-      </View>
-
+      )}
+    </View>
+    </SafeAreaView>
   );
 };
 
@@ -58,6 +60,11 @@ const styles = StyleSheet.create({
   icon: {
     width: width * 0.06, // Responsive icon size
     height: width * 0.06, // Responsive icon size
+  },
+  callButton: {
+    padding: width * 0.02,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../Api/AxiosInstance';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const initialState = {
   data: null,
@@ -16,6 +17,9 @@ export const loginUser = createAsyncThunk(
         '/authentication/loginClinic/',
         requestedData
       );
+     await AsyncStorage.setItem("auth_tokens",response.data.access_token)
+   const myAcesssToken=  await AsyncStorage.getItem("auth_tokens")
+console.log('vvvv')
       return response.data; 
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Login failed');

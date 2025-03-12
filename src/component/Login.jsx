@@ -52,23 +52,39 @@ export default function Login({navigation}) {
   const clinicState = useSelector(state => {
     const clinicData = state?.auth?.clinic;
 
-    console.log('Clinic Data:', JSON.stringify(clinicData));
     return clinicData || {};
   });
   const {subdomains = [], loading = false} = clinicState;
 
   // Log whenever subdomains changes
   useEffect(() => {
-    console.log('Current clinicState:', clinicState);
+   
   }, [subdomains]);
 
   // Test API call directly
   const testApiCall = async () => {
+    setIsLoading(true);
     try {
+    
       const response = await dispatch(fetchSubdomains()).unwrap();
-      console.log('API Call Success:', response);
+    
     } catch (error) {
       console.error('API Call Failed:', error);
+      
+      // More detailed error logging
+      if (error.message) {
+        console.error('Error message:', error.message);
+      }
+      
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      } else if (error.request) {
+        console.error('Request made but no response received');
+        console.error('Request details:', error.request);
+      } else {
+        console.error('Error setting up request:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +95,7 @@ export default function Login({navigation}) {
   }, []);
 
   useEffect(() => {
-    console.log('Current Subdomains State:', subdomains);
-    console.log('Loading State:', loading);
+
   }, [subdomains, loading]);
   useEffect(() => {
     const checkAuthToken = async () => {
@@ -230,7 +245,7 @@ export default function Login({navigation}) {
           placeholder="Clinic Name"
           value={clinicDisplayName || subdomainBimble}
           onChangeText={(text) => {
-            console.log('Input Changed:', text);
+     
             setSubdomain(text);
             setClinicDisplayName('');
             setErrors((prev) => ({ ...prev, subdomain: false }));
@@ -242,7 +257,7 @@ export default function Login({navigation}) {
             }
           }}
           onFocus={() => {
-            console.log('Input Focused');
+          
             if (subdomainBimble.length > 0) {
               setShowSuggestions(true);
             }

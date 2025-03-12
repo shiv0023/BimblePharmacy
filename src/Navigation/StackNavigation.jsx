@@ -20,30 +20,31 @@ export default function MyStack() {
     <SafeAreaProvider>
       <Fragment>
         <Stack.Navigator 
-          screenOptions={{
-            headerShown: false,
-            animationEnabled: true,
-            detachPreviousScreen: false,
-            presentation: 'modal',
-            cardStyle: {
-              backgroundColor: '#0049F8'
-            },
-            contentStyle: {
-              backgroundColor: '#0049F8'
-            },
-            cardStyleInterpolator: ({ current, layouts }) => ({
-              cardStyle: {
-                transform: [
-                  {
-                    translateX: current.progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [layouts.screen.width, 0],
-                    }),
-                  },
-                ],
-              },
-            }),
-          }} 
+           screenOptions={{
+           headerShown: false,
+  }}
+          //   animationEnabled: true,
+          //   detachPreviousScreen: false,
+          //   presentation: 'modal',
+          //   cardStyle: {
+          //     backgroundColor: '#0049F8'
+          //   },
+          //   contentStyle: {
+          //     backgroundColor: '#0049F8'
+          //   },
+          //   cardStyleInterpolator: ({ current, layouts }) => ({
+          //     cardStyle: {
+          //       transform: [
+          //         {
+          //           translateX: current.progress.interpolate({
+          //             inputRange: [0, 1],
+          //             outputRange: [layouts.screen.width, 0],
+          //           }),
+          //         },
+          //       ],
+          //     },
+          //   }),
+          // }} 
           initialRouteName="Splash"
         >
           <Stack.Screen 
@@ -65,14 +66,14 @@ export default function MyStack() {
           <Stack.Screen 
             name="Appointment" 
             component={Appointment}
-            options={{
-              gestureEnabled: true,
-              cardOverlayEnabled: false,
-              animationEnabled: true,
-              unmountOnBlur: false,
-              freezeOnBlur: false,
-              detachPreviousScreen: false
-            }}
+            // options={{
+            //   gestureEnabled: true,
+            //   cardOverlayEnabled: false,
+            //   animationEnabled: true,
+            //   unmountOnBlur: false,
+            //   freezeOnBlur: false,
+            //   detachPreviousScreen: false
+            // }}
           />
 
           <Stack.Screen 

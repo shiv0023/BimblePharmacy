@@ -7,5 +7,7 @@ export const store = configureStore({
     auth: rootReducer, 
   },
 });
-
+store.subscribe(() => {
+  console.log('Store State:', store.getState());
+});
 export default store;
