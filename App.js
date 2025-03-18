@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const App = () => {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }} edges={['bottom']}>
+    <SafeAreaView style={{flex:1}} edges={['bottom']}>
       <DrawerNavigator>
     
       </DrawerNavigator>
@@ -16,4 +16,4 @@ const App = () => {
 
 export default App;
 
-const styles = StyleSheet.create({});
+

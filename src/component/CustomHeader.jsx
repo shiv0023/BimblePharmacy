@@ -9,7 +9,7 @@ const CustomHeader = ({ title, IconComponent, phoneNumber, chatType, onCall }) =
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView >
+
     <View style={styles.header}>
       <TouchableOpacity 
         onPress={() => navigation.openDrawer()} 
@@ -27,7 +27,8 @@ const CustomHeader = ({ title, IconComponent, phoneNumber, chatType, onCall }) =
         </TouchableOpacity>
       )}
     </View>
-    </SafeAreaView>
+  
+
   );
 };
 

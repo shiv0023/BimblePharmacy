@@ -38,42 +38,42 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchAppointments, setSelectedAppointmentAndFetchDetails } from '../Redux/Slices/AppointmentSlice';
 
 
-const appointments = [
-  {
-    id: '1',
-    name: 'Sophia Christopher',
-    gender: 'F',
-    age: 30,
-    phone: '5436789567',
-    status: 'N',
-    description:
-      'Experience Fatigue due to lack of sleep. There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form.',
-    avatar: <PatientFemaleImg />,
-    genderIcon: 'https://example.com/icons/female.png',
-  },
-  {
-    id: '2',
-    name: 'Aiden Sheppard',
-    gender: 'M',
-    age: 25,
-    phone: '6345789567',
-    status: 'F',
-    description: 'Experience Fatigue due to lack of sleep.',
-    avatar: <PatientImage />,
-    genderIcon: 'https://example.com/icons/male.png',
-  },
-  {
-    id: '3',
-    name: 'Aiden Sheppard',
-    gender: 'M',
-    age: 25,
-    phone: '6345789567',
-    status: 'F',
-    description: 'Experience Fatigue due to lack of sleep.',
-    avatar: <PatientImage />,
-    genderIcon: 'https://example.com/icons/male.png',
-  },
-];
+// const appointments = [
+//   {
+//     id: '1',
+//     name: 'Sophia Christopher',
+//     gender: 'F',
+//     age: 30,
+//     phone: '5436789567',
+//     status: 'N',
+//     description:
+//       'Experience Fatigue due to lack of sleep. There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form.',
+//     avatar: <PatientFemaleImg />,
+//     genderIcon: 'https://example.com/icons/female.png',
+//   },
+//   {
+//     id: '2',
+//     name: 'Aiden Sheppard',
+//     gender: 'M',
+//     age: 25,
+//     phone: '6345789567',
+//     status: 'F',
+//     description: 'Experience Fatigue due to lack of sleep.',
+//     avatar: <PatientImage />,
+//     genderIcon: 'https://example.com/icons/male.png',
+//   },
+//   {
+//     id: '3',
+//     name: 'Aiden Sheppard',
+//     gender: 'M',
+//     age: 25,
+//     phone: '6345789567',
+//     status: 'F',
+//     description: 'Experience Fatigue due to lack of sleep.',
+//     avatar: <PatientImage />,
+//     genderIcon: 'https://example.com/icons/male.png',
+//   },
+// ];
 
 // Get window dimensions
 const { width, height } = Dimensions.get('window');
@@ -230,7 +230,7 @@ export default function Appointment({navigation}) {
             </View>
             <View style={{flex: 1}}>
               <View style={styles.nameRow}>
-                <Text variant="base" style={styles.patientName}>{item.patientName}</Text>
+                <Text variant="subheading" style={styles.patientName}>{item.patientName}</Text>
               </View>
               <View style={styles.row}>
                 <View style={styles.infoText}>
@@ -240,7 +240,7 @@ export default function Appointment({navigation}) {
                   </Text>
                 </View>
                 <View style={styles.infoText}>
-                  <Text>{item.duration} mins</Text>
+                  <Text variant='paragraph'>{item.duration} mins</Text>
                 </View>
               </View>
             </View>

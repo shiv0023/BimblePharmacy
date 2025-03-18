@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,15 @@ import {
   ActivityIndicator,
   Linking,
   Alert,
+  Image,
 } from 'react-native';
 import  {Call,AppointmentUserIcon, PatientFemaleImg} from './svgComponent';
 import {FileIcon, MenuIcon, Union, Union2} from './svgComponent';
 import CustomHeader from './CustomHeader';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPatientDetails, fetchEncounterNotes } from '../Redux/Slices/PatientDetailsSlice';
+import { addPatientDrug } from '../Redux/Slices/DrugSlice';
 
 const { width } = Dimensions.get('window');
 
@@ -45,6 +47,7 @@ const calculateAge = (dob) => {
 const Chat = ({navigation}) => {
   const dispatch = useDispatch();
   const routes = useRoute();
+  const navigationNav = useNavigation();
   
   const selectedAppointment = useSelector(state => state?.appointment?.selectedAppointment);
   const patientDetails = useSelector(state => state?.auth?.patientDetails?.data);
@@ -53,6 +56,8 @@ const Chat = ({navigation}) => {
   const notesLoading = useSelector(state => state?.patientDetails?.notesLoading);
 
   const chatType = routes.params?.status === 'N' ? 'NEW' : 'FOLLOWUP';
+
+  const [isPrescribing, setIsPrescribing] = useState(false);
 
   useEffect(() => {
     const demoNo = selectedAppointment?.demographicNo || routes.params?.demographicNo;
@@ -83,7 +88,7 @@ const Chat = ({navigation}) => {
       if (appointment.reason || appointment.reasonDesc) {
         messages.push({
           id: `patient-${appointment.appointment_no}-reason`,
-          type: 'patient',
+      type: 'patient',
           text: appointment.reason || '',
           description: appointment.reasonDesc || '',
           timestamp: appointment.appointment_date,
@@ -96,7 +101,7 @@ const Chat = ({navigation}) => {
       if (appointment.notesData && appointment.notesData.length > 0) {
         messages.push({
           id: `doctor-${appointment.appointment_no}-notes`,
-          type: 'doctor',
+      type: 'doctor',
           notes: appointment.notesData,
           timestamp: appointment.appointment_date,
           isDoctor: true,
@@ -104,16 +109,13 @@ const Chat = ({navigation}) => {
         });
       }
 
-      // Patient's files/attachments message (if any)
+      // Patient's images message (if any)
       if (appointment.problemPics && appointment.problemPics.length > 0) {
         messages.push({
           id: `patient-${appointment.appointment_no}-files`,
-          type: 'patient',
-          text: 'Attached Files',
-          files: appointment.problemPics.map(pic => ({
-            name: pic.split('/').pop() || 'File',
-            type: pic.split('.').pop() || 'pdf'
-          })),
+      type: 'patient',
+          text: 'Attached Images',
+          images: appointment.problemPics,
           timestamp: appointment.appointment_date,
           isDoctor: false,
           hasFiles: true
@@ -171,37 +173,30 @@ const Chat = ({navigation}) => {
             <PatientFemaleImg style={styles.profileImage} />
             <View style={styles.messageContent}>
               <View style={[styles.messageBox, styles.patientMessage]}>
-                {!item.hasFiles ? (
-                  <>
-                    <Text style={[styles.messageText, styles.patientText]}>
-                      {item.text}
-                    </Text>
-                    {item.description && (
-                      <Text style={[styles.descriptionText, styles.patientText]}>
-                        {item.description}
-                      </Text>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Text style={[styles.messageText, styles.patientText]}>
-                      {item.text}
-                    </Text>
-                    <View style={styles.fileGrid}>
-                      {item.files.map((file, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          style={styles.patientFileButton}
-                          onPress={() => openPDF({ uri: file.name })}
-                        >
-                          <FileIcon style={styles.fileIcon} />
-                          <Text style={styles.patientFileName} numberOfLines={1}>
-                            {file.name}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </>
+                <Text style={[styles.messageText, styles.patientText]}>
+                  {item.text}
+                </Text>
+                {item.description && (
+                  <Text style={[styles.descriptionText, styles.patientText]}>
+                    {item.description}
+                  </Text>
+                )}
+                {item.hasFiles && item.images && (
+                  <View style={styles.imageGrid}>
+                    {item.images.map((imageUrl, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.imageContainer}
+                        onPress={() => navigation.navigate('ImageViewer', { uri: imageUrl })}
+                      >
+                        <Image
+                          source={{ uri: imageUrl }}
+                          style={styles.attachedImage}
+                          resizeMode="cover"
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 )}
               </View>
             </View>
@@ -268,12 +263,12 @@ const Chat = ({navigation}) => {
             paddingHorizontal: isNew ? 12 : 8  // Adjust padding for longer text
           }
         ]}>
-          <Text style={styles.newButton}>
+          <Text variant='accent' style={styles.newButton}>
             {isNew ? 'New' : 'FollowUp'}
           </Text>
         </View>
-      </View>
-    );
+    </View>
+  );
   };
 
   useEffect(() => {
@@ -309,6 +304,54 @@ const Chat = ({navigation}) => {
       .catch(err => {
         Alert.alert('Error', 'Failed to make phone call');
       });
+  };
+
+  const handleStartAssessment = () => {
+    // Get relevant patient info from the current appointment
+    const assessmentData = {
+      patientId: patientDetails?.demographicNo,
+      patientName: `${patientDetails?.firstName} ${patientDetails?.lastName}`,
+      appointmentReason: selectedAppointment?.reason,
+      appointmentDesc: selectedAppointment?.reasonDesc,
+      appointmentDate: selectedAppointment?.appointment_date,
+      chatType: chatType
+    };
+
+    navigationNav.navigate('Assessment', assessmentData);
+  };
+
+  const handleWritePrescription = () => {
+    if (!patientDetails?.demographicNo) {
+      Alert.alert('Error', 'Patient information is missing');
+      return;
+    }
+
+    const prescriptionData = {
+      demographicNo: parseInt(patientDetails.demographicNo),
+      drugData: [{
+        indication: "Wound disinfection",
+        instructions: "",
+        duration: "",
+        quantity: "",
+        repeat: "",
+        groupName: "",
+        drugForm: "",
+        dosage: "",
+        startDate: new Date().toISOString().split('T')[0],
+        longTerm: null
+      }]
+    };
+
+    navigation.navigate('Prescription', {
+      patientDetails: {
+        demographicNo: parseInt(patientDetails.demographicNo),
+        firstName: patientDetails.firstName,
+        lastName: patientDetails.lastName,
+        phn: patientDetails.phn,
+        dob: patientDetails.dob
+      },
+      prescriptionData: prescriptionData
+    });
   };
 
   return (
@@ -363,33 +406,49 @@ const Chat = ({navigation}) => {
             <ActivityIndicator size="large" color="#0057FF" />
           </View>
         ) : (
-          <FlatList
+        <FlatList
             data={transformedMessages}
-            keyExtractor={item => item.id.toString()}
-            renderItem={renderMessage}
-            style={styles.messageList}
+          keyExtractor={item => item.id.toString()}
+          renderItem={renderMessage}
+          style={styles.messageList}
             contentContainerStyle={styles.messageListContent}
-          />
+        />
         )}
 
-        <View style={styles.footer}>
-          <View style={styles.footerButtonContainer}>
-            <TouchableOpacity style={styles.footerButton}>
-              <Union style={styles.footerIcon} />
-              <Text style={styles.footerButtonText}>
-                Start{'\n'}Assessment
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.footerButtonContainer}>
-            <TouchableOpacity style={styles.footerButton}>
-              <Union2 style={styles.footerIcon} />
-              <Text style={styles.footerButtonText}>
-                Write{'\n'}Prescription
-              </Text>  
-            </TouchableOpacity>
-          </View>
-        </View>
+<View style={styles.footer}>
+  <View style={styles.footerButtonContainer}>
+            <TouchableOpacity 
+              style={[styles.footerButton, styles.assessmentButton]}
+              onPress={handleStartAssessment}
+            >
+      <Union style={styles.footerIcon} />
+      <Text style={styles.footerButtonText}>
+        Start{'\n'}Assessment
+      </Text>
+    </TouchableOpacity>
+  </View>
+  <View style={styles.footerButtonContainer}>
+            <TouchableOpacity 
+              style={[
+                styles.footerButton,
+                isPrescribing && styles.footerButtonDisabled
+              ]}
+              onPress={handleWritePrescription}
+              disabled={isPrescribing}
+            >
+              {isPrescribing ? (
+                <ActivityIndicator size="small" color="#0049F8" />
+              ) : (
+                <>
+      <Union2 style={styles.footerIcon} />
+      <Text style={styles.footerButtonText}>
+        Write{'\n'}Prescription
+      </Text>  
+                </>
+              )}
+    </TouchableOpacity>
+  </View>
+</View>
       </SafeAreaView>
     </>
   );
@@ -631,6 +690,41 @@ const additionalStyles = {
     flex: 1,
     marginHorizontal: 12,
   },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    justifyContent: 'flex-start',
+  },
+  imageContainer: {
+    width: '48%', // Adjust this value to control image size
+    aspectRatio: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(248, 94, 173, 0.4)',
+  },
+  attachedImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f0f0f0',
+  },
+  footerButtonDisabled: {
+    opacity: 0.7,
+  },
+  prescriptionSuccess: {
+    backgroundColor: '#E8F5E9',
+    padding: 12,
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+  },
+  prescriptionSuccessText: {
+    color: '#2E7D32',
+    fontSize: 14,
+    fontFamily: 'Product Sans Regular',
+  }
 };
 
 const styles = StyleSheet.create({

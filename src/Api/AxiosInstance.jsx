@@ -17,6 +17,7 @@ axiosInstance.interceptors.request.use(
 
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
+        console.log('token',token)
       } else {
         console.warn('No auth token found');
       }

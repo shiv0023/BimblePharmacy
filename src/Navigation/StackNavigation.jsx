@@ -11,6 +11,9 @@ import PDFViewer from '../component/PdfViewer';
 
 import Call from '../component/Dialer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import ImageViewer from '../component/ImageViewer';
+import Assessment from '../component/Assessment';
+import Prescription from '../component/Prescription';
 
 const Stack = createStackNavigator();
 const { width, height } = Dimensions.get('window');
@@ -101,6 +104,30 @@ export default function MyStack() {
               cardStyle: { width: width, height: height }
             }}
           />
+          <Stack.Screen 
+            name="ImageViewer" 
+            component={ImageViewer} 
+            options={{
+              headerLeft: null,
+              cardStyle: { width: width, height: height }
+            }}
+          />
+          <Stack.Screen 
+            name="Assessment" 
+            component={Assessment} 
+            options={{
+              headerLeft: null,
+              cardStyle: { width: width, height: height } 
+            }}
+          />
+          <Stack.Screen 
+            name="Prescription" 
+            component={Prescription}
+            options={{
+              headerShown: false
+            }}
+          />
+          
         </Stack.Navigator>
       </Fragment>
     </SafeAreaProvider>
