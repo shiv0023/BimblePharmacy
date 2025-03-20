@@ -583,14 +583,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textAlignVertical: 'center',
   },
-  // checkboxText: {
-  //  fontSize:15,
-  //   color: '#151515',
-  //   fontFamily: 'Product Sans Regular',
-  //   fontWeight: '400',
-  //   lineHeight: wp('4.5%'),
 
-  // },
   loginButton: {
     backgroundColor: '#2968FF',
     paddingVertical: 15,

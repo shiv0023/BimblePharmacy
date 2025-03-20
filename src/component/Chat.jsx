@@ -378,29 +378,6 @@ const Chat = ({navigation}) => {
 
         {renderPatientInfo()}
 
-        <View style={styles.dateContainer}>
-          <View style={styles.line} />
-          <Text style={styles.dateText}>
-            {selectedAppointment?.appointment_date ? 
-              new Date(selectedAppointment.appointment_date).toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              })
-              : encounterNotes && encounterNotes[0]?.appointment_date ? 
-                new Date(encounterNotes[0].appointment_date).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })
-                : 'No date available'
-            }
-          </Text>
-          <View style={styles.line} />
-        </View>
-
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#0057FF" />
@@ -768,24 +745,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     textAlign: 'center',
     
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginVertical: 16,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E5E5',
-  },
-  dateText: {
-    marginHorizontal: 12,
-    color: '#191919',
-    fontSize: 15,
-    fontWeight: '450',
-    fontFamily: 'Product Sans Regular',
   },
   messageList: {
     flex: 1,

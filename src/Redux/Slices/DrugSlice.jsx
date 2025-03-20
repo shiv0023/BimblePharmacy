@@ -16,23 +16,45 @@ export const addPatientDrug = createAsyncThunk(
     'drugs/addPatientDrug',
     async (drugData, { rejectWithValue }) => {
         try {
+            // Validate drug data before formatting
+            if (!drugData.drugData || !Array.isArray(drugData.drugData)) {
+                return rejectWithValue('Invalid drug data format');
+            }
+
+            // Validate each drug in the array
+            const invalidDrugs = drugData.drugData.filter(drug => !drug.groupName);
+            if (invalidDrugs.length > 0) {
+                return rejectWithValue('All drugs must have a group name');
+            }
+
             // Format the data with only required fields
             const formattedData = {
                 ...drugData,
                 demographicNo: parseInt(drugData.demographicNo),
-                drugData: drugData.drugData.map(drug => ({
-                    groupName: drug.groupName,
-                    drugForm: drug.drugForm,
-                    dosage: drug.dosage || drug.selectedDrugDetails?.strength || '',
-                    indication: drug.indication,
-                    instructions: drug.instructions,
-                    duration: parseInt(drug.duration) || 0,
-                    quantity: parseInt(drug.quantity) || 0,
-                    repeat: parseInt(drug.repeat) || 0,
-                    longTerm: drug.longTerm === 'Yes' ? true : false,
-                    startDate: drug.startDate || new Date().toISOString().split('T')[0]
-                }))
+                drugData: drugData.drugData.map(drug => {
+                    if (!drug.groupName) {
+                        throw new Error('Group name is required for all drugs');
+                    }
+                    
+                    return {
+                        groupName: drug.groupName,
+                        drugForm: drug.drugForm || '',
+                        dosage: drug.dosage || drug.selectedDrugDetails?.strength || '',
+                        indication: drug.indication || '',
+                        instructions: drug.instructions || '',
+                        duration: parseInt(drug.duration) || 0,
+                        quantity: parseInt(drug.quantity) || 0,
+                        repeat: parseInt(drug.repeat) || 0,
+                        longTerm: drug.longTerm === 'Yes' ? true : false,
+                        startDate: drug.startDate || new Date().toISOString().split('T')[0]
+                    };
+                })
             };
+
+            // Additional validation before sending
+            if (!formattedData.drugData.every(drug => drug.groupName)) {
+                return rejectWithValue('Missing group name for one or more drugs');
+            }
 
             console.log('Sending formatted drug data:', formattedData);
 
@@ -69,7 +91,7 @@ export const searchDrugs = createAsyncThunk(
                 return [];
             }
 
-            console.log('Searching for:', searchQuery);
+            // console.log('Searching for:', searchQuery);
 
             const response = await axiosInstance.get(
                 `https://oatrx.ca/api/fetch-drug-data?search=${encodeURIComponent(searchQuery)}`
@@ -83,7 +105,7 @@ export const searchDrugs = createAsyncThunk(
 
             // Get the data array
             const responseData = response.data?.data || response.data;
-            console.log('Raw API Response:', responseData);
+            // console.log('Raw API Response:', responseData);
 
             // Ensure we have an array
             const drugsArray = Array.isArray(responseData) ? responseData : [responseData];
@@ -112,7 +134,7 @@ export const searchDrugs = createAsyncThunk(
                         : []
                 }));
 
-            console.log('Formatted data:', formattedData);
+            // console.log('Formatted data:', formattedData);
             return formattedData;
 
         } catch (error) {

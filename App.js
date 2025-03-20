@@ -3,17 +3,22 @@ import { StyleSheet, View } from 'react-native';
 import DrawerNavigator from './src/Navigation/DrawerNavigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-
 const App = () => {
   return (
-    <SafeAreaView style={{flex:1}} edges={['bottom']}>
-      <DrawerNavigator>
-    
-      </DrawerNavigator>
+    <SafeAreaView 
+      style={styles.safeArea} 
+      edges={[ 'bottom']} 
+    >
+      <DrawerNavigator />
     </SafeAreaView>
   );
 };
 
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+});
+
 export default App;
-
-

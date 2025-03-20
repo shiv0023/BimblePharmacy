@@ -95,3 +95,18 @@ To learn more about React Native, take a look at the following resources:
 
 
 
+on start date enput feilds show a calander and doctor able to select the desired dates 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
