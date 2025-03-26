@@ -144,6 +144,60 @@ export const searchDrugs = createAsyncThunk(
     }
 );
 
+// Update the fetchPatientDrugs thunk
+export const fetchPatientDrugs = createAsyncThunk(
+    'drugs/fetchPatientDrugs',
+    async (demographicNo, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post('/drugs/fetchPatientDrugs/', {
+                demographicNo: parseInt(demographicNo)
+            });
+
+            // Check if response exists and has the correct structure
+            if (!response?.data) {
+                return rejectWithValue('No data received from server');
+            }
+
+            // Check if response.data is an array, if not, check for data property
+            const drugsData = Array.isArray(response.data) ? response.data : 
+                            Array.isArray(response.data.data) ? response.data.data : [];
+
+            // Transform the response data to match the UI structure
+            const formattedData = drugsData.map(drug => ({
+                Medication: drug.groupName || '',
+                duration: drug.duration || '',
+                quantity: drug.quantity || '',
+                rxDate: drug.rxDate || '',
+                daysToExpire: calculateDaysToExpire(drug.endDate),
+                ltMed: drug.longTerm ? 'Yes' : 'No',
+                reason: drug.reason || '',
+                dosage: drug.dosage || '',
+                startDate: drug.startDate || '',
+                endDate: drug.endDate || '',
+                // additionalNotes: drug.additionalNotes || '',
+                deliveryOption: drug.deliveryOption || 'pickup'
+            }));
+
+            console.log('Formatted patient drugs:', formattedData);
+            return formattedData;
+
+        } catch (error) {
+            console.error('Fetch patient drugs error:', error);
+            return rejectWithValue(error.message || 'Failed to fetch patient drugs');
+        }
+    }
+);
+
+// Update the calculateDaysToExpire helper function
+const calculateDaysToExpire = (endDate) => {
+    if (!endDate) return '0';
+    const today = new Date();
+    const expireDate = new Date(endDate);
+    const diffTime = expireDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays.toString() : '0';
+};
+
 const initialState = {
   prescriptionData: null,
   loading: false,
@@ -151,6 +205,8 @@ const initialState = {
   searchLoading: false,
   errorMessage: null,
   successMessage: null,
+  patientDrugs: [],
+  error: null
 };
 
 const drugSlice = createSlice({
@@ -207,6 +263,20 @@ const drugSlice = createSlice({
                 state.searchLoading = false;
                 state.searchResults = [];
                 state.errorMessage = action.payload;
+            })
+            .addCase(fetchPatientDrugs.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchPatientDrugs.fulfilled, (state, action) => {
+                state.loading = false;
+                state.patientDrugs = action.payload;
+                state.error = null;
+            })
+            .addCase(fetchPatientDrugs.rejected, (state, action) => {
+                state.loading = false;
+                state.patientDrugs = [];
+                state.error = action.payload;
             });
     },
 });

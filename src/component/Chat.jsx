@@ -348,7 +348,10 @@ const Chat = ({navigation}) => {
         firstName: patientDetails.firstName,
         lastName: patientDetails.lastName,
         phn: patientDetails.phn,
-        dob: patientDetails.dob
+        dob: patientDetails.dob,
+        patientAddress: patientDetails
+        
+        
       },
       prescriptionData: prescriptionData
     });

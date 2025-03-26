@@ -4,6 +4,7 @@ import ClinicReducer from "../Slices/ClinicSlice"
 import AppointmentReducer from '../Slices/AppointmentSlice';
 import patientDetailsReducer from './PatientDetailsSlice';
 import DrugReducer from './DrugSlice';
+import clinicDetailsReducer from './ClinicDetails';
 
 const rootReducer = combineReducers({
   user: AuthReducer,
@@ -11,6 +12,7 @@ const rootReducer = combineReducers({
   Appointment: AppointmentReducer,
   patientDetails: patientDetailsReducer,
   drugs: DrugReducer,
+  clinicDetails: clinicDetailsReducer,
 });
 
 export default rootReducer;

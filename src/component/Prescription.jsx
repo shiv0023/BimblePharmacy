@@ -14,10 +14,336 @@ import {
   Platform,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { addPatientDrug, searchDrugs, clearSearchResults } from '../Redux/Slices/DrugSlice';
+import { addPatientDrug, searchDrugs, clearSearchResults, fetchPatientDrugs } from '../Redux/Slices/DrugSlice';
 import CustomHeader from './CustomHeader';
 import debounce from 'lodash/debounce';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import PrescriptionPreview from '../components/PrescriptionPreview';
+
+// Add this tableStyles definition before the PatientDrugsTable component
+const tableStyles = StyleSheet.create({
+  // Legend styles
+  legendContainer: {
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  legendLabel: {
+    fontSize: 16,
+    color: '#191919',
+    marginBottom: 12,
+  },
+  legendItems: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  legendItem: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#E6E8EC',
+  },
+  legendItemSelected: {
+    backgroundColor: '#0049F8',
+  },
+  legendItemText: {
+    color: '#666',
+  },
+  legendItemTextSelected: {
+    color: '#fff',
+  },
+
+  // Container styles
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  tableContainer: {
+    flex: 1,
+  },
+
+  // Medication card styles
+  medicationCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E6E8EC',
+  },
+  medicationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  medicationInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  medicationName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#191919',
+    marginBottom: 4,
+  },
+  durationText: {
+    fontSize: 11,
+    color: '#666666',
+  },
+  medicationMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quantityText: {
+    fontSize: 14,
+    color: '#191919',
+    marginRight: 8,
+  },
+  ltMedText: {
+    fontSize: 14,
+    color: '#0049F8',
+    fontWeight: '500',
+  },
+  reasonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  reasonLabel: {
+    fontSize: 14,
+    color: '#666666',
+    marginRight: 8,
+  },
+  reasonText: {
+    fontSize: 14,
+    color: '#191919',
+    flex: 1,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  actionButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  represcribeButton: {
+    backgroundColor: '#E3F2FD',
+    borderColor: '#0049F8',
+  },
+  deleteButton: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#DC2626',
+  },
+  discontinueButton: {
+    backgroundColor: '#FFF3CD',
+    borderColor: '#FFC107',
+  },
+  represcribeText: {
+    color: '#0049F8',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  deleteText: {
+    color: '#DC2626',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  discontinueText: {
+    color: '#B45309',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  rxDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // marginTop: 4,  // Add some space between reason and Rx date
+  },
+  rxDateLabel: {
+    fontSize: 14,
+    color: '#666666',
+    marginRight: 8,
+  },
+  rxDateText: {
+    fontSize: 14,
+    color: '#191919',
+  
+  },
+});
+
+const PatientDrugsTable = ({ drugs, onReprescribe, onDelete, onDiscontinue }) => {
+  const [selectedFilter, setSelectedFilter] = useState('current');
+
+  const filteredDrugs = React.useMemo(() => {
+    try {
+      switch (selectedFilter) {
+        case 'current':
+          return drugs.filter(drug => {
+            const endDate = new Date(drug.endDate);
+            return endDate >= new Date();
+          });
+        case 'active':
+          return drugs.filter(drug => drug.ltMed === 'Yes');
+        case 'expired':
+          return drugs.filter(drug => {
+            const endDate = new Date(drug.endDate);
+            return endDate < new Date();
+          });
+        case 'longterm':
+          return drugs.filter(drug => drug.ltMed === 'Yes');
+        case 'all':
+        default:
+          return drugs;
+      }
+    } catch (error) {
+      console.error('Error filtering drugs:', error);
+      return drugs;
+    }
+  }, [drugs, selectedFilter]);
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-CA', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const getDurationText = (startDate, endDate) => {
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return `${diffDays} days (${formatDate(startDate)} - ${formatDate(endDate)})`;
+    } catch (error) {
+      return 'Invalid duration';
+    }
+  };
+
+  return (
+    <View style={tableStyles.container}>
+      <ProfileLegend
+        selectedFilter={selectedFilter}
+        onFilterChange={setSelectedFilter}
+      />
+      
+      <ScrollView style={tableStyles.tableContainer}>
+        {filteredDrugs.map((drug, index) => (
+          <View key={index} style={tableStyles.medicationCard}>
+            <View style={tableStyles.medicationHeader}>
+              <View style={tableStyles.medicationInfo}>
+                <Text style={tableStyles.medicationName}>{drug.Medication}</Text>
+                <Text style={tableStyles.durationText}>
+                  {getDurationText(drug.startDate, drug.endDate)}
+                </Text>
+              </View>
+              <View style={tableStyles.medicationMeta}>
+                <Text style={tableStyles.quantityText}>Qty: {drug.quantity}</Text>
+                {drug.ltMed === 'Yes' && (
+                  <Text style={tableStyles.ltMedText}>• Long Term</Text>
+                )}
+              </View>
+            </View>
+
+            {drug.reason && (
+              <>
+                <View style={tableStyles.reasonContainer}>
+                  <Text style={tableStyles.reasonLabel}>Reason:</Text>
+                  <Text style={tableStyles.reasonText}>{drug.reason}</Text>
+                </View>
+                {drug.rxDate && (
+                  <View style={tableStyles.rxDateContainer}>
+                    <Text style={tableStyles.rxDateLabel}>Rx Date:</Text>
+                    <Text style={tableStyles.rxDateText}>
+                      {formatDate(drug.rxDate)}
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
+
+            <View style={tableStyles.actionsContainer}>
+              <TouchableOpacity
+                style={[tableStyles.actionButton, tableStyles.represcribeButton]}
+                onPress={() => onReprescribe(drug)}
+              >
+                <Text style={tableStyles.represcribeText}>Represcribe</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[tableStyles.actionButton, tableStyles.deleteButton]}
+                onPress={() => onDelete(drug)}
+              >
+                <Text style={tableStyles.deleteText}>Delete</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[tableStyles.actionButton, tableStyles.discontinueButton]}
+                onPress={() => onDiscontinue(drug)}
+              >
+                <Text style={tableStyles.discontinueText}>Discontinue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+const ProfileLegend = ({ selectedFilter, onFilterChange }) => {
+  const filters = [
+    { id: 'current', label: 'Current' },
+    { id: 'all', label: 'All' },
+    { id: 'active', label: 'Active' },
+    { id: 'expired', label: 'Expired' },
+    { id: 'longterm', label: 'Longterm/Acute' },
+  ];
+
+  return (
+    <View style={tableStyles.legendContainer}>
+      <Text style={tableStyles.legendLabel}>Profile Legend:</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={tableStyles.legendItems}>
+          {filters.map((filter) => (
+            <TouchableOpacity
+              key={filter.id}
+              style={[
+                tableStyles.legendItem,
+                selectedFilter === filter.id && tableStyles.legendItemSelected
+              ]}
+              onPress={() => onFilterChange(filter.id)}
+            >
+              <Text style={[
+                tableStyles.legendItemText,
+                selectedFilter === filter.id && tableStyles.legendItemTextSelected
+              ]}>
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
 
 const Prescription = ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -30,7 +356,11 @@ const Prescription = ({ route, navigation }) => {
   const [showComplianceOptions, setShowComplianceOptions] = useState(false);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
+  const [frequency, setFrequency] = useState('BID');
+  const [dose, setDose] = useState('');
+  const [showFrequencyOptions, setShowFrequencyOptions] = useState(false);
+  const [complianceFrequency, setComplianceFrequency] = useState('Monthly');
+   console.log('patientDetails here ', patientDetails);
   // Initialize with default values
   const initialPrescriptionDetails = {
     indication: "",
@@ -206,9 +536,10 @@ const Prescription = ({ route, navigation }) => {
 
   // Add new state for validation
   const [validationErrors, setValidationErrors] = useState({
+    dose: false,
+    frequency: false,
     indication: false,
     instructions: false,
-    quantity: false,
     duration: false,
     repeat: false,
     startDate: false
@@ -217,9 +548,10 @@ const Prescription = ({ route, navigation }) => {
   // Add validation function
   const validateForm = () => {
     const errors = {
+      dose: !dose,
+      frequency: !frequency,
       indication: !prescriptionDetails.indication,
       instructions: !prescriptionDetails.instructions,
-      quantity: !prescriptionDetails.quantity,
       duration: !prescriptionDetails.duration,
       repeat: prescriptionDetails.repeat === undefined || prescriptionDetails.repeat === '',
       startDate: !prescriptionDetails.startDate
@@ -235,8 +567,40 @@ const Prescription = ({ route, navigation }) => {
   // Add a new state to track added prescriptions
   const [addedPrescriptions, setAddedPrescriptions] = useState([]);
 
+  // Add this function to calculate total quantity based on dose, frequency and duration
+  const calculateTotalQuantity = (dose, freq, duration) => {
+    const frequencyMap = {
+      'OD': 1,  // Once daily
+      'BID': 2, // Twice daily
+      'TID': 3, // Three times daily
+      'QID': 4  // Four times daily
+    };
+
+    if (!dose || !freq || !duration) return '';
+    
+    const doseNum = parseFloat(dose) || 0;
+    const durationNum = parseInt(duration) || 0;
+    const frequencyNum = frequencyMap[freq] || 0;
+    
+    return (doseNum * frequencyNum * durationNum).toString();
+  };
+
+  // Add this effect to auto-calculate quantity when dose, frequency or duration changes
+  useEffect(() => {
+    const totalQty = calculateTotalQuantity(
+      dose,
+      frequency,
+      prescriptionDetails.duration
+    );
+    
+    setPrescriptionDetails(prev => ({
+      ...prev,
+      quantity: totalQty
+    }));
+  }, [dose, frequency, prescriptionDetails.duration]);
+
   // Modify handleDrugSelect to work with the new state
-  const handleAddDrug = () => {
+  const handleAddDrug = async () => {
     try {
       // Validate current drug details before adding
       if (!validateForm()) {
@@ -246,6 +610,10 @@ const Prescription = ({ route, navigation }) => {
 
       // Create new prescription object
       const newPrescription = {
+        ...prescriptionDetails,
+        dose: dose,
+        frequency: frequency,
+        complianceFrequency: complianceFrequency,
         groupName: prescriptionDetails.groupName,
         drugForm: prescriptionDetails.drugForm,
         indication: prescriptionDetails.indication,
@@ -258,31 +626,51 @@ const Prescription = ({ route, navigation }) => {
         selectedDrugDetails: prescriptionDetails.selectedDrugDetails
       };
 
-      // Add to added prescriptions array
-      setAddedPrescriptions(prev => [...prev, newPrescription]);
-      
-      // Reset only the form fields but keep the added prescriptions
-      setSearchQuery('');
-      setIsDrugSelected(false);
-      setPrescriptionDetails(initialPrescriptionDetails);
-      setValidationErrors({
-        indication: false,
-        instructions: false,
-        quantity: false,
-        duration: false,
-        repeat: false,
-        startDate: false
-      });
-      dispatch(clearSearchResults());
+      // Prepare API data
+      const prescriptionData = {
+        demographicNo: parseInt(patientDetails.demographicNo),
+        drugData: [newPrescription], // Send as array with single drug
+        // additionalNotes: '' // Add empty additionalNotes to prevent 400 error
+      };
 
-      Alert.alert('Success', 'Drug added to prescription');
+      // Call the API
+      const result = await dispatch(addPatientDrug(prescriptionData)).unwrap();
+      
+      if (result && result.status === "Success") {
+        // Add to local state only after successful API call
+        setAddedPrescriptions(prev => [...prev, newPrescription]);
+        
+        // Reset form fields but keep the drug selection
+        setDose('');
+        setFrequency('BID');
+        setPrescriptionDetails(initialPrescriptionDetails);
+        setValidationErrors({
+          dose: false,
+          frequency: false,
+          indication: false,
+          instructions: false,
+          duration: false,
+          repeat: false,
+          startDate: false
+        });
+        
+        // Clear search results
+        dispatch(clearSearchResults());
+        setSearchQuery('');
+        setIsDrugSelected(false);
+
+        Alert.alert('Success', 'Drug added successfully');
+      }
     } catch (error) {
       console.error('Add drug error:', error);
-      Alert.alert('Error', 'Failed to add drug to prescription');
+      Alert.alert('Error', 'Failed to add drug. Please try again.');
     }
   };
 
   // Modify handleGeneratePrescription to handle multiple drugs
+  const [showPreview, setShowPreview] = useState(false);
+  const [additionalNotes, setAdditionalNotes] = useState('');
+
   const handleGeneratePrescription = async () => {
     if (!patientDetails?.demographicNo) {
       Alert.alert('Error', 'Patient information is missing');
@@ -295,69 +683,98 @@ const Prescription = ({ route, navigation }) => {
       return;
     }
 
-    setIsGenerating(true);
     try {
       // Combine existing prescriptions with current drug if selected
       let allDrugs = [...addedPrescriptions];
       
       if (isDrugSelected) {
-        // Validate groupName before adding
         if (!prescriptionDetails.groupName) {
           Alert.alert('Error', 'Drug name is required');
-          setIsGenerating(false);
           return;
         }
 
         allDrugs.push({
-          groupName: prescriptionDetails.groupName,
-          drugForm: prescriptionDetails.drugForm,
-          indication: prescriptionDetails.indication,
-          instructions: prescriptionDetails.instructions,
-          duration: parseInt(prescriptionDetails.duration) || 0,
-          quantity: parseInt(prescriptionDetails.quantity) || 0,
-          repeat: parseInt(prescriptionDetails.repeat) || 0,
-          startDate: prescriptionDetails.startDate,
-          longTerm: prescriptionDetails.longTerm,
-          selectedDrugDetails: prescriptionDetails.selectedDrugDetails
+          ...prescriptionDetails,
+          dose,
+          frequency,
+          complianceFrequency
         });
       }
 
-      // Check if there are any drugs to submit
       if (allDrugs.length === 0) {
         Alert.alert('Error', 'Please add at least one drug to the prescription');
-        setIsGenerating(false);
         return;
       }
 
-      // Validate all drugs have groupName
-      const invalidDrugs = allDrugs.filter(drug => !drug.groupName);
-      if (invalidDrugs.length > 0) {
-        Alert.alert('Error', 'All drugs must have a name');
-        setIsGenerating(false);
-        return;
-      }
+      // Instead of immediately submitting, show the preview
+      setShowPreview(true);
+    } catch (error) {
+      console.error('Prescription Error:', error);
+      Alert.alert('Error', 'Failed to prepare prescription preview');
+    }
+  };
 
+  // Add these handlers for the preview actions
+  const handlePrintAndPaste = async () => {
+    setIsGenerating(true);
+    try {
       const prescriptionData = {
         demographicNo: parseInt(patientDetails.demographicNo),
-        drugData: allDrugs
+        drugData: addedPrescriptions,
+        additionalNotes: additionalNotes
       };
-
-      console.log('Sending prescription data:', prescriptionData);
-
       const result = await dispatch(addPatientDrug(prescriptionData)).unwrap();
-      console.log('Prescription Response:', result);
-
+      console.log('batch result', result)
       if (result && result.status === "Success") {
-        Alert.alert('Success', result.message || 'Prescription added successfully');
+        Alert.alert('Success', 'Prescription printed and pasted to EMR');
         navigation.goBack();
       }
     } catch (error) {
-      console.error('Prescription Error:', error);
-      Alert.alert('Error', error.message || 'Failed to generate prescription');
+      Alert.alert('Error', 'Failed to print and paste prescription');
     } finally {
       setIsGenerating(false);
     }
   };
+
+  const handleFaxAndPaste = async () => {
+    setIsGenerating(true);
+    try {
+      const prescriptionData = {
+        demographicNo: parseInt(patientDetails.demographicNo),
+        drugData: addedPrescriptions,
+        // additionalNotes: additionalNotes
+      };
+      const result = await dispatch(addPatientDrug(prescriptionData)).unwrap();
+      if (result && result.status === "Success") {
+        Alert.alert('Success', 'Prescription faxed and pasted to EMR');
+        navigation.goBack();
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fax and paste prescription');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // const handleGeneratePDF = async () => {
+  //   setIsGenerating(true);
+  //   try {
+  //     const prescriptionData = {
+  //       demographicNo: parseInt(patientDetails.demographicNo),
+  //       drugData: addedPrescriptions,
+  //       // additionalNotes: additionalNotes
+  //     };
+  //     const result = await dispatch(addPatientDrug(prescriptionData)).unwrap();
+  //     if (result && result.status === "Success") {
+  //       Alert.alert('Success', 'PDF generated successfully');
+  //       navigation.goBack();
+  //     }
+  //   } catch (error) {
+  //     Alert.alert('Error', 'Failed to generate PDF');
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
 
   const handleReset = () => {
     try {
@@ -365,9 +782,10 @@ const Prescription = ({ route, navigation }) => {
       setIsDrugSelected(false);
       setPrescriptionDetails(initialPrescriptionDetails);
       setValidationErrors({
+        dose: false,
+        frequency: false,
         indication: false,
         instructions: false,
-        quantity: false,
         duration: false,
         repeat: false,
         startDate: false
@@ -582,12 +1000,16 @@ const Prescription = ({ route, navigation }) => {
     );
   };
 
+  // Add this array for frequency options
+  const frequencyOptions = ['OD', 'BID', 'TID', 'QID'];
+
+  // Update the form fields layout in renderPrescriptionForm
   const renderPrescriptionForm = () => (
     <View style={styles.responsiveContainer}>
       {/* Drug Header with Details */}
       <View style={styles.drugHeader}>
+        <View style={styles.drugTitleContainer}>
         <Text style={styles.drugTitle}>{prescriptionDetails.groupName}</Text>
-        <View style={styles.drugMetadata}>
           <Text style={styles.drugSubtitle}>
             {prescriptionDetails.drugForm} {prescriptionDetails.selectedDrugDetails?.category ? `• ${prescriptionDetails.selectedDrugDetails.category}` : ''}
           </Text>
@@ -599,15 +1021,15 @@ const Prescription = ({ route, navigation }) => {
           <Text style={styles.closeButtonText}>×</Text>
         </TouchableOpacity>
       </View>
-  
-      {/* Indication Section */}
-      <View style={styles.formSection}>
+      
+      {/* Indication Field */}
+      <View style={styles.formField}>
         <Text style={styles.sectionLabel}>
           Indication<Text style={styles.required}>*</Text>
         </Text>
         <TextInput
           style={[
-            styles.input, 
+            styles.input,
             styles.customInput,
             validationErrors.indication && styles.inputError
           ]}
@@ -618,37 +1040,40 @@ const Prescription = ({ route, navigation }) => {
             setValidationErrors(prev => ({ ...prev, indication: false }));
           }}
         />
-        <View style={styles.optionsContainer}>
-          {prescriptionDetails.availableIndications?.map((item, index) => (
-            <TouchableOpacity
-              key={`indication-${index}`}
-              style={[
-                styles.suggestionButton,
-                prescriptionDetails.indication === item.indication && styles.suggestionButtonSelected
-              ]}
-              onPress={() => handleIndicationSelect(item.indication)}
-            >
-              <Text style={[
-                styles.suggestionText,
-                prescriptionDetails.indication === item.indication && styles.suggestionTextSelected
-              ]}>
-                {item.indication}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {prescriptionDetails.availableIndications && (
+          <ScrollView style={styles.suggestionsScrollView}>
+            <View style={styles.suggestionsContainer}>
+              {prescriptionDetails.availableIndications.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.suggestionButton,
+                    prescriptionDetails.indication === item.indication && styles.suggestionButtonSelected
+                  ]}
+                  onPress={() => handleIndicationSelect(item.indication)}
+                >
+                  <Text style={[
+                    styles.suggestionText,
+                    prescriptionDetails.indication === item.indication && styles.suggestionTextSelected
+                  ]}>
+                    {item.indication}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        )}
       </View>
 
-      {/* Instructions Section */}
-      <View style={styles.formSection}>
+      {/* Instructions Field */}
+      <View style={styles.formField}>
         <Text style={styles.sectionLabel}>
           Instructions<Text style={styles.required}>*</Text>
         </Text>
         <TextInput
           style={[
-            styles.input, 
-            styles.customInput, 
-            styles.textArea,
+            styles.input,
+            styles.customInput,
             validationErrors.instructions && styles.inputError
           ]}
           placeholder="Type instructions here..."
@@ -657,81 +1082,134 @@ const Prescription = ({ route, navigation }) => {
             setPrescriptionDetails(prev => ({ ...prev, instructions: text }));
             setValidationErrors(prev => ({ ...prev, instructions: false }));
           }}
-          multiline
-          numberOfLines={3}
         />
-        <View style={styles.optionsContainer}>
-          {prescriptionDetails.availableIndications
-            ?.find(item => item.indication === prescriptionDetails.indication)
-            ?.instructions.map((instruction, index) => (
-              <TouchableOpacity
-                key={`instruction-${index}`}
-                style={[
-                  styles.suggestionButton,
-                  prescriptionDetails.instructions === instruction && styles.suggestionButtonSelected
-                ]}
-                onPress={() => handleInstructionSelect(instruction)}
-              >
-                <Text style={[
-                  styles.suggestionText,
-                  prescriptionDetails.instructions === instruction && styles.suggestionTextSelected
-                ]}>
-                  {instruction}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        {prescriptionDetails.availableInstructions && (
+          <ScrollView style={styles.suggestionsScrollView}>
+            <View style={styles.suggestionsContainer}>
+              {prescriptionDetails.availableInstructions.map((instruction, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.suggestionButton,
+                    prescriptionDetails.instructions === instruction && styles.suggestionButtonSelected
+                  ]}
+                  onPress={() => handleInstructionSelect(instruction)}
+                >
+                  <Text style={[
+                    styles.suggestionText,
+                    prescriptionDetails.instructions === instruction && styles.suggestionTextSelected
+                  ]}>
+                    {instruction}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Row for Dose and Frequency */}
+      <View style={styles.formRow}>
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>
+            Dose<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              styles.customInput,
+              validationErrors.dose && styles.inputError
+            ]}
+            value={dose}
+            keyboardType="numeric"
+            onChangeText={(text) => {
+              setDose(text);
+              setValidationErrors(prev => ({ ...prev, dose: false }));
+            }}
+            placeholder="Enter dose"
+          />
+        </View>
+
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>
+            Frequency<Text style={styles.required}>*</Text>
+          </Text>
+          <TouchableOpacity
+            style={[styles.dropdownButton, { height: 48 }]}
+            onPress={() => setShowFrequencyOptions(!showFrequencyOptions)}
+          >
+            <Text style={styles.dropdownButtonText}>{frequency}</Text>
+            <Text style={styles.dropdownIcon}>▼</Text>
+          </TouchableOpacity>
+          {showFrequencyOptions && (
+            <View style={styles.frequencyDropdown}>
+              {frequencyOptions.map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  style={styles.frequencyOption}
+                  onPress={() => {
+                    setFrequency(option);
+                    setShowFrequencyOptions(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.frequencyOptionText,
+                    frequency === option && styles.frequencyOptionSelected
+                  ]}>
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
       </View>
 
-      {/* First Row: Long Term, Refills, Start Date */}
-      <View style={styles.gridRow}>
-        <View style={styles.gridCell}>
-          <Text style={styles.gridLabel}>Long Term</Text>
-          <TouchableOpacity
-            style={styles.dropdownButton}
-            onPress={() => setShowLongTermOptions(!showLongTermOptions)}
-          >
-            <Text style={styles.dropdownButtonText}>
-              {prescriptionDetails.longTerm}
-            </Text>
-            <Text style={styles.dropdownIcon}>▼</Text>
-          </TouchableOpacity>
-          {showLongTermOptions && (
-            <ScrollView style={styles.dropdownOptions}>
-              {['Yes', 'No'].map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={styles.dropdownOption}
-                  onPress={() => handleLongTermSelect(option)}
-                >
-                  <Text style={styles.dropdownOptionText}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        <View style={styles.gridCell}>
-          <Text style={styles.gridLabel}>Refills<Text style={styles.required}>*</Text></Text>
+      {/* Row 3: Duration and Quantity */}
+      <View style={styles.formRow}>
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>
+            Duration (days)<Text style={styles.required}>*</Text>
+          </Text>
           <TextInput
             style={[
-              styles.gridInput,
-              validationErrors.repeat && styles.inputError
+              styles.input,
+              styles.customInput,
+              validationErrors.duration && styles.inputError
             ]}
-            value={prescriptionDetails.repeat?.toString()}
+            value={prescriptionDetails.duration?.toString()}
             keyboardType="numeric"
             onChangeText={(text) => {
-              setPrescriptionDetails(prev => ({ ...prev, repeat: parseInt(text) || '' }));
-              setValidationErrors(prev => ({ ...prev, repeat: false }));
+              setPrescriptionDetails(prev => ({
+                ...prev,
+                duration: text ? parseInt(text) : ''
+              }));
+              setValidationErrors(prev => ({ ...prev, duration: false }));
             }}
           />
         </View>
 
-        <View style={styles.gridCell}>
-          <Text style={styles.gridLabel}>Start Date<Text style={styles.required}>*</Text></Text>
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>Total Quantity</Text>
+          <TextInput
+            style={[styles.input, styles.customInput, styles.disabledInput]}
+            value={prescriptionDetails.quantity?.toString()}
+            editable={false}
+            placeholder="Auto-calculated"
+          />
+        </View>
+      </View>
+
+      {/* Row 4: Start Date and End Date */}
+      <View style={styles.formRow}>
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>
+            Start Date<Text style={styles.required}>*</Text>
+          </Text>
           <TouchableOpacity
             style={[
-              styles.gridInput,
+              styles.input,
+              styles.customInput,
               validationErrors.startDate && styles.inputError,
               styles.datePickerButton
             ]}
@@ -742,55 +1220,12 @@ const Prescription = ({ route, navigation }) => {
             </Text>
             <Text style={styles.calendarIcon}>📅</Text>
           </TouchableOpacity>
-          
-          {/* Custom Date Picker Modal */}
-          <DatePickerModal
-            visible={datePickerVisible}
-            onClose={() => setDatePickerVisible(false)}
-            onSelect={handleDateSelect}
-            initialDate={prescriptionDetails.startDate || new Date().toISOString().split('T')[0]}
-          />
-        </View>
-      </View>
-
-      {/* Second Row: Quantity, Duration, End Date */}
-      <View style={styles.gridRow}>
-        <View style={styles.gridCell}>
-          <Text style={styles.gridLabel}>Quantity<Text style={styles.required}>*</Text></Text>
-          <TextInput
-            style={[
-              styles.gridInput,
-              validationErrors.quantity && styles.inputError
-            ]}
-            value={prescriptionDetails.quantity?.toString()}
-            keyboardType="numeric"
-            onChangeText={(text) => {
-              setPrescriptionDetails(prev => ({ ...prev, quantity: text ? parseInt(text) : '' }));
-              setValidationErrors(prev => ({ ...prev, quantity: false }));
-            }}
-          />
         </View>
 
-        <View style={styles.gridCell}>
-          <Text style={styles.gridLabel}>Duration (days)<Text style={styles.required}>*</Text></Text>
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>End Date</Text>
           <TextInput
-            style={[
-              styles.gridInput,
-              validationErrors.duration && styles.inputError
-            ]}
-            value={prescriptionDetails.duration?.toString()}
-            keyboardType="numeric"
-            onChangeText={(text) => {
-              setPrescriptionDetails(prev => ({ ...prev, duration: text ? parseInt(text) : '' }));
-              setValidationErrors(prev => ({ ...prev, duration: false }));
-            }}
-          />
-        </View>
-
-        <View style={styles.gridCell}>
-          <Text style={styles.gridLabel}>End Date</Text>
-          <TextInput
-            style={[styles.gridInput, styles.disabledInput]}
+            style={[styles.input, styles.customInput, styles.disabledInput]}
             value={prescriptionDetails.endDate}
             editable={false}
             placeholder="Auto-calculated"
@@ -798,25 +1233,163 @@ const Prescription = ({ route, navigation }) => {
         </View>
       </View>
 
-      {/* Patient Compliance Section */}
-      <View style={styles.formSection}>
-        <Text style={styles.gridLabel}>Patient Compliance</Text>
-        <TouchableOpacity
-          style={styles.complianceButton}
-          onPress={() => setShowComplianceOptions(true)}
-        >
-          <Text style={styles.complianceButtonText}>
-            {prescriptionDetails.patientCompliance || patientDetails?.patientCompliance || 'Unknown'}
+      {/* Row 5: Refills */}
+      <View style={styles.formRow}>
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>
+            Refills<Text style={styles.required}>*</Text>
           </Text>
-          <Text style={styles.dropdownIcon}>▼</Text>
-        </TouchableOpacity>
-        
-        <ComplianceModal
-          visible={showComplianceOptions}
-          onClose={() => setShowComplianceOptions(false)}
-          onSelect={handleComplianceSelect}
-          selectedValue={prescriptionDetails.patientCompliance || patientDetails?.patientCompliance || 'Unknown'}
-        />
+          <TextInput
+            style={[
+              styles.input,
+              styles.customInput,
+              validationErrors.repeat && styles.inputError
+            ]}
+            value={prescriptionDetails.repeat?.toString()}
+            keyboardType="numeric"
+            onChangeText={(text) => {
+              setPrescriptionDetails(prev => ({ ...prev, repeat: parseInt(text) || '' }));
+              setValidationErrors(prev => ({ ...prev, repeat: false }));
+            }}
+          />
+        </View>
+      </View>
+
+      {/* Row 5: Long Term and Patient Compliance */}
+      <View style={styles.formRow}>
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>Long Term</Text>
+          <TouchableOpacity
+            style={[styles.dropdownButton, { height: 48 }]}
+            onPress={() => setShowLongTermOptions(!showLongTermOptions)}
+          >
+            <Text style={styles.dropdownButtonText}>
+              {prescriptionDetails.longTerm}
+            </Text>
+            <Text style={styles.dropdownIcon}>▼</Text>
+          </TouchableOpacity>
+          {showLongTermOptions && (
+            <View style={styles.optionsDropdown}>
+              {['Yes', 'No'].map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.optionItem,
+                    prescriptionDetails.longTerm === option && styles.optionItemSelected
+                  ]}
+                  onPress={() => {
+                    handleLongTermSelect(option);
+                    setShowLongTermOptions(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.optionText,
+                    prescriptionDetails.longTerm === option && styles.optionTextSelected
+                  ]}>
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.formColumn}>
+          <Text style={styles.sectionLabel}>Patient Compliance</Text>
+          <TouchableOpacity
+            style={[styles.dropdownButton, { height: 48 }]}
+            onPress={() => setShowComplianceOptions(!showComplianceOptions)}
+          >
+            <Text style={styles.dropdownButtonText}>
+              {prescriptionDetails.patientCompliance || patientDetails?.patientCompliance || 'Unknown'}
+            </Text>
+            <Text style={styles.dropdownIcon}>▼</Text>
+          </TouchableOpacity>
+          {showComplianceOptions && (
+            <View style={styles.optionsDropdown}>
+              {['Unknown', 'No', 'Yes'].map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.optionItem,
+                    prescriptionDetails.patientCompliance === option && styles.optionItemSelected
+                  ]}
+                  onPress={() => {
+                    handleComplianceSelect(option);
+                    setShowComplianceOptions(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.optionText,
+                    prescriptionDetails.patientCompliance === option && styles.optionTextSelected
+                  ]}>
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* ... rest of your existing form code ... */}
+
+      {/* Add this to your renderPrescriptionForm function, after the Patient Compliance field */}
+      <View style={styles.formField}>
+        <Text style={styles.sectionLabel}>Compliance Frequency</Text>
+        <View style={styles.radioGroup}>
+          <TouchableOpacity 
+            style={styles.radioOption}
+            onPress={() => setComplianceFrequency('Daily')}
+          >
+            <View style={[
+              styles.radioButton,
+              complianceFrequency === 'Daily' && styles.radioButtonSelected
+            ]}>
+              {complianceFrequency === 'Daily' && <View style={styles.radioButtonInner} />}
+            </View>
+            <Text style={styles.radioLabel}>Daily</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.radioOption}
+            onPress={() => setComplianceFrequency('Weekly')}
+          >
+            <View style={[
+              styles.radioButton,
+              complianceFrequency === 'Weekly' && styles.radioButtonSelected
+            ]}>
+              {complianceFrequency === 'Weekly' && <View style={styles.radioButtonInner} />}
+            </View>
+            <Text style={styles.radioLabel}>Weekly</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.radioOption}
+            onPress={() => setComplianceFrequency('Bi-Weekly')}
+          >
+            <View style={[
+              styles.radioButton,
+              complianceFrequency === 'Bi-Weekly' && styles.radioButtonSelected
+            ]}>
+              {complianceFrequency === 'Bi-Weekly' && <View style={styles.radioButtonInner} />}
+            </View>
+            <Text style={styles.radioLabel}>Bi-Weekly</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.radioOption}
+            onPress={() => setComplianceFrequency('Monthly')}
+          >
+            <View style={[
+              styles.radioButton,
+              complianceFrequency === 'Monthly' && styles.radioButtonSelected
+            ]}>
+              {complianceFrequency === 'Monthly' && <View style={styles.radioButtonInner} />}
+            </View>
+            <Text style={styles.radioLabel}>Monthly</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -997,7 +1570,7 @@ const Prescription = ({ route, navigation }) => {
                   style={styles.deleteButton}
                   onPress={() => handleDeletePrescription(index)}
                 >
-                  <Text style={styles.deleteButtonText}>×</Text>
+                  <Text style={styles.deleteButtonText}>✕</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1067,9 +1640,10 @@ const Prescription = ({ route, navigation }) => {
             setIsDrugSelected(false);
             setPrescriptionDetails(initialPrescriptionDetails);
             setValidationErrors({
+              dose: false,
+              frequency: false,
               indication: false,
               instructions: false,
-              quantity: false,
               duration: false,
               repeat: false,
               startDate: false
@@ -1149,11 +1723,20 @@ const Prescription = ({ route, navigation }) => {
       position: 'absolute',
       right: 0,
       top: 0,
-      padding: 8,
+      width: 32,
+      height: 32,
+      borderRadius: 16,  // Make it fully rounded
+      backgroundColor: '#FEE2E2',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#DC2626',
     },
     closeButtonText: {
       fontSize: 24,
-      color: '#666',
+      color: '#DC2626',
+      lineHeight: 24,
+      textAlign: 'center',
     },
     formSection: {
       marginBottom: 24,
@@ -1173,7 +1756,7 @@ const Prescription = ({ route, navigation }) => {
       overflow: 'scroll',
     },
     sectionLabel: {
-      fontSize: 16,
+      fontSize: 13,
       color: '#0066CC',
       marginBottom: 12,
       fontWeight: '500',
@@ -1327,30 +1910,21 @@ const Prescription = ({ route, navigation }) => {
       alignSelf: 'center',
       padding: 12,
     },
-    indicationsScrollView: {
-      maxHeight: 150,
-    },
-    instructionsScrollView: {
-      maxHeight: 150,
-    },
-    optionsScrollView: {
-      maxHeight: 150,
-    },
     suggestionsScrollView: {
-      maxHeight: 200,
-      width: '100%',
+      maxHeight: 120, // Reduced height for suggestions
+      marginTop: 4,
     },
     suggestionsContainer: {
-      padding: 8,
-      gap: 8,
+      padding: 4,
+      gap: 4,
     },
     suggestionButton: {
       backgroundColor: '#F8F9FA',
       borderWidth: 1,
       borderColor: '#E6E8EC',
-      borderRadius: 8,
-      padding: 12,
-      minHeight: 40,
+      borderRadius: 6,
+      padding: 8, // Reduced padding
+      minHeight: 32, // Reduced height
       justifyContent: 'center',
     },
     suggestionButtonSelected: {
@@ -1358,9 +1932,9 @@ const Prescription = ({ route, navigation }) => {
       borderColor: '#0049F8',
     },
     suggestionText: {
-      fontSize: 14,
+      fontSize: 12, // Smaller font size
       color: '#191919',
-      lineHeight: 20,
+      lineHeight: 16,
     },
     suggestionTextSelected: {
       color: '#0049F8',
@@ -1790,19 +2364,27 @@ const Prescription = ({ route, navigation }) => {
       fontSize: 18,
       color: '#0049F8',
       lineHeight: 24,
+      
     },
     deleteButton: {
+
       width: 32,
       height: 32,
       borderRadius: 16,
       backgroundColor: '#FEE2E2',
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#DC2626',
     },
     deleteButtonText: {
-      fontSize: 24,
+      
+      fontSize: 16,  // Reduced size for better appearance
       color: '#DC2626',
-      lineHeight: 24,
+      fontWeight: '600',
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      includeFontPadding: false,
     },
     prescriptionDetails: {
       marginTop: 12,
@@ -1814,7 +2396,7 @@ const Prescription = ({ route, navigation }) => {
       marginBottom: 12,
     },
     detailLabel: {
-      // fontSize: 14,
+      fontSize: 14,
       color: '#666',
      
     },
@@ -1876,6 +2458,262 @@ const Prescription = ({ route, navigation }) => {
       borderRadius: 8,
       padding: 12,
       fontSize: 16,
+    },
+    noDataContainer: {
+      padding: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    noDataText: {
+      fontSize: 16,
+      color: '#666',
+    },
+    tableContainer: {
+      marginTop: 16,
+      backgroundColor: '#fff',
+      borderRadius: 8,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E6E8EC',
+    },
+    headerCell: {
+      flex: 1,
+    },
+    headerText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#191919',
+    },
+    tableRow: {
+      flexDirection: 'row',
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E6E8EC',
+    },
+    cell: {
+      flex: 1,
+    },
+    medicationName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#191919',
+    },
+    durationText: {
+      fontSize: 14,
+      color: '#666',
+    },
+    actionButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: '#F8F9FA',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+    },
+    represcribeButton: {
+      backgroundColor: '#E3F2FD',
+      borderColor: '#0049F8',
+    },
+    deleteButton: {
+      backgroundColor: '#FEE2E2',
+      borderColor: '#DC2626',
+    },
+    discontinueButton: {
+      backgroundColor: '#FFF3CD',
+      borderColor: '#FFC107',
+    },
+    buttonText: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: '#191919',
+      textAlign: 'center',
+    },
+    loadingContainer: {
+      padding: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    frequencyOption: {
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E6E8EC',
+    },
+    frequencyOptionText: {
+      fontSize: 16,
+      color: '#191919',
+    },
+    frequencyDropdown: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+      borderRadius: 8,
+      marginTop: 4,
+      zIndex: 1000,
+      elevation: 5,
+    },
+    formRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+      gap: 12,
+    },
+    formColumn: {
+      flex: 1,
+    },
+    formField: {
+      marginBottom: 16,
+      width: '100%',
+    },
+    frequencyDropdown: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+      borderRadius: 8,
+      marginTop: 4,
+      zIndex: 1000,
+      elevation: 5,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    frequencyOption: {
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E6E8EC',
+    },
+    frequencyOptionText: {
+      fontSize: 14,
+      color: '#191919',
+    },
+    frequencyOptionSelected: {
+      color: '#0049F8',
+      fontWeight: '500',
+    },
+    suggestionsScrollView: {
+      maxHeight: 120,
+      marginTop: 4,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+      borderRadius: 8,
+    },
+    suggestionsContainer: {
+      padding: 8,
+      gap: 4,
+    },
+    suggestionButton: {
+      backgroundColor: '#F8F9FA',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+      borderRadius: 6,
+      padding: 8,
+      minHeight: 32,
+    },
+    optionsDropdown: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+      borderRadius: 8,
+      marginTop: 4,
+      zIndex: 1000,
+      elevation: 5,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    optionItem: {
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E6E8EC',
+      backgroundColor: '#F8F9FA',
+    },
+    optionItemSelected: {
+      backgroundColor: '#E3F2FD',
+    },
+    optionText: {
+      fontSize: 14,
+      color: '#191919',
+    },
+    optionTextSelected: {
+      color: '#0049F8',
+      fontWeight: '500',
+    },
+    dropdownButton: {
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#E6E8EC',
+      borderRadius: 8,
+      padding: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      minHeight: 48,
+    },
+    dropdownButtonText: {
+      fontSize: 14,
+      color: '#191919',
+    },
+    dropdownIcon: {
+      fontSize: 12,
+      color: '#666',
+    },
+    radioGroup: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 16,
+      marginTop: 8,
+    },
+    radioOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    radioButton: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: '#E6E8EC',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    radioButtonSelected: {
+      borderColor: '#0049F8',
+    },
+    radioButtonInner: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: '#0049F8',
+    },
+    radioLabel: {
+      fontSize: 14,
+      color: '#191919',
     },
   };
 
@@ -2062,6 +2900,102 @@ const Prescription = ({ route, navigation }) => {
     };
   }, []);
 
+  const patientDrugs = useSelector(state => state.auth.drugs.patientDrugs);
+  const loading = useSelector(state => state.auth.drugs.loading);
+
+  useEffect(() => {
+    if (patientDetails?.demographicNo) {
+        console.log('Fetching drugs for patient:', patientDetails.demographicNo);
+        dispatch(fetchPatientDrugs(patientDetails.demographicNo))
+            .unwrap()
+            .then(result => {
+                console.log('Successfully fetched patient drugs:', result);
+            })
+            .catch(error => {
+                console.error('Failed to fetch patient drugs:', error);
+                Alert.alert(
+                    'Error',
+                    'Failed to fetch patient medications. Please try again.'
+                );
+            });
+    }
+  }, [dispatch, patientDetails]);
+
+  const handleReprescribe = (drug) => {
+    // Pre-fill the prescription form with the selected drug's data
+    setPrescriptionDetails({
+      ...initialPrescriptionDetails,
+      groupName: drug.Medication,
+      indication: drug.reason,
+      quantity: drug.quantity,
+      duration: drug.duration,
+      longTerm: drug.ltMed === 'Yes' ? 'Yes' : 'No',
+    });
+    setIsDrugSelected(true);
+  };
+
+  const handleDelete = (drug) => {
+    Alert.alert(
+      'Delete Prescription',
+      'Are you sure you want to delete this prescription?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: () => {
+            // Add delete logic here
+            console.log('Delete:', drug);
+          }
+        },
+      ]
+    );
+  };
+
+  const handleDiscontinue = (drug) => {
+    Alert.alert(
+      'Discontinue Prescription',
+      'Are you sure you want to discontinue this prescription?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Discontinue',
+          onPress: () => {
+            // Add discontinue logic here
+            console.log('Discontinue:', drug);
+          }
+        },
+      ]
+    );
+  };
+
+  const renderPatientDrugsTable = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0049F8" />
+        </View>
+      );
+    }
+
+    if (!patientDrugs || patientDrugs.length === 0) {
+      return (
+        <View style={styles.noDataContainer}>
+          <Text style={styles.noDataText}>No medications found</Text>
+        </View>
+      );
+    }
+
+    return (
+      <PatientDrugsTable
+        drugs={patientDrugs}
+        onReprescribe={handleReprescribe}
+        onDelete={handleDelete}
+        onDiscontinue={handleDiscontinue}
+      />
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: '#0049F8' }]}>
       <StatusBar
@@ -2141,9 +3075,37 @@ const Prescription = ({ route, navigation }) => {
                 </TouchableOpacity>
               )}
             </View>
+
+            {renderPatientDrugsTable()}
           </View>
         </KeyboardAwareScrollView>
       </View>
+      {/* Add the DatePickerModal here, right before the closing tag of renderPrescriptionForm */}
+      <DatePickerModal
+        visible={datePickerVisible}
+        onClose={() => setDatePickerVisible(false)}
+        onSelect={handleDateSelect}
+        initialDate={prescriptionDetails.startDate || new Date()}
+      />
+      
+      <PrescriptionPreview
+        visible={showPreview}
+        onClose={() => setShowPreview(false)}
+        prescriptionData={{
+          drugData: [...addedPrescriptions, ...(isDrugSelected ? [{
+            ...prescriptionDetails,
+            dose,
+            frequency,
+            complianceFrequency
+          }] : [])]
+        }}
+        patientDetails={patientDetails}
+        additionalNotes={additionalNotes}
+        setAdditionalNotes={setAdditionalNotes}
+        // onGeneratePDF={handleGeneratePDF}
+        onPrintAndPaste={handlePrintAndPaste}
+        onFaxAndPaste={handleFaxAndPaste}
+      />
     </SafeAreaView>
   );
 };

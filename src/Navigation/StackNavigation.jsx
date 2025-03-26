@@ -14,7 +14,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ImageViewer from '../component/ImageViewer';
 import Assessment from '../component/Assessment';
 import Prescription from '../component/Prescription';
-
+import PrescriptionPreview from '../components/PrescriptionPreview';
+import PDFViewers from '../component/Pdf';
 const Stack = createStackNavigator();
 const { width, height } = Dimensions.get('window');
 
@@ -127,7 +128,17 @@ export default function MyStack() {
               headerShown: false
             }}
           />
-          
+          <Stack.Screen 
+            name="PrescriptionPreview" 
+            component={PrescriptionPreview}
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen 
+          name="pdf"
+          component={PDFViewers} 
+          />
         </Stack.Navigator>
       </Fragment>
     </SafeAreaProvider>
