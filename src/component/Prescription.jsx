@@ -500,10 +500,15 @@ const Prescription = ({ route, navigation }) => {
 
   const handleComplianceSelect = (value) => {
     setPrescriptionDetails(prev => ({
-        ...prev,
-        patientCompliance: value
+      ...prev,
+      patientCompliance: value
     }));
     setShowComplianceOptions(false);
+    
+    // Reset compliance frequency if compliance is not "No"
+    if (value.toLowerCase() !== 'no') {
+      setComplianceFrequency('Monthly'); // Reset to default
+    }
   };
 
   const calculateEndDate = (startDate, duration) => {
@@ -1294,6 +1299,7 @@ const Prescription = ({ route, navigation }) => {
           )}
         </View>
 
+        {/* Patient Compliance Dropdown */}
         <View style={styles.formColumn}>
           <Text style={styles.sectionLabel}>Patient Compliance</Text>
           <TouchableOpacity
@@ -1301,7 +1307,7 @@ const Prescription = ({ route, navigation }) => {
             onPress={() => setShowComplianceOptions(!showComplianceOptions)}
           >
             <Text style={styles.dropdownButtonText}>
-              {prescriptionDetails.patientCompliance || patientDetails?.patientCompliance || 'Unknown'}
+              {prescriptionDetails.patientCompliance}
             </Text>
             <Text style={styles.dropdownIcon}>▼</Text>
           </TouchableOpacity>
@@ -1314,10 +1320,7 @@ const Prescription = ({ route, navigation }) => {
                     styles.optionItem,
                     prescriptionDetails.patientCompliance === option && styles.optionItemSelected
                   ]}
-                  onPress={() => {
-                    handleComplianceSelect(option);
-                    setShowComplianceOptions(false);
-                  }}
+                  onPress={() => handleComplianceSelect(option)}
                 >
                   <Text style={[
                     styles.optionText,
@@ -1332,65 +1335,31 @@ const Prescription = ({ route, navigation }) => {
         </View>
       </View>
 
-      {/* ... rest of your existing form code ... */}
-
-      {/* Add this to your renderPrescriptionForm function, after the Patient Compliance field */}
-      <View style={styles.formField}>
-        <Text style={styles.sectionLabel}>Compliance Frequency</Text>
-        <View style={styles.radioGroup}>
-          <TouchableOpacity 
-            style={styles.radioOption}
-            onPress={() => setComplianceFrequency('Daily')}
-          >
-            <View style={[
-              styles.radioButton,
-              complianceFrequency === 'Daily' && styles.radioButtonSelected
-            ]}>
-              {complianceFrequency === 'Daily' && <View style={styles.radioButtonInner} />}
-            </View>
-            <Text style={styles.radioLabel}>Daily</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.radioOption}
-            onPress={() => setComplianceFrequency('Weekly')}
-          >
-            <View style={[
-              styles.radioButton,
-              complianceFrequency === 'Weekly' && styles.radioButtonSelected
-            ]}>
-              {complianceFrequency === 'Weekly' && <View style={styles.radioButtonInner} />}
-            </View>
-            <Text style={styles.radioLabel}>Weekly</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.radioOption}
-            onPress={() => setComplianceFrequency('Bi-Weekly')}
-          >
-            <View style={[
-              styles.radioButton,
-              complianceFrequency === 'Bi-Weekly' && styles.radioButtonSelected
-            ]}>
-              {complianceFrequency === 'Bi-Weekly' && <View style={styles.radioButtonInner} />}
-            </View>
-            <Text style={styles.radioLabel}>Bi-Weekly</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.radioOption}
-            onPress={() => setComplianceFrequency('Monthly')}
-          >
-            <View style={[
-              styles.radioButton,
-              complianceFrequency === 'Monthly' && styles.radioButtonSelected
-            ]}>
-              {complianceFrequency === 'Monthly' && <View style={styles.radioButtonInner} />}
-            </View>
-            <Text style={styles.radioLabel}>Monthly</Text>
-          </TouchableOpacity>
+      {/* Only show Compliance Frequency when compliance is "No" */}
+      {prescriptionDetails.patientCompliance.toLowerCase() === 'no' && (
+        <View style={styles.formField}>
+          <Text style={styles.sectionLabel}>Compliance Frequency</Text>
+          <View style={styles.radioGroup}>
+            {['Daily', 'Weekly', 'Bi-Weekly', 'Monthly'].map((frequency) => (
+              <TouchableOpacity 
+                key={frequency}
+                style={styles.radioOption}
+                onPress={() => setComplianceFrequency(frequency)}
+              >
+                <View style={[
+                  styles.radioButton,
+                  complianceFrequency === frequency && styles.radioButtonSelected
+                ]}>
+                  {complianceFrequency === frequency && <View style={styles.radioButtonInner} />}
+                </View>
+                <Text style={styles.radioLabel}>{frequency}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
+      )}
+
+      {/* ... rest of your existing form code ... */}
     </View>
   );
 

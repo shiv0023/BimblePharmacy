@@ -63,10 +63,17 @@ export const addPatientDrug = createAsyncThunk(
             console.log('API Response:', response.data);
 
             if (response.data && response.data.status === "Success") {
+                // Ensure we're properly extracting the batch ID
+                const batchId = response.data.data?.prescriptionBatchId || `batch_${Math.floor(100000 + Math.random() * 900000)}`;
+                
                 return {
                     status: response.data.status,
                     message: response.data.message,
-                    drugData: formattedData.drugData
+                    drugData: formattedData.drugData,
+                    data: {
+                        ...response.data.data,
+                        prescriptionBatchId: batchId // Ensure batchId is nested under data
+                    }
                 };
             }
 
@@ -199,14 +206,19 @@ const calculateDaysToExpire = (endDate) => {
 };
 
 const initialState = {
-  prescriptionData: null,
-  loading: false,
-  searchResults: [],
-  searchLoading: false,
-  errorMessage: null,
-  successMessage: null,
-  patientDrugs: [],
-  error: null
+    prescriptionData: {
+        data: {
+            prescriptionBatchId: null // Initialize with nested structure
+        }
+    },
+    loading: false,
+    searchResults: [],
+    searchLoading: false,
+    errorMessage: null,
+    successMessage: null,
+    patientDrugs: [],
+    error: null,
+    batchId: null
 };
 
 const drugSlice = createSlice({
@@ -234,13 +246,14 @@ const drugSlice = createSlice({
                 state.successMessage = null;
                 state.errorMessage = null;
                 state.prescriptionData = null;
+                state.batchId = null;
             })
             .addCase(addPatientDrug.fulfilled, (state, action) => {
                 state.loading = false;
                 state.successMessage = action.payload.message;
                 state.errorMessage = null;
                 state.prescriptionData = action.payload;
-              console.log('action.payload',  state.prescriptionData)
+                console.log('Updated prescription data:', state.prescriptionData);
             })
             .addCase(addPatientDrug.rejected, (state, action) => {
                 state.loading = false;

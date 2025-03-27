@@ -15,7 +15,17 @@ export const fetchPatientDetails = createAsyncThunk(
       console.log('Patient details response:', response.data);
 
       if (response.data.status === 'success' && response.data.data) {
-        return response.data.data;
+        const patientData = response.data.data;
+        
+        // Normalize the compliance value from patientAddress
+        if (patientData.patientAddress?.patientCompliance) {
+          patientData.patientCompliance = patientData.patientAddress.patientCompliance.toLowerCase();
+        } else if (patientData.patientCompliance) {
+          patientData.patientCompliance = patientData.patientCompliance.toLowerCase();
+        }
+
+        console.log('Patient Compliance:', patientData.patientCompliance); // Debug log
+        return patientData;
       }
       return rejectWithValue('No patient data received');
     } catch (error) {
