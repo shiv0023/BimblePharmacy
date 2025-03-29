@@ -374,7 +374,8 @@ const Prescription = ({ route, navigation }) => {
     startDate: new Date().toISOString().split('T')[0],
     longTerm: 'No',
     endDate: '',
-    patientCompliance: patientDetails?.patientCompliance || 'Unknown',
+    patientCompliance: patientDetails?.patientAddress?.patientCompliance?.toLowerCase(),
+    complianceFrequency: patientDetails?.patientAddress?.frequency?.toLowerCase() ,
     selectedDrugDetails: {
       din: '',
       name: '',
@@ -441,18 +442,28 @@ const Prescription = ({ route, navigation }) => {
         instructions: tr.sigs?.map(sig => sig.sig) || []
       })) || [];
 
+      // Get compliance and frequency from API data
+      const apiCompliance = patientDetails?.patientAddress?.patientCompliance?.toLowerCase() || 'unknown';
+      const apiFrequency = patientDetails?.patientAddress?.frequency?.toLowerCase() || 'monthly';
+
       setPrescriptionDetails(prev => ({
         ...prev,
         groupName: drug.group_name || '',
         drugForm: drug.dosage_form || '',
         availableIndications: technicalReasons,
-        patientCompliance: patientDetails?.patientCompliance || 'Unknown',
+        patientCompliance: apiCompliance,
+        complianceFrequency: apiCompliance === 'no' ? apiFrequency : 'monthly',
         selectedDrugDetails: {
           din: drug.drugs?.[0]?.din || '',
           name: drug.drugs?.[0]?.name || '',
           category: drug.drug_category || ''
         }
       }));
+
+      // Set compliance frequency if compliance is "no"
+      if (apiCompliance === 'no') {
+        setComplianceFrequency(apiFrequency);
+      }
 
       setSearchQuery('');
       setIsDrugSelected(true);
@@ -499,15 +510,20 @@ const Prescription = ({ route, navigation }) => {
   };
 
   const handleComplianceSelect = (value) => {
+    const lowerValue = value.toLowerCase();
     setPrescriptionDetails(prev => ({
       ...prev,
-      patientCompliance: value
+      patientCompliance: lowerValue
     }));
     setShowComplianceOptions(false);
     
-    // Reset compliance frequency if compliance is not "No"
-    if (value.toLowerCase() !== 'no') {
-      setComplianceFrequency('Monthly'); // Reset to default
+    if (lowerValue === 'no') {
+      // When selecting "No", use the API frequency
+      const apiFrequency = patientDetails?.patientAddress?.frequency?.toLowerCase() || 'monthly';
+      setComplianceFrequency(apiFrequency);
+    } else {
+      // Reset frequency when selecting anything other than "No"
+      setComplianceFrequency('monthly');
     }
   };
 
@@ -1307,7 +1323,8 @@ const Prescription = ({ route, navigation }) => {
             onPress={() => setShowComplianceOptions(!showComplianceOptions)}
           >
             <Text style={styles.dropdownButtonText}>
-              {prescriptionDetails.patientCompliance}
+              {(prescriptionDetails.patientCompliance || 'Unknown').charAt(0).toUpperCase() + 
+               (prescriptionDetails.patientCompliance || 'Unknown').slice(1).toLowerCase()}
             </Text>
             <Text style={styles.dropdownIcon}>▼</Text>
           </TouchableOpacity>
@@ -1318,13 +1335,15 @@ const Prescription = ({ route, navigation }) => {
                   key={option}
                   style={[
                     styles.optionItem,
-                    prescriptionDetails.patientCompliance === option && styles.optionItemSelected
+                    prescriptionDetails.patientCompliance === option.toLowerCase() && 
+                    styles.optionItemSelected
                   ]}
                   onPress={() => handleComplianceSelect(option)}
                 >
                   <Text style={[
                     styles.optionText,
-                    prescriptionDetails.patientCompliance === option && styles.optionTextSelected
+                    prescriptionDetails.patientCompliance === option.toLowerCase() && 
+                    styles.optionTextSelected
                   ]}>
                     {option}
                   </Text>
@@ -1335,26 +1354,31 @@ const Prescription = ({ route, navigation }) => {
         </View>
       </View>
 
-      {/* Only show Compliance Frequency when compliance is "No" */}
-      {prescriptionDetails.patientCompliance.toLowerCase() === 'no' && (
+      {/* Show Compliance Frequency only when compliance is "no" */}
+      {prescriptionDetails.patientCompliance === 'no' && (
         <View style={styles.formField}>
           <Text style={styles.sectionLabel}>Compliance Frequency</Text>
           <View style={styles.radioGroup}>
-            {['Daily', 'Weekly', 'Bi-Weekly', 'Monthly'].map((frequency) => (
-              <TouchableOpacity 
-                key={frequency}
-                style={styles.radioOption}
-                onPress={() => setComplianceFrequency(frequency)}
-              >
-                <View style={[
-                  styles.radioButton,
-                  complianceFrequency === frequency && styles.radioButtonSelected
-                ]}>
-                  {complianceFrequency === frequency && <View style={styles.radioButtonInner} />}
-                </View>
-                <Text style={styles.radioLabel}>{frequency}</Text>
-              </TouchableOpacity>
-            ))}
+            {['daily', 'weekly', 'bi-weekly', 'monthly'].map((frequency) => {
+              const isSelected = complianceFrequency === frequency;
+              return (
+                <TouchableOpacity 
+                  key={frequency}
+                  style={styles.radioOption}
+                  onPress={() => setComplianceFrequency(frequency)}
+                >
+                  <View style={[
+                    styles.radioButton,
+                    isSelected && styles.radioButtonSelected
+                  ]}>
+                    {isSelected && <View style={styles.radioButtonInner} />}
+                  </View>
+                  <Text style={styles.radioLabel}>
+                    {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       )}
@@ -1880,7 +1904,7 @@ const Prescription = ({ route, navigation }) => {
       padding: 12,
     },
     suggestionsScrollView: {
-      maxHeight: 120, // Reduced height for suggestions
+      maxHeight: 150, // Reduced height for suggestions
       marginTop: 4,
     },
     suggestionsContainer: {
@@ -2337,10 +2361,10 @@ const Prescription = ({ route, navigation }) => {
     },
     deleteButton: {
 
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: '#FEE2E2',
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: 'green',
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1,
@@ -2964,6 +2988,22 @@ const Prescription = ({ route, navigation }) => {
       />
     );
   };
+
+  useEffect(() => {
+    if (patientDetails?.patientAddress) {
+      const apiCompliance = patientDetails.patientAddress.patientCompliance?.toLowerCase();
+      const apiFrequency = patientDetails.patientAddress.frequency?.toLowerCase();
+      
+      setPrescriptionDetails(prev => ({
+        ...prev,
+        patientCompliance: apiCompliance || 'unknown'
+      }));
+      
+      if (apiCompliance === 'no') {
+        setComplianceFrequency(apiFrequency || 'monthly');
+      }
+    }
+  }, [patientDetails]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: '#0049F8' }]}>

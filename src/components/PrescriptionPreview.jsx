@@ -62,10 +62,12 @@ const PrescriptionPreview = ({
   const [deliveryOption, setDeliveryOption] = useState('pickup');
   const [signature, setSignature] = useState(null);
   const signatureRef = useRef();
-  const [pdfContent, setPdfContent] = useState(null); // add this
+  const [pdfContent, setPdfContent] = useState(null);
   const [pdfUri, setPdfUri] = useState(null);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const navigation = useNavigation();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   const formatDate = (date) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const d = new Date(date);
@@ -73,6 +75,16 @@ const PrescriptionPreview = ({
     const day = d.getDate();
     const year = d.getFullYear();
     return ` ${month} ${day}, ${year}`;
+  };
+
+  const formatDateForDOB = (dateString) => {
+    if (!dateString) return '';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const date = new Date(dateString);
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month} ${day}, ${year}`;
   };
 
   const calculateAge = (dob) => {
@@ -95,6 +107,7 @@ const PrescriptionPreview = ({
     return `batch_${Math.floor(100000 + Math.random() * 900000)}`;
   };
 
+  console.log('patientDetailsdwcdccx', patientDetails);
   // Fetch clinic details when component mounts
   React.useEffect(() => {
     if (visible) {
@@ -139,237 +152,117 @@ const PrescriptionPreview = ({
     return number; // Return original if not 10 digits
   };
 
-const handleGeneratePDF = () => {
-  if (!signature) {
-    Alert.alert('Error', 'Please add your signature before generating the PDF');
-    return;
-  }
+  // First, add a function to validate required fields
+  const validateFields = () => {
+    const requiredFields = [
+      { value: signature, message: 'Please add your signature' },
+      { value: patientDetails?.firstName, message: 'Patient first name is required' },
+      { value: patientDetails?.lastName, message: 'Patient last name is required' },
+      { value: patientDetails?.phn, message: 'Patient PHN is required' },
+      { value: prescriptionData?.drugData?.length, message: 'At least one medication is required' },
+    ];
 
-  // Format the data for PDF generation
-  const content = {
-    clinicInfo: {
-      logo: clinicDetails?.logo,
-      date: formatDate(new Date()),
-      name: clinicDetails?.clinicName || 'Test Clinic',
-      address: clinicDetails?.address || '633 E Hastings St',
-      city: clinicDetails?.city || 'Vancouver',
-      province: getProvinceAbbreviation(clinicDetails?.province) || 'BC',
-      postalCode: clinicDetails?.postalCode || 'V6A 2R2',
-      phone: formatPhoneNumber(clinicDetails?.phoneNo) ,
-      fax: formatPhoneNumber(clinicDetails?.faxNo) 
-    },
-    pharmacyDetails: {
-      name: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[0]?.trim() || 'PROSPER PHARMACY 24',
-      address: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[1]?.trim() || '12818 72 Avenue',
-      city: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[2]?.trim() || 'Surrey',
-      province: getProvinceAbbreviation(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[3]?.trim()) || 'BC',
-      postalCode: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[4]?.trim() || 'V3W 2M9',
-      phone: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[5]?.trim()) || '604-543-6677',
-      fax: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[6]?.trim()) || '604-543-4433'
-    },
-    patientInfo: {
-      name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}`,
-      phn: patientDetails?.phn || '',
-      gender: patientDetails?.gender || 'M',
-      dob: `${patientDetails?.dob ? calculateAge(patientDetails.dob) : '23'} years`,
-      address: patientDetails?.patientAddress?.address || 'Curzon Road Street# 34',
-      city: patientDetails?.patientAddress?.city || 'Delta',
-      province: getProvinceAbbreviation(patientDetails?.patientAddress?.province) || 'BC',
-      postalCode: patientDetails?.patientAddress?.postalCode || 'V3W 2M9',
-      phoneCell: formatPhoneNumber(patientDetails?.phoneCell) || '659-862-3548',
-      phoneWork: formatPhoneNumber(patientDetails?.phoneWork) || '635-489-2455',
-      phoneHome: formatPhoneNumber(patientDetails?.phoneHome) || '685-942-6666',
-      allergies: patientDetails?.allergies || 'No Known Allergies',
-      compliance: patientDetails?.patientCompliance || prescriptionData?.drugData?.[0]?.patientCompliance || 'Unknown',
-      complianceFrequency: (patientDetails?.patientCompliance?.toLowerCase() === 'no' || 
-        prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no') 
-        ? prescriptionData?.drugData?.[0]?.complianceFrequency 
-        : null
-    },
-    medications: prescriptionData?.drugData?.map(drug => ({
-      name: drug.groupName,
-      form: drug.form || 'Suppository',
-      instructions: drug.instructions,
-      startDate: formatDate(drug.startDate),
-      endDate: formatDate(drug.endDate),
-      duration: drug.duration || '1',
-      quantity: drug.quantity || '2',
-      refills: drug.repeat || '0'
-    })) || [],
-    deliveryOption: deliveryOption,
-    signature: signature,
-    doctorInfo: {
-      name: 'Dr.doctor oscardoc',
-      license: '98765',
-      signedDate: new Date().toLocaleString()
+    for (const field of requiredFields) {
+      if (!field.value) {
+        return field.message;
+      }
     }
+
+    return null;
   };
 
-  setPdfContent(content);
-  setShowPdfViewer(true);
-};
+  // Update the handleGeneratePDF function
+  const handleGeneratePDF = async () => {
+    try {
+      setIsGeneratingPdf(true);
 
-const handleDownloadPDF = async () => {
-  try {
-    // // Create HTML content with matching layout
-    // const htmlContent = `
-    //   <html>
-    //     <head>
-    //       <style>
-    //         body { 
-    //           font-family: Arial, sans-serif; 
-    //           padding: 40px;
-    //           max-width: 800px;
-    //           margin: 0 auto;
-    //         }
-    //         .header { 
-    //           display: flex;
-    //           justify-content: space-between;
-    //           margin-bottom: 30px;
-    //           border-bottom: 1px solid #ccc;
-    //           padding-bottom: 20px;
-    //         }
-    //         .clinic-info {
-    //           flex: 1;
-    //         }
-    //         .logo {
-    //           max-width: 120px;
-    //           margin-bottom: 15px;
-    //         }
-    //         .delivery-option {
-    //           margin-bottom: 20px;
-    //           font-weight: bold;
-    //         }
-    //         .pharmacy-details {
-    //           margin-bottom: 30px;
-    //           padding: 15px;
-    //           background-color: #f9f9f9;
-    //           border-radius: 5px;
-    //         }
-    //         .patient-info {
-    //           margin-bottom: 20px;
-    //         }
-    //         .medication {
-    //           margin-bottom: 20px;
-    //           padding: 15px;
-    //           background-color: #f9f9f9;
-    //           border-radius: 5px;
-    //         }
-    //         .signature-section {
-    //           margin-top: 40px;
-    //           text-align: center;
-    //         }
-    //         .signature-image {
-    //           max-width: 200px;
-    //           margin-bottom: 10px;
-    //         }
-    //       </style>
-    //     </head>
-    //     <body>
-    //       <!-- Header with clinic info -->
-    //       <div class="header">
-    //         <div class="clinic-info">
-    //           ${clinicDetails?.logo ? 
-    //             `<img src="https://api.bimble.pro/media/${clinicDetails.logo}" 
-    //                   class="logo" />` : ''}
-    //           <div>${formatDate(new Date())}</div>
-    //           <div>${clinicDetails.logo}</div>
-    //           <div><strong>${clinicDetails?.clinicName || ''}</strong></div>
-    //           <div>${clinicDetails?.address || ''}</div>
-    //           <div>${clinicDetails?.city || ''}, ${getProvinceAbbreviation(clinicDetails?.province)} ${clinicDetails?.postalCode || ''}</div>
-    //           <div>Phone: ${formatPhoneNumber(clinicDetails?.phoneNo)}</div>
-    //           <div>Fax: ${formatPhoneNumber(clinicDetails?.faxNo)} here ${`https://api.bimble.pro/media/${clinicDetails.logo}`}</div>
-    //         </div>
-    //       </div>
+      // Validate fields
+      const validationError = validateFields();
+      if (validationError) {
+        Alert.alert('Required Fields', validationError);
+        return;
+      }
 
-    //       <!-- Delivery Option -->
-    //       <div class="delivery-option">
-    //         ${deliveryOption === 'delivery' ? 'Delivery' : 'Pickup'} Requested
-    //       </div>
+      // Show loading state
+      Alert.alert(
+        'Generating PDF',
+        'Please wait while we generate your prescription...',
+        [],
+        { cancelable: false }
+      );
 
-    //       <!-- Patient Information -->
-    //       <div class="patient-info">
-    //         <h3>Patient Information</h3>
-    //         <div>${patientDetails?.firstName} ${patientDetails?.lastName} (PHN: ${patientDetails?.phn})</div>
-    //         <div>${patientDetails?.gender}/${calculateAge(patientDetails?.dob)} years</div>
-    //         <div>${patientDetails?.patientAddress?.address}</div>
-    //         <div>${patientDetails?.patientAddress?.city}, ${getProvinceAbbreviation(patientDetails?.patientAddress?.province)} ${patientDetails?.patientAddress?.postalCode}</div>
-    //         <div>Phone (C): ${patientDetails?.phoneCell}</div>
-    //         <div>Phone (W): ${patientDetails?.phoneWork}</div>
-    //         <div>Phone (H): ${patientDetails?.phoneHome}</div>
-    //         <div class="compliance-info">
-    //           <div>
-    //             <strong>Compliance Status:</strong> 
-    //             <span class="${prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no' ? 'compliance-no' : ''}">
-    //               ${prescriptionData?.drugData?.[0]?.patientCompliance || patientDetails?.patientCompliance || 'Unknown'}
-    //             </span>
-    //           </div>
-    //           ${(prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no' ||
-    //              patientDetails?.patientCompliance?.toLowerCase() === 'no') ?
-    //             `<div class="frequency-info">
-    //               <strong>Compliance Frequency:</strong> 
-    //               ${prescriptionData?.drugData?.[0]?.complianceFrequency || 'Monthly'}
-    //             </div>` : ''
-    //           }
-    //         </div>
-    //       </div>
+      // Format the data for PDF generation
+      const content = {
+        clinicInfo: {
+          logo: clinicDetails?.logo,
+          date: formatDate(new Date()),
+          name: clinicDetails?.clinicName,
+          address: clinicDetails?.address,
+          city: clinicDetails?.city,
+          province: getProvinceAbbreviation(clinicDetails?.province),
+          postalCode: clinicDetails?.postalCode,
+          phone: formatPhoneNumber(clinicDetails?.phoneNo),
+          fax: formatPhoneNumber(clinicDetails?.faxNo)
+        },
+        pharmacyDetails: {
+          name: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[0]?.trim() || 'PROSPER PHARMACY 24',
+          address: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[1]?.trim() || '12818 72 Avenue',
+          city: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[2]?.trim() || 'Surrey',
+          province: getProvinceAbbreviation(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[3]?.trim()) || 'BC',
+          postalCode: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[4]?.trim() || 'V3W 2M9',
+          phone: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[5]?.trim()) || '604-543-6677',
+          fax: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[6]?.trim()) || '604-543-4433'
+        },
+        patientInfo: {
+          name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}`,
+          phn: patientDetails?.phn || '',
+          gender: patientDetails?.gender || 'M',
+          originalDob: patientDetails?.dob,
+          age: calculateAge(patientDetails?.dob),
+          dob: `${formatDateForDOB(patientDetails?.dob)}/${calculateAge(patientDetails?.dob)} years`,
+          address: patientDetails?.patientAddress?.address || 'Curzon Road Street# 34',
+          city: patientDetails?.patientAddress?.city || 'Delta',
+          province: getProvinceAbbreviation(patientDetails?.patientAddress?.province) || 'BC',
+          postalCode: patientDetails?.patientAddress?.postalCode || 'V3W 2M9',
+          phoneCell: formatPhoneNumber(patientDetails?.phoneCell) || '659-862-3548',
+          phoneWork: formatPhoneNumber(patientDetails?.phoneWork) || '635-489-2455',
+          phoneHome: formatPhoneNumber(patientDetails?.phoneHome) || '685-942-6666',
+          allergies: patientDetails?.allergies || 'No Known Allergies',
+          compliance: patientDetails?.patientCompliance || prescriptionData?.drugData?.[0]?.patientCompliance || 'Unknown',
+          complianceFrequency: (patientDetails?.patientCompliance?.toLowerCase() === 'no' || 
+            prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no') 
+            ? prescriptionData?.drugData?.[0]?.complianceFrequency 
+            : null
+        },
+        medications: prescriptionData?.drugData?.map(drug => ({
+          name: drug.groupName,
+          form: drug.form || 'Suppository',
+          instructions: drug.instructions,
+          startDate: formatDate(drug.startDate),
+          endDate: formatDate(drug.endDate),
+          duration: drug.duration || '1',
+          quantity: drug.quantity || '2',
+          refills: drug.repeat || '0'
+        })) || [],
+        deliveryOption: deliveryOption,
+        signature: signature,
+        doctorInfo: {
+          name: 'Dr.doctor oscardoc',
+          license: '98765',
+          signedDate: new Date().toLocaleString()
+        }
+      };
 
-    //       <!-- Medications -->
-    //       ${prescriptionData?.drugData?.map(drug => `
-    //         <div class="medication">
-    //           <div><strong>${drug.groupName}</strong></div>
-    //           <div>${drug.instructions}</div>
-    //           <div>${formatDate(drug.startDate)} - ${formatDate(drug.endDate)} (${drug.duration} days)</div>
-    //           <div>Total Qty: ${drug.quantity} Refills: ${drug.repeat}</div>
-    //         </div>
-    //       `).join('')}
-
-    //       <!-- Signature -->
-    //       ${signature ? `
-    //         <div class="signature-section">
-    //           <img src="data:image/png;base64,${signature}" class="signature-image" />
-    //           <div><strong>Dr.doctor oscardoc</strong></div>
-    //           <div>License #98765</div>
-    //           <div>Signed on ${formatDate(new Date())}</div>
-    //         </div>
-    //       ` : ''}
-    //     </body>
-    //   </html>
-    // `;
-
-    // Generate PDF
-    const options = {
-      html: htmlContent,
-      fileName: `prescription_${Date.now()}`,
-      directory: 'Documents',
-    };
-
-    const file = await RNHTMLtoPDF.convert(options);
-    console.log('PDF generated:', file.filePath);
-
-    // Handle download/share based on platform
-    if (Platform.OS === 'android') {
-      const downloadPath = `${RNBlobUtil.fs.dirs.DownloadDir}/prescription_${Date.now()}.pdf`;
-      await RNBlobUtil.fs.cp(file.filePath, downloadPath);
-      await RNBlobUtil.android.addCompleteDownload({
-        title: 'Prescription PDF',
-        description: 'Downloading Prescription',
-        mime: 'application/pdf',
-        path: downloadPath,
-        showNotification: true,
-      });
-      Alert.alert('Success', 'PDF has been downloaded to your downloads folder');
-    } else {
-      await Share.share({
-        url: `file://${file.filePath}`,
-        title: 'Prescription PDF',
-      });
+      // Set the content and show the PDF viewer
+      setPdfContent(content);
+      setShowPdfViewer(true);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      Alert.alert('Error', 'Failed to generate PDF');
+    } finally {
+      setIsGeneratingPdf(false);
     }
-  } catch (error) {
-    console.error('Error downloading PDF:', error);
-    Alert.alert('Error', 'Failed to download PDF');
-  }
-};
+  };
 
   if (!visible) return null;
 
@@ -397,30 +290,34 @@ const handleDownloadPDF = async () => {
             <ScrollView style={styles.scrollView}>
               {/* Clinic Info */}
               <View style={styles.section}>
-              
                 {clinicLoading ? (
                   <ActivityIndicator size="small" color="#0049F8" />
                 ) : clinicError ? (
                   <Text style={styles.errorText}>{clinicError}</Text>
                 ) : clinicDetails ? (
                   <View>
-                    {clinicDetails.logo && (
-                      <Image
-                        source={{ 
-                          uri: `https://api.bimble.pro/media/${clinicDetails.logo}`,
-                          headers: {
-                            'Cache-Control': 'no-cache'
-                          }
-                        }}
-                        style={styles.clinicLogo}
-                        resizeMode="contain"
-                        onError={(e) => {
-                          console.error('Error loading logo:', e.nativeEvent.error);
-                        }}
-                        onLoad={() => console.log('Logo loaded successfully')}
-                      />
-                    )}
-                      <Text style={styles.date}>{formatDate(new Date())}</Text>
+                    <View style={styles.clinicHeader}>
+                      <View style={styles.clinicLogoContainer}>
+                        {clinicDetails.logo && (
+                          <Image
+                            source={{ 
+                              uri: `https://api.bimble.pro/media/${clinicDetails.logo}`,
+                              headers: {
+                                'Cache-Control': 'no-cache'
+                              }
+                            }}
+                            style={styles.clinicLogo}
+                            resizeMode="contain"
+                            onError={(e) => {
+                              console.error('Error loading logo:', e.nativeEvent.error);
+                            }}
+                            onLoad={() => console.log('Logo loaded successfully')}
+                          />
+                        )}
+                      </View>
+                      <Text style={styles.batchId}>Order #{getBatchId()}</Text>
+                    </View>
+                    <Text style={styles.date}>{formatDate(new Date())}</Text>
                     <Text style={styles.clinicName}>
                       {clinicDetails.clinicName}
                     </Text>
@@ -460,11 +357,11 @@ const handleDownloadPDF = async () => {
                         {patientDetails.patientAddress.preferredPharmacy.split(',')[2].trim()}, {patientDetails.patientAddress.preferredPharmacy.split(',')[3].trim()} {patientDetails.patientAddress.preferredPharmacy.split(',')[4].trim()}
                       </Text>
                       <Text style={styles.cityProvinceText}>
-                        Phone: {formatPhoneNumber(patientDetails.patientAddress.preferredPharmacy.split(',')[5]?.trim()) || '604-543-6677'}
+                        Phone: {formatPhoneNumber(patientDetails.patientAddress.preferredPharmacy.split(',')[5]?.trim()) }
                       </Text>
-                      <Text style={styles.cityProvinceText}>
-                        Fax: {formatPhoneNumber(patientDetails.patientAddress.preferredPharmacy.split(',')[6]?.trim()) || '604-543-4433'}
-                      </Text>
+                      {/* <Text style={styles.cityProvinceText}>
+                        Fax: {formatPhoneNumber(patientDetails.patientAddress.preferredPharmacy.split(',')[6]?.trim()) }
+                      </Text> */}
                     </>
                   ) : (
                     <>
@@ -481,53 +378,31 @@ const handleDownloadPDF = async () => {
               {/* Patient Details */}
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Patient Details</Text>
-                  <Text style={styles.orderNumber}>
-                    Order #{getBatchId()}
-                  </Text>
+                  <Text style={styles.sectionTitle}>Patient Information</Text>
                 </View>
                 <View style={styles.patientInfo}>
-                  <Text style={styles.cityProvinceText}>
-                    {patientDetails?.firstName} {patientDetails?.lastName} (PHN {patientDetails?.phn})
+                  <Text style={styles.patientName}>
+                    {patientDetails?.firstName} {patientDetails?.lastName} (PHN: {patientDetails?.phn})
                   </Text>
-                  <Text style={styles.cityProvinceText}>
-                    {patientDetails?.gender || 'M'}/{calculateAge(patientDetails?.dob)} years
+                  <Text style={styles.patientDetails}>
+                    {patientDetails?.gender || 'M'}/{formatDateForDOB(patientDetails?.dob)}/{calculateAge(patientDetails?.dob)} years
                   </Text>
-                  <Text style={styles.cityProvinceText}>
-                    {patientDetails?.patientAddress?.address || patientDetails?.address || 'Curzon Road Street# 34'}
+                  <Text style={styles.patientDetails}>
+                    {patientDetails?.patientAddress?.address}
                   </Text>
-                  <Text style={styles.cityProvinceText}>
-                    {patientDetails?.patientAddress?.city || patientDetails?.city || 'Delta'}, {patientDetails?.patientAddress?.province || patientDetails?.province || 'BC'} {patientDetails?.patientAddress?.postalCode || patientDetails?.postalCode || 'V3W 2M9'}
+                  <Text style={styles.patientDetails}>
+                    {patientDetails?.patientAddress?.city}, {getProvinceAbbreviation(patientDetails?.patientAddress?.province)} {patientDetails?.patientAddress?.postalCode}
                   </Text>
                   <View style={styles.phoneContainer}>
-                    <Text style={styles.cityProvinceText}>
-                      Phone (C): {patientDetails?.phoneCell || '659-862-3548'} Phone (W): {patientDetails?.phoneWork || '635-489-2455'}
+                    <Text style={styles.patientDetails}>
+                      Phone (C): {formatPhoneNumber(patientDetails?.patientAddress?.ext_data?.demo_cell)}
                     </Text>
-                    <Text style={styles.cityProvinceText}>
-                      Phone (H): {patientDetails?.phoneHome || '685-942-6666'}
+                    <Text style={styles.patientDetails}>
+                      Phone (W): {formatPhoneNumber(patientDetails?.patientAddress?.phoneWork)}
                     </Text>
-                  </View>
-
-                  {/* Add Compliance Information */}
-                  <View style={styles.complianceContainer}>
-                    <Text style={styles.complianceTitle}>Compliance Status:</Text>
-                    <Text style={[
-                      styles.complianceValue,
-                      prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no' && styles.complianceNo
-                    ]}>
-                      {prescriptionData?.drugData?.[0]?.patientCompliance || patientDetails?.patientCompliance || 'Unknown'}
+                    <Text style={styles.patientDetails}>
+                      Phone (H): {formatPhoneNumber(patientDetails?.patientAddress?.phoneHome)}
                     </Text>
-                    
-                    {/* Only show frequency if compliance is "No" */}
-                    {(prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no' ||
-                      patientDetails?.patientCompliance?.toLowerCase() === 'no') && (
-                      <View style={styles.frequencyContainer}>
-                        <Text style={styles.complianceTitle}>Compliance Frequency:</Text>
-                        <Text style={styles.complianceValue}>
-                          {prescriptionData?.drugData?.[0]?.complianceFrequency || 'Monthly'}
-                        </Text>
-                      </View>
-                    )}
                   </View>
                 </View>
               </View>
@@ -545,9 +420,18 @@ const handleDownloadPDF = async () => {
                 <Text style={styles.sectionTitle}>Medications</Text>
                 {prescriptionData?.drugData?.map((drug, index) => (
                   <View key={index} style={styles.medicationCard}>
-                    <Text style={styles.medicationName}>{drug.groupName}</Text>
+                    <Text style={styles.medicationName}>
+                      {drug.groupName}
+                    </Text>
                     <Text style={styles.cityProvinceText}>{drug.indication}</Text>
-                    <Text style={styles.cityProvinceText}>{drug.instructions}</Text>
+                    <Text style={styles.cityProvinceText}>
+                      {drug.instructions}
+                      {drug.patientCompliance?.toLowerCase() === 'no' && drug.complianceFrequency && (
+                        <Text style={styles.dispenseText}>
+                          {' '}({drug.complianceFrequency} Dispense)
+                        </Text>
+                      )}
+                    </Text>
                     <View style={styles.cityProvinceText}>
                       <Text style={styles.cityProvinceText}>Quantity: {drug.quantity}</Text>
                       <Text style={styles.cityProvinceText}>Repeats: {drug.repeat}</Text>
@@ -663,10 +547,24 @@ const handleDownloadPDF = async () => {
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
               <TouchableOpacity 
-                style={[styles.actionButton, styles.generateButton]}
+                style={[
+                  styles.actionButton, 
+                  styles.generateButton,
+                  isGeneratingPdf && styles.disabledButton
+                ]}
                 onPress={handleGeneratePDF}
+                disabled={isGeneratingPdf}
               >
-                <Text style={styles.actionButtonText}>Generate PDF</Text>
+                {isGeneratingPdf ? (
+                  <View style={styles.loaderContainer}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={[styles.actionButtonText, styles.loaderText]}>
+                      Generating PDF...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.actionButtonText}>Generate PDF</Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.actionButton, styles.printButton]}
@@ -693,7 +591,6 @@ const handleDownloadPDF = async () => {
         pdfContent={pdfContent}
         signature={signature}
         additionalNotes={additionalNotes}
-        onDownload={handleDownloadPDF}
       />
     </>
   );
@@ -800,17 +697,19 @@ const styles = StyleSheet.create({
   patientName: {
     fontSize: 16,
     color: '#000',
-    marginBottom: 2,
+  
+    fontWeight: '400',
   },
   patientDetails: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
+    fontSize: 16,
+    color: '#000',
+ 
+    fontWeight: '300',
   },
   patientAddress: {
     fontSize: 14,
     color: '#000',
-    marginBottom: 2,
+ 
   },
   allergiesText: {
     fontSize: 14,
@@ -827,6 +726,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#191919',
     marginBottom: 4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dispenseText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400',
+    marginLeft: 4,
   },
   medicationIndication: {
     fontSize: 14,
@@ -900,6 +807,7 @@ const styles = StyleSheet.create({
   },
   generateButton: {
     backgroundColor: '#0049F8',
+    opacity: (props) => props.disabled ? 0.7 : 1,
   },
   printButton: {
     backgroundColor: '#7C3AED',
@@ -1100,7 +1008,33 @@ const styles = StyleSheet.create({
     borderTopColor: '#E6E8EC',
   },
   phoneContainer: {
-    marginBottom: 8,
+    marginTop: 8,
+  },
+  clinicHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  clinicLogoContainer: {
+    flex: 1,
+  },
+  batchId: {
+    fontSize: 14,
+    color: '#0049F8',
+    fontWeight: '500',
+  },
+  loaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  loaderText: {
+    marginLeft: 8,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });
 

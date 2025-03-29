@@ -110,26 +110,10 @@ on start date enput feilds show a calander and doctor able to select the desired
 
 
 
-name -shiv
-
-1. Yesterday’s Accomplishments 
-
-• Worked on the prescription PDF section and set up layout rendering using @react-pdf/renderer.
-• Integrated PDF data binding to dynamically display clinic, patient, and medication details.
-• Debugged issues with PDF viewing and formatting to ensure accurate rendering on mobile.
-• Started refining batch ID generation logic for consistent and unique output.
-
-2. Today’s Completed Tasks 
-Bimblepro
-
-Fixed compliance logic and integrated it with the prescription data.
-Rendered compliance details inside the PrescriptionPreview component.
-Improved PDF UI for better layout and readability.
-Started working on the PDF viewer functionality.
 
 
-4. Next Steps  
- working on doctor flow 
 
-5. Issues/Blockers  
-none
+
+
+
+

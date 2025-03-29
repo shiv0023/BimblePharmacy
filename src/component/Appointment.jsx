@@ -237,6 +237,7 @@ export default function Appointment({navigation}) {
                   <Text>
                     <Text  style={styles.phnLabel}>PHN: </Text>
                     <Text  style={styles.phnValue}>{item.clinicContact}</Text>
+                  
                   </Text>
                 </View>
                 <View style={styles.infoText}>
@@ -251,16 +252,32 @@ export default function Appointment({navigation}) {
           </Text>
         </View>
 
-        <View style={styles.statusBadgeWrapper}>
-          <LinearGradient
-            colors={isNew ? ['#2968FF', '#0049F8'] : ['#06D001', '#008D00']}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-            style={styles.statusBadge}>
-            <Text style={styles.statusBadgeText}>
-              {isNew ? 'N' : 'F'}
-            </Text>
-          </LinearGradient>
+        <View style={styles.statusContainer}>
+          <View style={styles.statusBadgeWrapper}>
+            <LinearGradient
+              colors={isNew ? ['#2968FF', '#0049F8'] : ['#06D001', '#008D00']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.statusBadge}>
+              <Text style={styles.statusBadgeText}>
+                {isNew ? 'N' : 'F'}
+              </Text>
+            </LinearGradient>
+          </View>
+          
+         
+            <View style={[
+              styles.eligibilityBadge,
+              { backgroundColor: item.eligibility === "YES" ? '#E3F2FD' : '#FFEBEE' }
+            ]}>
+              <Text style={[
+                styles.eligibilityText,
+                { color: item.eligibility === "YES" ? '#0049F8' : '#D32F2F' }
+              ]}>
+                {item.eligibility === "YES" ? "Eligible" : "Not Eligible"}
+              </Text>
+            </View>
+       
         </View>
 
         <TouchableOpacity
@@ -463,11 +480,22 @@ const styles = StyleSheet.create({
     padding: moderateScale(4),
   },
 
-  statusBadgeWrapper: {
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     position: 'absolute',
     top: 0,
     right: 0,
     zIndex: 1,
+  },
+  
+  statusBadgeWrapper: {
+    width: moderateScale(36),
+    height: moderateScale(36),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomLeftRadius: 8,
+    borderTopRightRadius: 7,
   },
   statusBadge: {
     width: moderateScale(36),
@@ -593,6 +621,19 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#666666', // Faded color for PHN value
     fontFamily: 'Product Sans Regular',
+  },
+  eligibilityBadge: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    position: 'absolute',
+    right: moderateScale(40), // Adjust this value to position it correctly
+    top: moderateScale(6),
+  },
+  eligibilityText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
 
