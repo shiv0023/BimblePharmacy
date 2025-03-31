@@ -107,7 +107,7 @@ const PrescriptionPreview = ({
     return `batch_${Math.floor(100000 + Math.random() * 900000)}`;
   };
 
-  console.log('patientDetailsdwcdccx', patientDetails);
+  // console.log('patientDetailsdwcdccx', patientDetails);
   // Fetch clinic details when component mounts
   React.useEffect(() => {
     if (visible) {
@@ -193,6 +193,7 @@ const PrescriptionPreview = ({
 
       // Format the data for PDF generation
       const content = {
+        orderId: prescriptionData?.data?.prescriptionBatchId || `717049`,
         clinicInfo: {
           logo: clinicDetails?.logo,
           date: formatDate(new Date()),
@@ -205,13 +206,13 @@ const PrescriptionPreview = ({
           fax: formatPhoneNumber(clinicDetails?.faxNo)
         },
         pharmacyDetails: {
-          name: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[0]?.trim() || 'PROSPER PHARMACY 24',
-          address: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[1]?.trim() || '12818 72 Avenue',
-          city: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[2]?.trim() || 'Surrey',
-          province: getProvinceAbbreviation(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[3]?.trim()) || 'BC',
-          postalCode: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[4]?.trim() || 'V3W 2M9',
-          phone: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[5]?.trim()) || '604-543-6677',
-          fax: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[6]?.trim()) || '604-543-4433'
+          name: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[0]?.trim() ,
+          address: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[1]?.trim() ,
+          city: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[2]?.trim() ,
+          province: getProvinceAbbreviation(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[3]?.trim()) ,
+          postalCode: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[4]?.trim() ,
+          phone: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[5]?.trim()) ,
+          fax: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[6]?.trim()) ,
         },
         patientInfo: {
           name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}`,
@@ -220,15 +221,15 @@ const PrescriptionPreview = ({
           originalDob: patientDetails?.dob,
           age: calculateAge(patientDetails?.dob),
           dob: `${formatDateForDOB(patientDetails?.dob)}/${calculateAge(patientDetails?.dob)} years`,
-          address: patientDetails?.patientAddress?.address || 'Curzon Road Street# 34',
-          city: patientDetails?.patientAddress?.city || 'Delta',
-          province: getProvinceAbbreviation(patientDetails?.patientAddress?.province) || 'BC',
-          postalCode: patientDetails?.patientAddress?.postalCode || 'V3W 2M9',
-          phoneCell: formatPhoneNumber(patientDetails?.phoneCell) || '659-862-3548',
-          phoneWork: formatPhoneNumber(patientDetails?.phoneWork) || '635-489-2455',
-          phoneHome: formatPhoneNumber(patientDetails?.phoneHome) || '685-942-6666',
-          allergies: patientDetails?.allergies || 'No Known Allergies',
-          compliance: patientDetails?.patientCompliance || prescriptionData?.drugData?.[0]?.patientCompliance || 'Unknown',
+          address: patientDetails?.patientAddress?.address ,
+          city: patientDetails?.patientAddress?.city ,
+          province: getProvinceAbbreviation(patientDetails?.patientAddress?.province) ,
+          postalCode: patientDetails?.patientAddress?.postalCode ,
+          phoneCell: formatPhoneNumber(patientDetails?.phoneCell) ,
+          phoneWork: formatPhoneNumber(patientDetails?.phoneWork) ,
+          phoneHome: formatPhoneNumber(patientDetails?.phoneHome) ,
+          allergies: patientDetails?.allergies ,
+          compliance: patientDetails?.patientCompliance || prescriptionData?.drugData?.[0]?.patientCompliance ,
           complianceFrequency: (patientDetails?.patientCompliance?.toLowerCase() === 'no' || 
             prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no') 
             ? prescriptionData?.drugData?.[0]?.complianceFrequency 
@@ -236,13 +237,15 @@ const PrescriptionPreview = ({
         },
         medications: prescriptionData?.drugData?.map(drug => ({
           name: drug.groupName,
-          form: drug.form || 'Suppository',
+          route: drug.route || 'Topical',
+          form: drug.drugForm || 'Cream',
           instructions: drug.instructions,
           startDate: formatDate(drug.startDate),
           endDate: formatDate(drug.endDate),
           duration: drug.duration || '1',
           quantity: drug.quantity || '2',
-          refills: drug.repeat || '0'
+          refills: drug.repeat || '0',
+          indication: drug.indication
         })) || [],
         deliveryOption: deliveryOption,
         signature: signature,
@@ -420,9 +423,16 @@ const PrescriptionPreview = ({
                 <Text style={styles.sectionTitle}>Medications</Text>
                 {prescriptionData?.drugData?.map((drug, index) => (
                   <View key={index} style={styles.medicationCard}>
-                    <Text style={styles.medicationName}>
-                      {drug.groupName}
-                    </Text>
+                    <View style={styles.medicationHeader}>
+                      <Text style={styles.medicationName}>
+                        {drug.groupName}
+                      </Text>
+                      {drug.route && (
+                        <Text style={styles.medicationRoute}>
+                          ({drug.route || 'Topical'})
+                        </Text>
+                      )}
+                    </View>
                     <Text style={styles.cityProvinceText}>{drug.indication}</Text>
                     <Text style={styles.cityProvinceText}>
                       {drug.instructions}
@@ -658,13 +668,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
    
-    marginBottom: 6,
+    // marginBottom: 6,
   },
   clinicLogo: {
     width: 120,
     height: 110,
-    marginBottom: 12,
- 
+  
   },
   clinicName: {
     fontSize: 16,
@@ -716,18 +725,27 @@ const styles = StyleSheet.create({
     color: '#191919',
   },
   medicationCard: {
-    backgroundColor: '#F8F9FA',
+  
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
+  },
+  medicationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 4,
   },
   medicationName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#191919',
-    marginBottom: 4,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    marginRight: 4,
+  },
+  medicationRoute: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400',
   },
   dispenseText: {
     fontSize: 14,

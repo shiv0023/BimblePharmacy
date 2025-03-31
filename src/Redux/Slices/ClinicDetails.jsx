@@ -9,7 +9,7 @@ export const fetchClinicDetails = createAsyncThunk(
           subdomainBimble: "123virtual1.bimble.pro"
         });
         
-        console.log('Clinic details response:', response.data);
+        // console.log('Clinic details response:', response.data);
         
         if (response.data.status === 'success' && response.data.data) {
           return response.data.data;

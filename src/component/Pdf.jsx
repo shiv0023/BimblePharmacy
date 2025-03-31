@@ -39,6 +39,11 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
     try {
       setLoading(true);
       
+      // Add validation for required content
+      if (!pdfContent?.medications || pdfContent.medications.length === 0) {
+        throw new Error('No medications to display');
+      }
+
       // Verify logo URL
       if (pdfContent?.clinicInfo?.logo) {
         console.log('Using logo URL:', pdfContent.clinicInfo.logo);
@@ -78,143 +83,14 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
             minute: '2-digit',
             hour12: false
           }).replace(',', '') // This will format the date like "Mar 26, 2025 at 05:27 AM"
-        }
+        },
+        medications: pdfContent?.medications?.map(med => ({
+          ...med,
+          patientCompliance: pdfContent?.patientInfo?.compliance,
+          complianceFrequency: pdfContent?.patientInfo?.complianceFrequency
+        })) || [],
       };
 
-      const medications = pdfContent?.medications?.map(med => ({
-        ...med,
-        patientCompliance: pdfContent?.patientInfo?.compliance,
-        complianceFrequency: pdfContent?.patientInfo?.complianceFrequency
-      }));
-
-      const generatePages = (pdfContent, medications) => {
-        const MEDS_PER_PAGE = 5;
-        const totalPages = Math.ceil((medications?.length || 0) / MEDS_PER_PAGE);
-        let html = '';
-
-        for (let pageNum = 0; pageNum < totalPages; pageNum++) {
-          const startIdx = pageNum * MEDS_PER_PAGE;
-          const endIdx = startIdx + MEDS_PER_PAGE;
-          const pageMeds = medications.slice(startIdx, endIdx);
-
-          html += `
-            <div class="page">
-              <!-- Left Section -->
-              <div class="left-section">
-                ${generateLeftSection(pdfContent)}
-              </div>
-
-              <!-- Right Section -->
-              <div class="right-section">
-                ${pageNum === 0 ? generateMainContent(pdfContent) : generateContinuationHeader(pdfContent)}
-                <div class="medications">
-                  ${generateMedications(pageMeds, startIdx)}
-                </div>
-                ${generateSignatureSection(pdfContent, signature)}
-              </div>
-
-              <!-- Page Number -->
-              <div class="page-number">Page ${pageNum + 1} of ${totalPages}</div>
-              ${pageNum < totalPages - 1 ? '<div class="continuation-marker">Continued on next page...</div>' : ''}
-            </div>
-            ${pageNum < totalPages - 1 ? '<div class="page-break"></div>' : ''}
-          `;
-        }
-        return html;
-      };
-
-      // Add these helper functions
-      const generateLeftSection = (pdfContent) => `
-        <img 
-          src="${`${MEDIA_URL}${pdfContent?.clinicInfo?.logo}`}" 
-          class="logo" 
-          alt="Clinic Logo"
-          onerror="this.onerror=null; this.src='${MEDIA_URL}logo.png';"
-        />
-        <div class="date">Date: ${formatDate(new Date())}</div>
-        <div class="clinic-info">
-          ${pdfContent?.clinicInfo?.name}<br/>
-          ${pdfContent?.clinicInfo?.address}<br/>
-          ${pdfContent?.clinicInfo?.city}, ${pdfContent?.clinicInfo?.province} ${pdfContent?.clinicInfo?.postalCode}<br/>
-          Phone: ${pdfContent?.clinicInfo?.phone}<br/>
-          Fax: ${pdfContent?.clinicInfo?.fax}
-        </div>
-
-        <div class="Pickup-status">${pdfContent?.deliveryOption} Requested</div>
-
-        <div class="pharmacy-details">
-          <div class="pharmacy-title">Pharmacy Details</div>
-          ${pdfContent?.pharmacyDetails?.name}<br/>
-          ${pdfContent?.pharmacyDetails?.address}<br/>
-          ${pdfContent?.pharmacyDetails?.city}, ${pdfContent?.pharmacyDetails?.province} ${pdfContent?.pharmacyDetails?.postalCode}<br/>
-          Phone: ${pdfContent?.pharmacyDetails?.phone}<br/>
-          Fax: ${pdfContent?.pharmacyDetails?.fax}
-        </div>
-      `;
-
-      const generateMainContent = (pdfContent) => `
-        <div class="patient-info">
-          <div class="patient-info-title">Patient Information</div>
-          ${pdfContent?.patientInfo?.name} (PHN: ${pdfContent?.patientInfo?.phn})<br/>
-          ${pdfContent?.patientInfo?.gender}/${pdfContent?.patientInfo?.dob?.split(' years')[0]} Years<br/>
-          ${pdfContent?.patientInfo?.address}<br/>
-          ${pdfContent?.patientInfo?.city}, ${pdfContent?.patientInfo?.province} ${pdfContent?.patientInfo?.postalCode}<br/>
-          <div class="phone-numbers">
-            Phone (C): ${pdfContent?.patientInfo?.phoneCell}
-            Phone (W): ${pdfContent?.patientInfo?.phoneWork}
-            Phone (H): ${pdfContent?.patientInfo?.phoneHome}
-          </div>
-        </div>
-
-        <div class="drug-allergies">
-          <div class="drug-allergies-title">Drug Allergies</div>
-          ${pdfContent?.patientInfo?.allergies}
-        </div>
-      `;
-
-      const generateContinuationHeader = (pdfContent) => `
-        <div class="continuation-header">
-          <h3>Prescription Continuation</h3>
-          <p>Patient: ${pdfContent?.patientInfo?.name} (PHN: ${pdfContent?.patientInfo?.phn})</p>
-        </div>
-      `;
-
-      const generateMedications = (medications, startIdx) => {
-        return medications.map((med, index) => `
-          ${index > 0 && index % 5 === 0 ? '<div class="page-break"></div>' : ''}
-          <div class="medication">
-            <div class="medication-name">${med.name} (${med.form})</div>
-            <div class="medication-details">${med.instructions}
-              ${med.patientCompliance?.toLowerCase() === 'no' && med.complianceFrequency ? 
-                `<span class="dispense-text">(${med.complianceFrequency} Dispense)</span>` : 
-                ''}
-            </div>
-            <div class="medication-details">${med.startDate} - ${med.endDate} (${med.duration} days)</div>
-            <div class="medication-details">Total Qty: ${med.quantity} Refills: ${med.refills}</div>
-          </div>
-        `).join('');
-      };
-
-      const generateSignatureSection = (pdfContent, signature) => `
-        <div class="signature-section">
-          ${signature ? `
-            <img 
-              src="data:image/png;base64,${signature}" 
-              class="signature-image"
-              alt="Doctor's Signature"
-            />
-          ` : ''}
-          <div class="doctor-info">
-            <p>${pdfContent?.doctorInfo?.name}</p>
-            <p>License #${pdfContent?.doctorInfo?.license}</p>
-          </div>
-          <div class="signed-date">
-            Signed on ${formatDate(new Date())}
-          </div>
-        </div>
-      `;
-
-      // Update the CSS styles in htmlContent
       const htmlContent = `
         <html>
           <head>
@@ -225,241 +101,154 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                 size: A4;
               }
               body { 
-                font-family: "Product Sans", Arial, sans-serif;
+                font-family: Arial, sans-serif;
                 margin: 0;
-                padding: 40px;
-                font-size: 10px;
+                padding: 20;
+                font-size: 12px;
                 line-height: 1.4;
                 color: #000;
-                position: relative;
-                max-height: 29.7cm;
-                overflow: hidden;
               }
-              .container {
+              .page {
+                position: relative;
+                min-height: 227mm;
+                page-break-after: auto;
+                background-color: black;
+              }
+              .page-content {
                 display: flex;
-                position: relative;
-                height: calc(100% - 120px);
-                max-height: calc(29.7cm - 120px);
-                overflow: hidden;
-              }
-              .vertical-line {
-                position: absolute;
-                left: 30%;
-                top: 0;
                 height: 100%;
-                width: 1px;
-                background-color: #d1d5db;
+                background-color: blue;
               }
-              .left-section {
-                width: 28%;
-                border-right: 2px solid #d1d5db;
-                z-index: 9999;
+              .left-sidebar {
+                width: 30%;
+                padding-right: 20px;
+                border-right: 1px solid #dee2e6;
+                background-color: yellow;
               }
-
-              .right-section {
-                width: 68%;
-                margin-left: 2%;
-                padding-bottom: 100px;
+              .main-content {
+                width: 70%;
+                padding-left: 20px;
+                position: relative;
+                background-color: green;
               }
-              .logo {
-                width: 80px;
-                height: 80px;
+              .clinic-logo {
+                width: 120px;
+                height: auto;
                 margin-bottom: 10px;
-                object-fit: contain;
-                object-position: left;
-                display: block;
               }
-              .date {
-                margin-bottom: 8px;
-                font-size: 10px;
+              .virtual-clinic {
+                font-weight: bold;
+                color: #002B5C;
+                margin-bottom: 20px;
+                font-size: 14px;
               }
               .clinic-info {
                 margin-bottom: 20px;
-                line-height: 1.4;
+                line-height: 1.6;
               }
-              .clinic-info p {
-                margin: 0;
-                padding: 0;
-                line-height: 1.4;
-                font-size: 10px;
-              }
-              .pickup-status {
-                margin: 4px 0;
-                font-size: 10px;
-                padding-top: 4px;
-                border-top: 1px solid #d1d5db;
-              }
-              .pharmacy-title {
-                font-size: 10px;
-                font-weight: bold;
-                margin-bottom: 4px;
-              }
-              .pharmacy-details p {
-                margin: 0;
-                padding: 0;
-                line-height: 1.4;
-                font-size: 10px;
-              }
-              .patient-info-title {
-                font-size: 10px;
-                font-weight: bold;
-                margin-bottom: 8px;
+              .pharmacy-info {
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #dee2e6;
               }
               .patient-info {
-                padding-right: 10px;
-                padding-top: 20px;
-                font-size: 10px;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+               
               }
-              .phone-numbers {
-                display: flex;
-                gap: 15px;
-                margin-top: 5px;
-              }
-              .drug-allergies {
-                padding-top: 5px;
-                padding-right: 10px;
-                border-bottom: 1px solid #d1d5db;
-                margin-bottom: 2px;
-              }
-              .drug-allergies-title {
-                font-size: 10px;
-                font-weight: bold;
-                margin-bottom: 4px;
+              .order-number {
+                position: absolute;
+                top: 0;
+                right: 40px;
+                font-size: 12px;
+                color: #0049F8;
               }
               .medication {
-                margin-bottom: 4px;
-                border-bottom: 1px solid #e5e7eb;
+                padding: 12px;
+                background-color: #F8F9FA;
+                border-radius: 8px;
+                border-bottom: 1px solid #E6E8EC;
+                page-break-inside: avoid;
+              }
+              .medication:last-child {
+                border-bottom: none;
               }
               .medication-name {
-                font-weight: bold;
-                font-size: 10px;
+                font-size: 16px;
+                font-weight: 600;
+                color: #191919;
                 margin-bottom: 4px;
-                padding: 4px;
               }
               .medication-details {
-                font-size: 10px;
-                padding-left: 4px;
-                margin: 2px 0;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
+                font-size: 14px;
+                color: #191919;
+                margin-bottom: 4px;
               }
               .dispense-text {
+                font-size: 14px;
                 color: #666;
-                font-weight: normal;
+                font-weight: 400;
                 margin-left: 4px;
               }
               .signature-section {
-                display: flex;
-                flex-direction: column;
                 position: absolute;
-                bottom: 120px;
-                left: 32%;
-                width: 65%;
-                text-align: left;
-              
-                border-top: 2px solid #d1d5db;
+                bottom: 2;
+                left: 37%;
+                width: 60%;
+                padding-top: 20px;
+                border-top: 1px solid #dee2e6;
+                background-color: yellow;
               }
               .signature-image {
                 width: 120px;
-                height: 80px;
-             
-                object-fit: contain;
-                display: block;
-              }
-              .doctor-info {
-                text-align: left;
-                font-size: 12px;
-                line-height: 1.2;
-              }
-              .signed-date {
-                font-size: 12px;
-                color: #000;
-             
-              }
-              .page-number {
-                position: fixed;
-                bottom: 40px;
-                right: 40px;
-                font-size: 12px;
-                color: #000;
-              }
-              .additional-notes {
-                margin-top: 8px;
-                padding-top: 8px;
-              
-                font-size: 10px;
-                color: #666;
-              }
-              .page-break {
-                page-break-before: always;
-              }
-              
-              .medications {
                 height: auto;
               }
-              
-              .continuation-marker {
-                position: fixed;
-                bottom: 40px;
-                left: 40px;
+              .doctor-info {
                 font-size: 12px;
-                color: #666;
+                line-height: 1.4;
               }
-              
+              .page-number {
+                position: absolute;
+                right: 40px;
+                font-size: 10px;
+              }
+              .drug-allergies {
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #dee2e6;
+              }
+              .medications-list {
+                page-break-inside: avoid;
+              }
+              .additional-notes {
+                margin-top: 20px;
+                padding: 12px;
+                background-color: #F8F9FA;
+                border-radius: 8px;
+                border: 1px solid #E6E8EC;
+                page-break-inside: avoid;
+              }
+              .notes-title {
+                font-size: 16px;
+                font-weight: 600;
+                color: #191919;
+                margin-bottom: 8px;
+              }
+              .notes-content {
+                font-size: 14px;
+                color: #191919;
+                line-height: 1.4;
+                white-space: pre-wrap;
+              }
               @media print {
                 .page-break {
                   page-break-before: always;
                 }
               }
-
-              .page {
-                position: relative;
-                padding: 40px;
-                page-break-after: always;
-                height: 100vh;
-              }
-              .page:last-child {
-                page-break-after: avoid;
-              }
-              .page-break {
-                page-break-before: always;
-              }
-              .page-number {
-                position: absolute;
-                bottom: 20px;
-                right: 40px;
-                font-size: 12px;
-                color: #000;
-                background-color: white;
-                padding: 4px 8px;
-                border-radius: 4px;
-              }
-              .continuation-marker {
-                position: absolute;
-                bottom: 20px;
-                left: 40px;
-                font-size: 12px;
-                color: #666;
-              }
-              .continuation-header {
-                margin-bottom: 20px;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #d1d5db;
-              }
-              .continuation-header h3 {
-                font-size: 14px;
-                margin: 0 0 8px 0;
-              }
-              .continuation-header p {
-                font-size: 12px;
-                margin: 0;
-                color: #666;
-              }
             </style>
           </head>
           <body>
-            ${generatePages(pdfContent, pdfContent?.medications || [])}
+            ${generatePages(pdfContent, content.medications)}
           </body>
         </html>
       `;
@@ -468,29 +257,127 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
         html: htmlContent,
         fileName: `prescription_${Date.now()}`,
         directory: 'Documents',
-        height: 842, // A4 height in points
-        width: 595,  // A4 width in points
+        height: 842,
+        width: 595,
         padding: 0,
         backgroundColor: '#ffffff',
-        maxPageHeight: 842,
-        page: {
-          margin: 0,
-          padding: 0,
-        }
+        enablePaging: true,
       };
 
       const file = await RNHTMLtoPDF.convert(options);
-      console.log('PDF generated:', file.filePath);
-      
       const pdfPath = Platform.OS === 'ios' ? `file://${file.filePath}` : file.filePath;
       setPdfFile(pdfPath);
-      setLoading(false);
     } catch (error) {
       console.error('Error generating PDF:', error);
       Alert.alert('Error', 'Failed to generate PDF preview');
       setLoading(false);
     }
   };
+
+  const generatePages = (content, medications) => {
+    if (!medications || medications.length === 0) {
+      return '';
+    }
+
+    const MEDS_PER_PAGE = 4;
+    const totalPages = Math.ceil(medications.length / MEDS_PER_PAGE);
+    
+    return Array.from({ length: totalPages }, (_, pageIndex) => {
+      const startIdx = pageIndex * MEDS_PER_PAGE;
+      const pageMeds = medications.slice(startIdx, startIdx + MEDS_PER_PAGE);
+      
+      if (pageMeds.length === 0) return '';
+
+      return `
+        <div class="page">
+          <div class="page-content">
+            <div class="left-sidebar">
+              <img src="${MEDIA_URL}${content.clinicInfo.logo}" class="clinic-logo" alt="Clinic Logo" />
+              <div class="virtual-clinic">VIRTUAL CLINIC</div>
+              <div class="clinic-info">
+                <div>Date: ${formatDate(new Date()).split(' at')[0]}</div>
+                <div>${content.clinicInfo.name}</div>
+                <div>${content.clinicInfo.address}</div>
+                <div>Phone: ${content.clinicInfo.phone}</div>
+                <div>Fax: ${content.clinicInfo.fax}</div>
+              </div>
+              
+              <div>${content.deliveryOption === 'delivery' ? 'Delivery' : 'Pickup'} Requested</div>
+              
+              <div class="pharmacy-info">
+                <strong>Pharmacy Details</strong><br/>
+                ${content.pharmacyDetails.name}<br/>
+                ${content.pharmacyDetails.address}<br/>
+                ${content.pharmacyDetails.city}, ${content.pharmacyDetails.province} ${content.pharmacyDetails.postalCode}<br/>
+                Phone: ${content.pharmacyDetails.phone}<br/>
+                Fax: ${content.pharmacyDetails.fax}
+              </div>
+            </div>
+
+            <div class="main-content">
+              <div class="order-number">Order #${content.orderId}</div>
+              
+              ${pageIndex === 0 ? `
+                <div class="patient-info">
+                  <strong>Patient Details</strong><br/>
+                  ${content.patientInfo.name} (PHN: ${content.patientInfo.phn})<br/>
+                  ${content.patientInfo.gender}/${content.patientInfo.dob}<br/>
+                  ${content.patientInfo.address}<br/>
+                  ${content.patientInfo.city}, ${content.patientInfo.province} ${content.patientInfo.postalCode}<br/>
+                  Phone (C): ${content.patientInfo.phoneCell}    Phone (H): ${content.patientInfo.phoneHome}
+                </div>
+
+                <div class="drug-allergies">
+                  <strong>Drug Allergies</strong><br/>
+                  ${content.patientInfo.allergies || 'No Known Allergies'}
+                </div>
+              ` : ''}
+
+              <div class="medications-list">
+                ${pageMeds.map((med, idx) => generateMedicationHTML(med)).join('')}
+              </div>
+
+              ${pageIndex === totalPages - 1 ? `
+                <div class="additional-notes">
+                  <div class="notes-title">Additional Notes</div>
+                  <div class="notes-content">${content.additionalNotes || 'Please Note it'}</div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="signature-section">
+            ${signature ? `<img src="data:image/png;base64,${signature}" class="signature-image" />` : ''}
+            <div class="doctor-info">
+              <div>${content.doctorInfo.name}</div>
+              <div>License #${content.doctorInfo.license}</div>
+              <div>Signed on ${formatDate(new Date())}</div>
+            </div>
+          </div>
+
+        </div>
+      `;
+    }).filter(Boolean).join('');
+  };
+
+  const generateMedicationHTML = (medication) => `
+    <div class="medication">
+      <div class="medication-name">${medication.name}</div>
+      <div class="medication-details">
+        ${medication.instructions}
+        ${medication.patientCompliance?.toLowerCase() === 'no' && medication.complianceFrequency 
+          ? `<span class="dispense-text"> (${medication.complianceFrequency} Dispense)</span>` 
+          : ''}
+      </div>
+      <div class="medication-details">
+        <span>Quantity: ${medication.quantity}</span>
+        <span style="margin-left: 20px;">Refills: ${medication.refills}</span>
+      </div>
+      <div class="medication-details">
+        Duration: ${medication.duration} Days (${medication.startDate} - ${medication.endDate})
+      </div>
+    </div>
+  `;
 
   const handleLogoError = (error) => {
     console.error('Error loading logo:', error);
@@ -577,8 +464,11 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                   setTotalPages(numberOfPages);
                 }}
                 onPageChanged={(page) => {
-                  console.log(`Current page: ${page}`);
                   setCurrentPage(page);
+                }}
+                onError={(error) => {
+                  console.error('PDF Error:', error);
+                  Alert.alert('Error', 'Failed to load PDF preview');
                 }}
                 enablePaging={true}
                 horizontal={false}
@@ -586,6 +476,11 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                 spacing={0}
                 fitPolicy={0}
                 singlePage={false}
+                maxScale={2.0}
+                minScale={1.0}
+                renderActivityIndicator={() => (
+                  <ActivityIndicator size="large" color="#0049F8" />
+                )}
               />
               <View style={styles.pageIndicator}>
                 <Text style={styles.pageIndicatorText}>
@@ -717,22 +612,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 8,
     borderRadius: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   pageIndicatorText: {
     fontSize: 12,
     color: '#000',
-    fontWeight: '500',
   },
 });
 

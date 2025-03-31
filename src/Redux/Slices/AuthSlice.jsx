@@ -19,7 +19,7 @@ export const loginUser = createAsyncThunk(
       );
      await AsyncStorage.setItem("auth_tokens",response.data.access_token)
    const myAcesssToken=  await AsyncStorage.getItem("auth_tokens")
-console.log('vvvv')
+
       return response.data; 
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Login failed');

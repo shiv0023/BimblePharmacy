@@ -360,7 +360,7 @@ const Prescription = ({ route, navigation }) => {
   const [dose, setDose] = useState('');
   const [showFrequencyOptions, setShowFrequencyOptions] = useState(false);
   const [complianceFrequency, setComplianceFrequency] = useState('Monthly');
-   console.log('patientDetails here ', patientDetails);
+  //  console.log('patientDetails here ', patientDetails);
   // Initialize with default values
   const initialPrescriptionDetails = {
     indication: "",
@@ -398,7 +398,7 @@ const Prescription = ({ route, navigation }) => {
 
   // Log the Redux state for debugging
   useEffect(() => {
-    console.log('Redux drugs state:', drugs);
+    // console.log('Redux drugs state:', drugs);
   }, [drugs]);
 
   const debouncedSearch = React.useCallback(
@@ -433,8 +433,6 @@ const Prescription = ({ route, navigation }) => {
   const handleDrugSelect = (drug) => {
     try {
       if (!drug) return;
-
-      console.log('Selected drug:', drug);
 
       // Get all technical reasons and their associated sigs
       const technicalReasons = drug.technical_reasons?.map(tr => ({
@@ -637,6 +635,7 @@ const Prescription = ({ route, navigation }) => {
         complianceFrequency: complianceFrequency,
         groupName: prescriptionDetails.groupName,
         drugForm: prescriptionDetails.drugForm,
+        route: prescriptionDetails.route, // Make sure route is included
         indication: prescriptionDetails.indication,
         instructions: prescriptionDetails.instructions,
         duration: parseInt(prescriptionDetails.duration) || 0,
@@ -745,7 +744,7 @@ const Prescription = ({ route, navigation }) => {
         additionalNotes: additionalNotes
       };
       const result = await dispatch(addPatientDrug(prescriptionData)).unwrap();
-      console.log('batch result', result)
+      // console.log('batch result', result)
       if (result && result.status === "Success") {
         Alert.alert('Success', 'Prescription printed and pasted to EMR');
         navigation.goBack();
@@ -1023,16 +1022,18 @@ const Prescription = ({ route, navigation }) => {
 
   // Add this array for frequency options
   const frequencyOptions = ['OD', 'BID', 'TID', 'QID'];
-
+console.log('prescriptionDetails', prescriptionDetails)
   // Update the form fields layout in renderPrescriptionForm
   const renderPrescriptionForm = () => (
     <View style={styles.responsiveContainer}>
       {/* Drug Header with Details */}
       <View style={styles.drugHeader}>
         <View style={styles.drugTitleContainer}>
-        <Text style={styles.drugTitle}>{prescriptionDetails.groupName}</Text>
+          <Text style={styles.drugTitle}>{prescriptionDetails.groupName}</Text>
           <Text style={styles.drugSubtitle}>
-            {prescriptionDetails.drugForm} {prescriptionDetails.selectedDrugDetails?.category ? `• ${prescriptionDetails.selectedDrugDetails.category}` : ''}
+            {prescriptionDetails.drugForm} 
+            {prescriptionDetails.route ? ` • ${prescriptionDetails.route}` : ''} 
+            {prescriptionDetails.selectedDrugDetails?.category ? ` • ${prescriptionDetails.selectedDrugDetails.category}` : ''}
           </Text>
         </View>
         <TouchableOpacity 
@@ -1390,7 +1391,7 @@ const Prescription = ({ route, navigation }) => {
   const renderSearchResults = () => {
     try {
       if (!drugs || !Array.isArray(drugs.searchResults)) {
-        console.log('Invalid search results state');
+        // console.log('Invalid search results state');
         return null;
       }
 
@@ -2898,11 +2899,11 @@ const Prescription = ({ route, navigation }) => {
 
   useEffect(() => {
     if (patientDetails?.demographicNo) {
-        console.log('Fetching drugs for patient:', patientDetails.demographicNo);
+        // console.log('Fetching drugs for patient:', patientDetails.demographicNo);
         dispatch(fetchPatientDrugs(patientDetails.demographicNo))
             .unwrap()
             .then(result => {
-                console.log('Successfully fetched patient drugs:', result);
+                // console.log('Successfully fetched patient drugs:', result);
             })
             .catch(error => {
                 console.error('Failed to fetch patient drugs:', error);
@@ -2938,7 +2939,7 @@ const Prescription = ({ route, navigation }) => {
           style: 'destructive',
           onPress: () => {
             // Add delete logic here
-            console.log('Delete:', drug);
+            // console.log('Delete:', drug);
           }
         },
       ]
@@ -2955,7 +2956,7 @@ const Prescription = ({ route, navigation }) => {
           text: 'Discontinue',
           onPress: () => {
             // Add discontinue logic here
-            console.log('Discontinue:', drug);
+            // console.log('Discontinue:', drug);
           }
         },
       ]

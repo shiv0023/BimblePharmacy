@@ -56,11 +56,11 @@ export const addPatientDrug = createAsyncThunk(
                 return rejectWithValue('Missing group name for one or more drugs');
             }
 
-            console.log('Sending formatted drug data:', formattedData);
+            // console.log('Sending formatted drug data:', formattedData);
 
             const response = await axiosInstance.post('/drugs/addPatientDrug/', formattedData);
             
-            console.log('API Response:', response.data);
+            // console.log('API Response:', response.data);
 
             if (response.data && response.data.status === "Success") {
                 // Ensure we're properly extracting the batch ID
@@ -106,7 +106,7 @@ export const searchDrugs = createAsyncThunk(
 
             // Validate response
             if (!response?.data) {
-                console.log('No data in response');
+                // console.log('No data in response');
                 return [];
             }
 
@@ -185,7 +185,7 @@ export const fetchPatientDrugs = createAsyncThunk(
                 deliveryOption: drug.deliveryOption || 'pickup'
             }));
 
-            console.log('Formatted patient drugs:', formattedData);
+            // console.log('Formatted patient drugs:', formattedData);
             return formattedData;
 
         } catch (error) {
@@ -253,7 +253,7 @@ const drugSlice = createSlice({
                 state.successMessage = action.payload.message;
                 state.errorMessage = null;
                 state.prescriptionData = action.payload;
-                console.log('Updated prescription data:', state.prescriptionData);
+                // console.log('Updated prescription data:', state.prescriptionData);
             })
             .addCase(addPatientDrug.rejected, (state, action) => {
                 state.loading = false;

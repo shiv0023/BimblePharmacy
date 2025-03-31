@@ -20,7 +20,7 @@ export const fetchAppointments = createAsyncThunk(
       });
 
       // Log the raw response
-      console.log('responssse', response)
+  
 
 
       if (!response.data || !response.data.data) {

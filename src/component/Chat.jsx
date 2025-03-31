@@ -273,15 +273,12 @@ const Chat = ({navigation}) => {
 
   useEffect(() => {
     if (patientDetails?.dob) {
-      console.log('Patient DOB:', patientDetails.dob);
-      console.log('Calculated Age:', calculateAge(patientDetails.dob));
+     
     }
   }, [patientDetails]);
 
   useEffect(() => {
-    console.log('Selected Appointment:', selectedAppointment);
-    console.log('Encounter Notes:', encounterNotes);
-    console.log('Appointment Date:', selectedAppointment?.appointment_date);
+   
   }, [selectedAppointment, encounterNotes]);
 
   const handleCall = (phoneNumber) => {

@@ -6,13 +6,13 @@ export const fetchPatientDetails = createAsyncThunk(
   'patientDetails/fetchPatient',
   async ({ demographicNo }, { rejectWithValue }) => {
     try {
-      console.log('Fetching patient details for demographicNo:', demographicNo);
+      // console.log('Fetching patient details for demographicNo:', demographicNo);
       
       const response = await axiosInstance.post('/patient/fetchPatient/', {
         demographicNo: demographicNo
       });
 
-      console.log('Patient details response:', response.data);
+      // console.log('Patient details response:', response.data);
 
       if (response.data.status === 'success' && response.data.data) {
         const patientData = response.data.data;
@@ -24,7 +24,7 @@ export const fetchPatientDetails = createAsyncThunk(
           patientData.patientCompliance = patientData.patientCompliance.toLowerCase();
         }
 
-        console.log('Patient Compliance:', patientData.patientCompliance); // Debug log
+        // console.log('Patient Compliance:', patientData.patientCompliance); // Debug log
         return patientData;
       }
       return rejectWithValue('No patient data received');
@@ -40,8 +40,8 @@ export const fetchEncounterNotes = createAsyncThunk(
   'patientDetails/fetchEncounterNotes',
   async ({ demographicNo }, { rejectWithValue }) => {
     try {
-      console.log('=== Encounter Notes API Call Start ===');
-      console.log('DemographicNo:', demographicNo);
+      // console.log('=== Encounter Notes API Call Start ===');
+      // console.log('DemographicNo:', demographicNo);
 
       // Validate demographicNo
       if (!demographicNo) {
@@ -53,10 +53,10 @@ export const fetchEncounterNotes = createAsyncThunk(
         demographicNo: parseInt(demographicNo) // Ensure number format
       });
 
-      console.log('API Response:', {
-        status: response.status,
-        data: response.data
-      });
+      // console.log('API Response:', {
+      //   status: response.status,
+      //   data: response.data
+      // });
 
       // Validate response
       if (!response.data) {
