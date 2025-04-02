@@ -240,6 +240,11 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                 line-height: 1.4;
                 white-space: pre-wrap;
               }
+              .highlight-value {
+                font-weight: 600;
+                color: #191919;
+                margin: 0 4px;
+              }
               @media print {
                 .page-break {
                   page-break-before: always;
@@ -362,19 +367,21 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
 
   const generateMedicationHTML = (medication) => `
     <div class="medication">
-      <div class="medication-name">${medication.name}</div>
+      <div class="medication-name">
+        ${medication.name}  (${medication.route})
+      </div>
       <div class="medication-details">
-        ${medication.instructions}
-        ${medication.patientCompliance?.toLowerCase() === 'no' && medication.complianceFrequency 
+        ${medication.instructions} ${medication.patientCompliance?.toLowerCase() === 'no' && medication.complianceFrequency 
           ? `<span class="dispense-text"> (${medication.complianceFrequency} Dispense)</span>` 
           : ''}
       </div>
       <div class="medication-details">
-        <span>Quantity: ${medication.quantity}</span>
-        <span style="margin-left: 20px;">Refills: ${medication.refills}</span>
+        ${medication.startDate}-${medication.endDate} (${medication.duration} days)
       </div>
       <div class="medication-details">
-        Duration: ${medication.duration} Days (${medication.startDate} - ${medication.endDate})
+        Total Qty: <span class="highlight-value">${medication.quantity}</span> 
+        <span class="highlight-value">${medication.drugForm || ''}</span> 
+        Refills: <span class="highlight-value">${medication.refills}</span>
       </div>
     </div>
   `;

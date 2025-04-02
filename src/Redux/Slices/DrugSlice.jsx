@@ -31,6 +31,7 @@ export const addPatientDrug = createAsyncThunk(
             const formattedData = {
                 ...drugData,
                 demographicNo: parseInt(drugData.demographicNo),
+                appointmentNo: parseInt(drugData.appointmentNo),
                 drugData: drugData.drugData.map(drug => {
                     if (!drug.groupName) {
                         throw new Error('Group name is required for all drugs');
@@ -47,6 +48,7 @@ export const addPatientDrug = createAsyncThunk(
                         repeat: parseInt(drug.repeat) || 0,
                         longTerm: drug.longTerm === 'Yes' ? true : false,
                         startDate: drug.startDate || new Date().toISOString().split('T')[0]
+                    
                     };
                 })
             };
@@ -60,10 +62,11 @@ export const addPatientDrug = createAsyncThunk(
 
             const response = await axiosInstance.post('/drugs/addPatientDrug/', formattedData);
             
-            // console.log('API Response:', response.data);
+  
 
             if (response.data && response.data.status === "Success") {
                 // Ensure we're properly extracting the batch ID
+                console.log('API Response:', response.data);
                 const batchId = response.data.data?.prescriptionBatchId || `batch_${Math.floor(100000 + Math.random() * 900000)}`;
                 
                 return {
@@ -109,7 +112,7 @@ export const searchDrugs = createAsyncThunk(
                 // console.log('No data in response');
                 return [];
             }
-
+            console.log('API Response:', response.data);
             // Get the data array
             const responseData = response.data?.data || response.data;
             // console.log('Raw API Response:', responseData);
@@ -126,6 +129,7 @@ export const searchDrugs = createAsyncThunk(
                     drug_category: drug?.drug_category || '',
                     dosage_form: drug?.dosage_form || '',
                     drugs: Array.isArray(drug?.drugs) ? drug.drugs : [],
+                    route: drug?.route || '',
                     active_ingredients: Array.isArray(drug?.active_ingredients) 
                         ? drug.active_ingredients 
                         : [],

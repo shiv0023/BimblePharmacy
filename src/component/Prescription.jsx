@@ -368,6 +368,7 @@ const Prescription = ({ route, navigation }) => {
     duration: "",
     quantity: "",
     repeat: "",
+    route: "",
     groupName: "",
     drugForm: "",
     dosage: "",
@@ -444,10 +445,12 @@ const Prescription = ({ route, navigation }) => {
       const apiCompliance = patientDetails?.patientAddress?.patientCompliance?.toLowerCase() || 'unknown';
       const apiFrequency = patientDetails?.patientAddress?.frequency?.toLowerCase() || 'monthly';
 
+      // Update prescription details with route information from API
       setPrescriptionDetails(prev => ({
         ...prev,
         groupName: drug.group_name || '',
         drugForm: drug.dosage_form || '',
+        route: drug.route || 'Topical123', // Use the route from API
         availableIndications: technicalReasons,
         patientCompliance: apiCompliance,
         complianceFrequency: apiCompliance === 'no' ? apiFrequency : 'monthly',
@@ -457,11 +460,6 @@ const Prescription = ({ route, navigation }) => {
           category: drug.drug_category || ''
         }
       }));
-
-      // Set compliance frequency if compliance is "no"
-      if (apiCompliance === 'no') {
-        setComplianceFrequency(apiFrequency);
-      }
 
       setSearchQuery('');
       setIsDrugSelected(true);
@@ -635,7 +633,7 @@ const Prescription = ({ route, navigation }) => {
         complianceFrequency: complianceFrequency,
         groupName: prescriptionDetails.groupName,
         drugForm: prescriptionDetails.drugForm,
-        route: prescriptionDetails.route, // Make sure route is included
+        route: prescriptionDetails.route , 
         indication: prescriptionDetails.indication,
         instructions: prescriptionDetails.instructions,
         duration: parseInt(prescriptionDetails.duration) || 0,
@@ -1032,7 +1030,7 @@ console.log('prescriptionDetails', prescriptionDetails)
           <Text style={styles.drugTitle}>{prescriptionDetails.groupName}</Text>
           <Text style={styles.drugSubtitle}>
             {prescriptionDetails.drugForm} 
-            {prescriptionDetails.route ? ` • ${prescriptionDetails.route}` : ''} 
+          
             {prescriptionDetails.selectedDrugDetails?.category ? ` • ${prescriptionDetails.selectedDrugDetails.category}` : ''}
           </Text>
         </View>

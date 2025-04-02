@@ -238,14 +238,15 @@ const PrescriptionPreview = ({
         medications: prescriptionData?.drugData?.map(drug => ({
           name: drug.groupName,
           route: drug.route || 'Topical',
-          form: drug.drugForm || 'Cream',
+          form: drug.drugForm || '',
           instructions: drug.instructions,
           startDate: formatDate(drug.startDate),
           endDate: formatDate(drug.endDate),
           duration: drug.duration || '1',
           quantity: drug.quantity || '2',
           refills: drug.repeat || '0',
-          indication: drug.indication
+          indication: drug.indication,
+          drugForm: drug.drugForm || ''
         })) || [],
         deliveryOption: deliveryOption,
         signature: signature,
@@ -422,16 +423,14 @@ const PrescriptionPreview = ({
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Medications</Text>
                 {prescriptionData?.drugData?.map((drug, index) => (
-                  <View key={index} style={styles.medicationCard}>
+                  <View key={`medication-${index}`} style={styles.medicationCard}>
                     <View style={styles.medicationHeader}>
                       <Text style={styles.medicationName}>
-                        {drug.groupName}
+                        {drug.groupName} ({drug.drugForm})   ({drug.route})
+                    
+                      </Text> <Text style={[styles.medicationRoute, { marginLeft: 4 }]}>
+                      
                       </Text>
-                      {drug.route && (
-                        <Text style={styles.medicationRoute}>
-                          ({drug.route || 'Topical'})
-                        </Text>
-                      )}
                     </View>
                     <Text style={styles.cityProvinceText}>{drug.indication}</Text>
                     <Text style={styles.cityProvinceText}>
@@ -449,6 +448,13 @@ const PrescriptionPreview = ({
                     <Text style={styles.cityProvinceText}>
                       Duration: {drug.duration} Days{'\n'}
                       ({formatDate(drug.startDate)} - {formatDate(drug.endDate)})
+                    </Text>
+                    <Text style={styles.cityProvinceText}>
+                      {pdfContent?.medications?.map((medication, index) => (
+                        <Text key={`med-form-${index}`} style={styles.cityProvinceText}>
+                          {medication.drugForm} 
+                        </Text>
+                      ))}
                     </Text>
                   </View>
                 ))}
@@ -734,7 +740,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   medicationName: {
     fontSize: 16,
@@ -746,6 +752,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     fontWeight: '400',
+    fontStyle: 'italic',
   },
   dispenseText: {
     fontSize: 14,
