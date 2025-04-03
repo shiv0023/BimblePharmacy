@@ -376,7 +376,8 @@ const Chat = ({navigation}) => {
         lastName: patientDetails.lastName,
         phn: patientDetails.phn,
         dob: patientDetails.dob,
-        patientAddress: patientDetails
+        patientAddress: patientDetails,
+        allergies: patientDetails.allergies
       },
       prescriptionData: prescriptionData,
       appointmentNo: parseInt(appointmentNo),

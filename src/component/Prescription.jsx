@@ -360,7 +360,7 @@ const Prescription = ({ route, navigation }) => {
   const [dose, setDose] = useState('');
   const [showFrequencyOptions, setShowFrequencyOptions] = useState(false);
   const [complianceFrequency, setComplianceFrequency] = useState('Monthly');
-  //  console.log('patientDetails here ', patientDetails);
+   console.log('patientDetails herer ', patientDetails);
   // Initialize with default values
   const initialPrescriptionDetails = {
     indication: "",
@@ -377,7 +377,7 @@ const Prescription = ({ route, navigation }) => {
     endDate: '',
     patientCompliance: patientDetails?.patientAddress?.patientCompliance?.toLowerCase(),
     complianceFrequency: patientDetails?.patientAddress?.frequency?.toLowerCase() ,
-    
+    allergies: patientDetails?.patientAddress?.allergies,
     selectedDrugDetails: {
       din: '',
       name: '',
@@ -386,7 +386,7 @@ const Prescription = ({ route, navigation }) => {
   };
 
   const [prescriptionDetails, setPrescriptionDetails] = useState(initialPrescriptionDetails);
-
+console.log('prescriptionDetails', prescriptionDetails)
   // Access the drugs slice of the Redux state
   const drugs = useSelector(state => {
     try {
@@ -1055,91 +1055,7 @@ console.log('prescriptionDetails', prescriptionDetails)
       </View>
       
       {/* Indication Field */}
-      <View style={styles.formField}>
-        <Text style={styles.sectionLabel}>
-          Indication<Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            styles.customInput,
-            validationErrors.indication && styles.inputError
-          ]}
-          placeholder="Type or select indication"
-          value={prescriptionDetails.indication}
-          onChangeText={(text) => {
-            setPrescriptionDetails(prev => ({ ...prev, indication: text }));
-            setValidationErrors(prev => ({ ...prev, indication: false }));
-          }}
-        />
-        {/* Show suggestions only if we have available indications and the field is focused or has content */}
-        {prescriptionDetails.availableIndications && (
-          <ScrollView style={[styles.suggestionsScrollView, { maxHeight: 120 }]}>
-            <View style={styles.suggestionsContainer}>
-              {prescriptionDetails.availableIndications.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.suggestionButton,
-                    prescriptionDetails.indication === item.indication && styles.suggestionButtonSelected
-                  ]}
-                  onPress={() => handleIndicationSelect(item.indication)}
-                >
-                  <Text style={[
-                    styles.suggestionText,
-                    prescriptionDetails.indication === item.indication && styles.suggestionTextSelected
-                  ]}>
-                    {item.indication}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        )}
-      </View>
-
-      {/* Instructions Field */}
-      <View style={styles.formField}>
-        <Text style={styles.sectionLabel}>
-          Instructions<Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={[
-            styles.input,
-            styles.customInput,
-            validationErrors.instructions && styles.inputError
-          ]}
-          placeholder="Type instructions here..."
-          value={prescriptionDetails.instructions}
-          onChangeText={(text) => {
-            setPrescriptionDetails(prev => ({ ...prev, instructions: text }));
-            setValidationErrors(prev => ({ ...prev, instructions: false }));
-          }}
-        />
-        {prescriptionDetails.availableInstructions && (
-          <ScrollView style={styles.suggestionsScrollView}>
-            <View style={styles.suggestionsContainer}>
-              {prescriptionDetails.availableInstructions.map((instruction, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.suggestionButton,
-                    prescriptionDetails.instructions === instruction && styles.suggestionButtonSelected
-                  ]}
-                  onPress={() => handleInstructionSelect(instruction)}
-                >
-                  <Text style={[
-                    styles.suggestionText,
-                    prescriptionDetails.instructions === instruction && styles.suggestionTextSelected
-                  ]}>
-                    {instruction}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        )}
-      </View>
+   
 
       {/* Row for Dose and Frequency */}
       <View style={styles.formRow}>
@@ -1266,6 +1182,91 @@ console.log('prescriptionDetails', prescriptionDetails)
         </View>
       </View>
 
+      <View style={styles.formField}>
+        <Text style={styles.sectionLabel}>
+          Indication<Text style={styles.required}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            styles.customInput,
+            validationErrors.indication && styles.inputError
+          ]}
+          placeholder="Type or select indication"
+          value={prescriptionDetails.indication}
+          onChangeText={(text) => {
+            setPrescriptionDetails(prev => ({ ...prev, indication: text }));
+            setValidationErrors(prev => ({ ...prev, indication: false }));
+          }}
+        />
+        {/* Show suggestions only if we have available indications and the field is focused or has content */}
+        {prescriptionDetails.availableIndications && (
+          <ScrollView style={[styles.suggestionsScrollView, { maxHeight: 120 }]}>
+            <View style={styles.suggestionsContainer}>
+              {prescriptionDetails.availableIndications.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.suggestionButton,
+                    prescriptionDetails.indication === item.indication && styles.suggestionButtonSelected
+                  ]}
+                  onPress={() => handleIndicationSelect(item.indication)}
+                >
+                  <Text style={[
+                    styles.suggestionText,
+                    prescriptionDetails.indication === item.indication && styles.suggestionTextSelected
+                  ]}>
+                    {item.indication}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Instructions Field */}
+      <View style={styles.formField}>
+        <Text style={styles.sectionLabel}>
+          Instructions<Text style={styles.required}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            styles.customInput,
+            validationErrors.instructions && styles.inputError
+          ]}
+          placeholder="Type instructions here..."
+          value={prescriptionDetails.instructions}
+          onChangeText={(text) => {
+            setPrescriptionDetails(prev => ({ ...prev, instructions: text }));
+            setValidationErrors(prev => ({ ...prev, instructions: false }));
+          }}
+        />
+        {prescriptionDetails.availableInstructions && (
+          <ScrollView style={styles.suggestionsScrollView}>
+            <View style={styles.suggestionsContainer}>
+              {prescriptionDetails.availableInstructions.map((instruction, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.suggestionButton,
+                    prescriptionDetails.instructions === instruction && styles.suggestionButtonSelected
+                  ]}
+                  onPress={() => handleInstructionSelect(instruction)}
+                >
+                  <Text style={[
+                    styles.suggestionText,
+                    prescriptionDetails.instructions === instruction && styles.suggestionTextSelected
+                  ]}>
+                    {instruction}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        )}
+      </View>
       {/* Row 5: Refills */}
       <View style={styles.formRow}>
         <View style={styles.formColumn}>
@@ -3125,10 +3126,9 @@ console.log('prescriptionDetails', prescriptionDetails)
             allergies: patientDetails?.allergies  // Allergies are passed here
           }] : [])]
         }}
-        patientDetails={patientDetails}  // And here as well
+        patientDetails={patientDetails}  // And here in the full patient details
         additionalNotes={additionalNotes}
         setAdditionalNotes={setAdditionalNotes}
-        // onGeneratePDF={handleGeneratePDF}
         onPrintAndPaste={handlePrintAndPaste}
         onFaxAndPaste={handleFaxAndPaste}
       />

@@ -17,6 +17,9 @@ export const fetchPatientDetails = createAsyncThunk(
       if (response.data.status === 'success' && response.data.data) {
         const patientData = response.data.data;
         
+        // Add debug log for allergies
+        console.log('Patient Data Allergies:', patientData.allergies);
+        
         // Normalize the compliance value from patientAddress
         if (patientData.patientAddress?.patientCompliance) {
           patientData.patientCompliance = patientData.patientAddress.patientCompliance.toLowerCase();

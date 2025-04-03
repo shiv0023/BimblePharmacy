@@ -19,8 +19,7 @@ import Signature from 'react-native-signature-capture';
 import { fetchClinicDetails } from '../Redux/Slices/ClinicDetails';
 import PDFViewer from '../component/Pdf';
 import { useNavigation } from '@react-navigation/native';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import RNBlobUtil from 'react-native-blob-util';
+
 
 const getProvinceAbbreviation = (provinceName) => {
   const provinceMap = {
@@ -174,12 +173,14 @@ const PrescriptionPreview = ({
   // Update the handleGeneratePDF function
   const handleGeneratePDF = async () => {
     try {
+      // Set loading state to true when starting
       setIsGeneratingPdf(true);
 
       // Validate fields
       const validationError = validateFields();
       if (validationError) {
         Alert.alert('Required Fields', validationError);
+        setIsGeneratingPdf(false); // Reset loading state if validation fails
         return;
       }
 
@@ -191,9 +192,12 @@ const PrescriptionPreview = ({
         { cancelable: false }
       );
 
+      // Log allergies before PDF generation
+      console.log('Allergies for PDF:', patientDetails?.allergies);
+
       // Format the data for PDF generation
       const content = {
-        orderId: prescriptionData?.data?.prescriptionBatchId || `717049`,
+        orderId: prescriptionData?.data?.prescriptionBatchId ||'',
         clinicInfo: {
           logo: clinicDetails?.logo,
           date: formatDate(new Date()),
@@ -228,7 +232,11 @@ const PrescriptionPreview = ({
           phoneCell: formatPhoneNumber(patientDetails?.patientAddress?.phoneCell) ,
           phoneWork: formatPhoneNumber(patientDetails?.patientAddress?.phoneWork) ,
           phoneHome: formatPhoneNumber(patientDetails?.patientAddress?.phoneHome) ,
-          allergies: patientDetails?.allergies ,
+          allergies: patientDetails?.allergies ? (
+            Array.isArray(patientDetails.allergies) ? 
+              patientDetails.allergies.join(', ') : 
+              patientDetails.allergies
+          ) : 'No Known Allergies',
           compliance: patientDetails?.patientCompliance || prescriptionData?.drugData?.[0]?.patientCompliance ,
           complianceFrequency: (patientDetails?.patientCompliance?.toLowerCase() === 'no' || 
             prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no') 
@@ -264,8 +272,43 @@ const PrescriptionPreview = ({
       console.error('Error generating PDF:', error);
       Alert.alert('Error', 'Failed to generate PDF');
     } finally {
+      // Reset loading state when done
       setIsGeneratingPdf(false);
     }
+  };
+
+  // Add this debug log for patientDetails
+  console.log('PrescriptionPreview patientDetails:', patientDetails);
+
+  // Update the Drug Allergies section
+  const renderAllergies = () => {
+    console.log('Rendering allergies:', patientDetails?.allergies);
+    
+    if (!patientDetails?.allergies) {
+      return (
+        <View style={styles.allergyItem}>
+          <Text style={styles.allergiesText}>No Known Allergies</Text>
+        </View>
+      );
+    }
+
+    if (Array.isArray(patientDetails.allergies)) {
+      return patientDetails.allergies.map((allergy, index) => (
+        <View key={index} style={styles.allergyItem}>
+          <Text style={styles.allergiesText}>
+            {allergy}
+            {index < patientDetails.allergies.length - 1 ? ', ' : ''}
+          </Text>
+        </View>
+      ));
+    }
+
+    // Handle string case
+    return (
+      <View style={styles.allergyItem}>
+        <Text style={styles.allergiesText}>{patientDetails.allergies}</Text>
+      </View>
+    );
   };
 
   if (!visible) return null;
@@ -414,9 +457,9 @@ const PrescriptionPreview = ({
               {/* Drug Allergies */}
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Drug Allergies</Text>
-                <Text style={styles.allergiesText}>
-                  {patientDetails?.allergies || 'No Known Allergies'}
-                </Text>
+                <View style={styles.allergiesContainer}>
+                  {renderAllergies()}
+                </View>
               </View>
 
               {/* Medications */}
@@ -563,6 +606,7 @@ const PrescriptionPreview = ({
 
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
+           
               <TouchableOpacity 
                 style={[
                   styles.actionButton, 
@@ -1062,6 +1106,21 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  allergiesContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  allergyItem: {
+    marginBottom: 4,
+  },
+  allergiesText: {
+    fontSize: 16,
+    color: '#191919',
+    lineHeight: 24,
+    fontWeight: '300',
   },
 });
 
