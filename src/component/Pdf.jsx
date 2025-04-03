@@ -152,19 +152,19 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                 border-top: 1px solid #dee2e6;
               }
               .patient-info {
-                margin-bottom: 20px;
+                margin-bottom: 10px;
                 padding-bottom: 15px;
-               
+                page-break-inside: avoid;
               }
               .order-number {
                 position: absolute;
                 top: 0;
                 right: 40px;
                 font-size: 12px;
-                color: #0049F8;
+               
               }
               .medication {
-                padding: 12px;
+                padding: 6px;
                 background-color: #F8F9FA;
                 border-radius: 8px;
                 border-bottom: 1px solid #E6E8EC;
@@ -216,6 +216,7 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                 margin-bottom: 20px;
                 padding-bottom: 10px;
                 border-bottom: 1px solid #dee2e6;
+                page-break-inside: avoid;
               }
               .medications-list {
                 page-break-inside: avoid;
@@ -245,6 +246,11 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                 color: #191919;
                 margin: 0 4px;
               }
+                .deliverymethod{
+                  font-size: 14px;
+              
+                  margin-bottom: 8px;
+                }
               @media print {
                 .page-break {
                   page-break-before: always;
@@ -284,7 +290,7 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
       return '';
     }
 
-    const MEDS_PER_PAGE = 4;
+    const MEDS_PER_PAGE = 5;
     const totalPages = Math.ceil(medications.length / MEDS_PER_PAGE);
     
     return Array.from({ length: totalPages }, (_, pageIndex) => {
@@ -298,7 +304,7 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
           <div class="page-content">
             <div class="left-sidebar">
               <img src="${MEDIA_URL}${content.clinicInfo.logo}" class="clinic-logo" alt="Clinic Logo" />
-              <div class="virtual-clinic">VIRTUAL CLINIC</div>
+            
               <div class="clinic-info">
                 <div>Date: ${formatDate(new Date()).split(' at')[0]}</div>
                 <div>${content.clinicInfo.name}</div>
@@ -307,9 +313,10 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
                 <div>Fax: ${content.clinicInfo.fax}</div>
               </div>
               
-              <div>${content.deliveryOption === 'delivery' ? 'Delivery' : 'Pickup'} Requested</div>
+           
               
               <div class="pharmacy-info">
+                 <div class="deliverymethod">${content.deliveryOption === 'delivery' ? 'Delivery' : 'Pickup'} Requested</div>
                 <strong>Pharmacy Details</strong><br/>
                 ${content.pharmacyDetails.name}<br/>
                 ${content.pharmacyDetails.address}<br/>
@@ -322,21 +329,20 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
             <div class="main-content">
               <div class="order-number">Order #${content.orderId}</div>
               
-              ${pageIndex === 0 ? `
-                <div class="patient-info">
-                  <strong>Patient Details</strong><br/>
-                  ${content.patientInfo.name} (PHN: ${content.patientInfo.phn})<br/>
-                  ${content.patientInfo.gender}/${content.patientInfo.dob}<br/>
-                  ${content.patientInfo.address}<br/>
-                  ${content.patientInfo.city}, ${content.patientInfo.province} ${content.patientInfo.postalCode}<br/>
-                  Phone (C): ${content.patientInfo.phoneCell}    Phone (H): ${content.patientInfo.phoneHome}
-                </div>
+              <div class="patient-info">
+                <strong>Patient Details</strong><br/>
+                ${content.patientInfo.name} (PHN: ${content.patientInfo.phn})<br/>
+                ${content.patientInfo.gender}/${content.patientInfo.dob}<br/>
+                ${content.patientInfo.address}<br/>
+                ${content.patientInfo.city}, ${content.patientInfo.province} ${content.patientInfo.postalCode}<br/>
+                Phone (C): ${content.patientInfo.phoneCell}    Phone (H): ${content.patientInfo.phoneHome}
+                Phone (W): ${content.patientInfo.phoneWork}
+              </div>
 
-                <div class="drug-allergies">
-                  <strong>Drug Allergies</strong><br/>
-                  ${content.patientInfo.allergies || 'No Known Allergies'}
-                </div>
-              ` : ''}
+              <div class="drug-allergies">
+                <strong>Drug Allergies</strong><br/>
+                ${content.patientInfo.allergies || 'No Known Allergies'}
+              </div>
 
               <div class="medications-list">
                 ${pageMeds.map((med, idx) => generateMedicationHTML(med)).join('')}
@@ -359,7 +365,6 @@ const PDFViewer = ({ visible, onClose, pdfContent, signature, additionalNotes })
               <div>Signed on ${formatDate(new Date())}</div>
             </div>
           </div>
-
         </div>
       `;
     }).filter(Boolean).join('');

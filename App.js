@@ -7,7 +7,7 @@ const App = () => {
   return (
     <SafeAreaView 
       style={styles.safeArea} 
-      edges={[ 'bottom']} 
+      edges={[ 'bottom` ']} 
     >
       <DrawerNavigator />
     </SafeAreaView>

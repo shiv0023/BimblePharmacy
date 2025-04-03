@@ -347,7 +347,7 @@ const ProfileLegend = ({ selectedFilter, onFilterChange }) => {
 
 const Prescription = ({ route, navigation }) => {
   const dispatch = useDispatch();
-  const { patientDetails } = route.params;
+  const { patientDetails, appointmentNo } = route.params; // Add appointmentNo here
   const [searchQuery, setSearchQuery] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDrugSelected, setIsDrugSelected] = useState(false);
@@ -377,6 +377,7 @@ const Prescription = ({ route, navigation }) => {
     endDate: '',
     patientCompliance: patientDetails?.patientAddress?.patientCompliance?.toLowerCase(),
     complianceFrequency: patientDetails?.patientAddress?.frequency?.toLowerCase() ,
+    
     selectedDrugDetails: {
       din: '',
       name: '',
@@ -445,22 +446,23 @@ const Prescription = ({ route, navigation }) => {
       const apiCompliance = patientDetails?.patientAddress?.patientCompliance?.toLowerCase() || 'unknown';
       const apiFrequency = patientDetails?.patientAddress?.frequency?.toLowerCase() || 'monthly';
 
-      // Update prescription details with route information from API
+      // Update prescription details WITHOUT setting the indication
       setPrescriptionDetails(prev => ({
         ...prev,
+        indication: "", // Keep indication empty initially
         groupName: drug.group_name || '',
         drugForm: drug.dosage_form || '',
-        route: drug.route || 'Topical123', // Use the route from API
-        availableIndications: technicalReasons,
+        route: drug.route || '',
+        availableIndications: technicalReasons, // Store available indications for suggestions
         patientCompliance: apiCompliance,
         complianceFrequency: apiCompliance === 'no' ? apiFrequency : 'monthly',
         selectedDrugDetails: {
           din: drug.drugs?.[0]?.din || '',
           name: drug.drugs?.[0]?.name || '',
-          category: drug.drug_category || ''
+          category: drug.drug_category || '',
         }
       }));
-
+console.log('prescriptionDetails', prescriptionDetails)
       setSearchQuery('');
       setIsDrugSelected(true);
       dispatch(clearSearchResults());
@@ -625,38 +627,48 @@ const Prescription = ({ route, navigation }) => {
         return;
       }
 
-      // Create new prescription object
-      const newPrescription = {
-        ...prescriptionDetails,
-        dose: dose,
-        frequency: frequency,
-        complianceFrequency: complianceFrequency,
-        groupName: prescriptionDetails.groupName,
-        drugForm: prescriptionDetails.drugForm,
-        route: prescriptionDetails.route , 
-        indication: prescriptionDetails.indication,
-        instructions: prescriptionDetails.instructions,
-        duration: parseInt(prescriptionDetails.duration) || 0,
-        quantity: parseInt(prescriptionDetails.quantity) || 0,
-        repeat: parseInt(prescriptionDetails.repeat) || 0,
-        startDate: prescriptionDetails.startDate,
-        longTerm: prescriptionDetails.longTerm,
-        selectedDrugDetails: prescriptionDetails.selectedDrugDetails
-      };
+      if (!prescriptionDetails.groupName) {
+        Alert.alert('Error', 'Drug name is required');
+        return;
+      }
 
-      // Prepare API data
+      // Get appointmentNo from route params
+      const appointmentNo = route.params?.appointmentNo;
+      
+      // Log for debugging
+      console.log('Adding drug with appointment number:', appointmentNo);
+
+      if (!appointmentNo) {
+        Alert.alert('Error', 'Appointment number is missing');
+        return;
+      }
+
+      // Create new prescription object with appointmentNo
       const prescriptionData = {
         demographicNo: parseInt(patientDetails.demographicNo),
-        drugData: [newPrescription], // Send as array with single drug
-        // additionalNotes: '' // Add empty additionalNotes to prevent 400 error
+        appointmentNo: parseInt(appointmentNo),
+        drugData: [{
+          ...prescriptionDetails,
+          dose: dose || '',
+          frequency: frequency || 'BID',
+          complianceFrequency: complianceFrequency || 'Monthly',
+          route: prescriptionDetails.route || 'Oral',
+          groupName: prescriptionDetails.groupName,
+          drugForm: prescriptionDetails.drugForm || '',
+          duration: parseInt(prescriptionDetails.duration) || 0,
+          quantity: parseInt(prescriptionDetails.quantity) || 0,
+          repeat: parseInt(prescriptionDetails.repeat) || 0,
+          startDate: prescriptionDetails.startDate || new Date().toISOString().split('T')[0],
+          longTerm: prescriptionDetails.longTerm || 'No', // Keep as string 'Yes' or 'No'
+          allergies: patientDetails?.allergies
+        }]
       };
 
       // Call the API
       const result = await dispatch(addPatientDrug(prescriptionData)).unwrap();
       
       if (result && result.status === "Success") {
-        // Add to local state only after successful API call
-        setAddedPrescriptions(prev => [...prev, newPrescription]);
+        setAddedPrescriptions(prev => [...prev, prescriptionData.drugData[0]]);
         
         // Reset form fields but keep the drug selection
         setDose('');
@@ -672,7 +684,6 @@ const Prescription = ({ route, navigation }) => {
           startDate: false
         });
         
-        // Clear search results
         dispatch(clearSearchResults());
         setSearchQuery('');
         setIsDrugSelected(false);
@@ -681,7 +692,7 @@ const Prescription = ({ route, navigation }) => {
       }
     } catch (error) {
       console.error('Add drug error:', error);
-      Alert.alert('Error', 'Failed to add drug. Please try again.');
+      Alert.alert('Error', error.message || 'Failed to add drug. Please try again.');
     }
   };
 
@@ -690,8 +701,8 @@ const Prescription = ({ route, navigation }) => {
   const [additionalNotes, setAdditionalNotes] = useState('');
 
   const handleGeneratePrescription = async () => {
-    if (!patientDetails?.demographicNo) {
-      Alert.alert('Error', 'Patient information is missing');
+    if (!patientDetails?.demographicNo || !appointmentNo) {
+      Alert.alert('Error', 'Patient information or appointment number is missing');
       return;
     }
 
@@ -738,6 +749,7 @@ const Prescription = ({ route, navigation }) => {
     try {
       const prescriptionData = {
         demographicNo: parseInt(patientDetails.demographicNo),
+        appointmentNo: parseInt(appointmentNo),
         drugData: addedPrescriptions,
         additionalNotes: additionalNotes
       };
@@ -759,8 +771,8 @@ const Prescription = ({ route, navigation }) => {
     try {
       const prescriptionData = {
         demographicNo: parseInt(patientDetails.demographicNo),
+        appointmentNo: parseInt(appointmentNo),
         drugData: addedPrescriptions,
-        // additionalNotes: additionalNotes
       };
       const result = await dispatch(addPatientDrug(prescriptionData)).unwrap();
       if (result && result.status === "Success") {
@@ -1060,8 +1072,9 @@ console.log('prescriptionDetails', prescriptionDetails)
             setValidationErrors(prev => ({ ...prev, indication: false }));
           }}
         />
+        {/* Show suggestions only if we have available indications and the field is focused or has content */}
         {prescriptionDetails.availableIndications && (
-          <ScrollView style={styles.suggestionsScrollView}>
+          <ScrollView style={[styles.suggestionsScrollView, { maxHeight: 120 }]}>
             <View style={styles.suggestionsContainer}>
               {prescriptionDetails.availableIndications.map((item, index) => (
                 <TouchableOpacity
@@ -1559,7 +1572,7 @@ console.log('prescriptionDetails', prescriptionDetails)
                   <Text style={styles.editButtonText}>✎</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={styles.deleteButton}
+                  style={styles.editButton}
                   onPress={() => handleDeletePrescription(index)}
                 >
                   <Text style={styles.deleteButtonText}>✕</Text>
@@ -1603,7 +1616,11 @@ console.log('prescriptionDetails', prescriptionDetails)
 
               <View style={styles.detailRow}>
                 <Text variant="subheading" style={styles.detailLabel}>Long Term:</Text>
-                <Text style={styles.detailText}>{prescription.longTerm}</Text>
+                <Text style={styles.detailText}>
+                  {typeof prescription.longTerm === 'boolean' 
+                    ? (prescription.longTerm ? 'Yes' : 'No')
+                    : prescription.longTerm}
+                </Text>
               </View>
             </View>
           </View>
@@ -3104,10 +3121,11 @@ console.log('prescriptionDetails', prescriptionDetails)
             ...prescriptionDetails,
             dose,
             frequency,
-            complianceFrequency
+            complianceFrequency,
+            allergies: patientDetails?.allergies  // Allergies are passed here
           }] : [])]
         }}
-        patientDetails={patientDetails}
+        patientDetails={patientDetails}  // And here as well
         additionalNotes={additionalNotes}
         setAdditionalNotes={setAdditionalNotes}
         // onGeneratePDF={handleGeneratePDF}

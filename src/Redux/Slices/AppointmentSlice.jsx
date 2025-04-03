@@ -55,12 +55,22 @@ export const fetchAppointments = createAsyncThunk(
 export const setSelectedAppointmentAndFetchDetails = createAsyncThunk(
   'appointment/setSelectedAndFetch',
   async (appointment, { dispatch }) => {
+    if (!appointment?.appointmentNo) {
+      throw new Error('Appointment number is required');
+    }
+
     // First set the selected appointment
-    dispatch(setSelectedAppointment(appointment));
+    dispatch(setSelectedAppointment({
+      ...appointment,
+      appointmentNo: parseInt(appointment.appointmentNo)
+    }));
 
     // Then fetch patient details if we have a demographicNo
     if (appointment?.demographicNo) {
-      await dispatch(fetchPatientDetails({ demographicNo: appointment.demographicNo }));
+      await dispatch(fetchPatientDetails({ 
+        demographicNo: appointment.demographicNo,
+        appointmentNo: appointment.appointmentNo
+      }));
     }
 
     return appointment;

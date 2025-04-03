@@ -196,12 +196,15 @@ export default function Appointment({navigation}) {
   };
 
   const handleAppointmentPress = (appointment) => {
+    console.log(appointment.deliveryMethod, 'appointment.deliveryMethod')
     dispatch(setSelectedAppointmentAndFetchDetails(appointment));
     
     navigation.navigate("Chat", {
       from: appointment.status === 'N' ? 'NEW' : 'FOLLOWUP',
       demographicNo: appointment.demographicNo,
-      status: appointment.status
+      status: appointment.status,
+      appointmentNo: appointment.appointmentNo,
+      deliveryMethod: appointment.deliveryMethod
     });
   };
 

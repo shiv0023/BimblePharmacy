@@ -59,6 +59,12 @@ const Chat = ({navigation}) => {
 
   const [isPrescribing, setIsPrescribing] = useState(false);
 
+  // Get appointment number from both sources
+  const routeAppointmentNo = routes.params?.appointmentNo;
+  
+  // Use either the selected appointment number or the route params
+  const appointmentNo = selectedAppointment?.appointmentNo || routeAppointmentNo;
+
   useEffect(() => {
     const demoNo = selectedAppointment?.demographicNo || routes.params?.demographicNo;
     
@@ -323,8 +329,24 @@ const Chat = ({navigation}) => {
       return;
     }
 
+    const appointmentNo = selectedAppointment?.appointmentNo || routes.params?.appointmentNo;
+    
+    // Get delivery method from route params first, then fallback to selectedAppointment
+    let deliveryMethod = routes.params?.deliveryMethod || selectedAppointment?.deliveryMethod;
+
+    console.log('Route Delivery Method:', routes.params?.deliveryMethod);
+    console.log('Selected Appointment Delivery Method:', selectedAppointment?.deliveryMethod);
+    console.log('Final Delivery Method:', deliveryMethod);
+
+    // Only set default if we don't have a value
+    if (!deliveryMethod) {
+      deliveryMethod = 'pickup';
+    }
+
     const prescriptionData = {
       demographicNo: parseInt(patientDetails.demographicNo),
+      appointmentNo: parseInt(appointmentNo),
+      deliveryMethod: deliveryMethod.toLowerCase(), // Ensure lowercase for consistency
       drugData: [{
         indication: "Wound disinfection",
         instructions: "",
@@ -339,6 +361,14 @@ const Chat = ({navigation}) => {
       }]
     };
 
+    // Log the final data being passed
+    console.log('Navigating to Prescription with data:', {
+      appointmentNo,
+      deliveryMethod: deliveryMethod.toLowerCase(),
+      source: routes.params?.deliveryMethod ? 'route params' : 
+              selectedAppointment?.deliveryMethod ? 'selected appointment' : 'default'
+    });
+
     navigation.navigate('Prescription', {
       patientDetails: {
         demographicNo: parseInt(patientDetails.demographicNo),
@@ -347,13 +377,28 @@ const Chat = ({navigation}) => {
         phn: patientDetails.phn,
         dob: patientDetails.dob,
         patientAddress: patientDetails
-        
-        
       },
-      prescriptionData: prescriptionData
+      prescriptionData: prescriptionData,
+      appointmentNo: parseInt(appointmentNo),
+      deliveryMethod: deliveryMethod.toLowerCase()
     });
   };
 
+  // Add debug logging to track appointment number
+  useEffect(() => {
+    console.log('Selected Appointment:', selectedAppointment);
+    console.log('Route Params:', routes.params);
+    console.log('Appointment Number:', appointmentNo);
+  }, [selectedAppointment, routes.params, appointmentNo]);
+
+  // Add this useEffect for debugging
+  useEffect(() => {
+    console.log('Selected Appointment:', selectedAppointment);
+    console.log('Route Params:', routes.params);
+    console.log('Delivery Method:', selectedAppointment?.deliveryMethod || routes.params?.deliveryMethod);
+  }, [selectedAppointment, routes.params]);
+
+console.log(patientDetails,'hhhhh')
   return (
     <>
       {Platform.OS === 'ios' && (

@@ -221,13 +221,13 @@ const PrescriptionPreview = ({
           originalDob: patientDetails?.dob,
           age: calculateAge(patientDetails?.dob),
           dob: `${formatDateForDOB(patientDetails?.dob)}/${calculateAge(patientDetails?.dob)} years`,
-          address: patientDetails?.patientAddress?.address ,
-          city: patientDetails?.patientAddress?.city ,
-          province: getProvinceAbbreviation(patientDetails?.patientAddress?.province) ,
-          postalCode: patientDetails?.patientAddress?.postalCode ,
-          phoneCell: formatPhoneNumber(patientDetails?.phoneCell) ,
-          phoneWork: formatPhoneNumber(patientDetails?.phoneWork) ,
-          phoneHome: formatPhoneNumber(patientDetails?.phoneHome) ,
+          address: patientDetails?.patientAddress?.address || '',
+          city: patientDetails?.patientAddress?.city || '',
+          province: getProvinceAbbreviation(patientDetails?.patientAddress?.province) || '',
+          postalCode: patientDetails?.patientAddress?.postalCode || '',
+          phoneCell: formatPhoneNumber(patientDetails?.patientAddress?.phoneCell) ,
+          phoneWork: formatPhoneNumber(patientDetails?.patientAddress?.phoneWork) ,
+          phoneHome: formatPhoneNumber(patientDetails?.patientAddress?.phoneHome) ,
           allergies: patientDetails?.allergies ,
           compliance: patientDetails?.patientCompliance || prescriptionData?.drugData?.[0]?.patientCompliance ,
           complianceFrequency: (patientDetails?.patientCompliance?.toLowerCase() === 'no' || 
@@ -420,7 +420,7 @@ const PrescriptionPreview = ({
               </View>
 
               {/* Medications */}
-              <View style={styles.section}>
+             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Medications</Text>
                 {prescriptionData?.drugData?.map((drug, index) => (
                   <View key={`medication-${index}`} style={styles.medicationCard}>
@@ -459,6 +459,7 @@ const PrescriptionPreview = ({
                   </View>
                 ))}
               </View>
+
 
               {/* Delivery Options */}
               <View style={styles.section}>
@@ -772,8 +773,9 @@ const styles = StyleSheet.create({
   },
   medicationDetails: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
     gap: 16,
-    marginBottom: 4,
   },
   detailText: {
     fontSize: 14,

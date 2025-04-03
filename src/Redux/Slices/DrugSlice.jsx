@@ -16,6 +16,15 @@ export const addPatientDrug = createAsyncThunk(
     'drugs/addPatientDrug',
     async (drugData, { rejectWithValue }) => {
         try {
+            // Validate required parameters first
+            if (!drugData.appointmentNo) {
+                return rejectWithValue('Appointment number is required');
+            }
+
+            if (!drugData.demographicNo) {
+                return rejectWithValue('Patient demographic number is required');
+            }
+
             // Validate drug data before formatting
             if (!drugData.drugData || !Array.isArray(drugData.drugData)) {
                 return rejectWithValue('Invalid drug data format');
@@ -29,7 +38,6 @@ export const addPatientDrug = createAsyncThunk(
 
             // Format the data with only required fields
             const formattedData = {
-                ...drugData,
                 demographicNo: parseInt(drugData.demographicNo),
                 appointmentNo: parseInt(drugData.appointmentNo),
                 drugData: drugData.drugData.map(drug => {
