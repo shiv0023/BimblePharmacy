@@ -12,7 +12,7 @@ export const fetchPatientDetails = createAsyncThunk(
         demographicNo: demographicNo
       });
 
-      // console.log('Patient details response:', response.data);
+      console.log('Patient details response:', response.data);
 
       if (response.data.status === 'success' && response.data.data) {
         const patientData = response.data.data;
@@ -83,7 +83,7 @@ export const fetchEncounterNotes = createAsyncThunk(
 const patientDetailsSlice = createSlice({
   name: 'patientDetails',
   initialState: {
-    data: null,
+    data: {},
     encounterNotes: [],
     loading: false,
     notesLoading: false,
@@ -91,7 +91,7 @@ const patientDetailsSlice = createSlice({
   },
   reducers: {
     clearPatientDetails: (state) => {
-      state.data = null;
+      state.data = {};
       state.encounterNotes = [];
       state.error = null;
     }
@@ -104,14 +104,15 @@ const patientDetailsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchPatientDetails.fulfilled, (state, action) => {
+        const demographicNo = action.meta.arg.demographicNo;
+        state.data[demographicNo] = action.payload;
         state.loading = false;
-        state.data = action.payload;
         state.error = null;
       })
       .addCase(fetchPatientDetails.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        state.data = null;
+        state.data = {};
       })
       // Encounter Notes reducers with separate loading state
       .addCase(fetchEncounterNotes.pending, (state) => {

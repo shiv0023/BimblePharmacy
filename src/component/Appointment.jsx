@@ -36,6 +36,7 @@ import CustomHeader from './CustomHeader';
 import { SafeAreaView as SafeAreaViewSafeAreaContext } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAppointments, setSelectedAppointmentAndFetchDetails } from '../Redux/Slices/AppointmentSlice';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 // const appointments = [
@@ -77,6 +78,11 @@ import { fetchAppointments, setSelectedAppointmentAndFetchDetails } from '../Red
 
 // Get window dimensions
 const { width, height } = Dimensions.get('window');
+
+function formatPatientName(name) {
+  // Remove spaces after commas and convert to uppercase
+  return name.replace(/, /g, ',').toUpperCase();
+}
 
 export default function Appointment({navigation}) {
   const [currentDate, setCurrentDate] = useState('');
@@ -217,42 +223,58 @@ export default function Appointment({navigation}) {
         style={[
           styles.card,
           {
-            borderColor: isNew ? '#0049F8' : 'grey',
+            borderColor: isNew ? '#0049F8' : '#bfc9c2',
           },
         ]}>
-        <View style={styles.timeHeader}>
-          <Text style={styles.appointmentTime}>
-            {item.startTime.slice(0, 5)} - {item.endTime.slice(0, 5)}
-          </Text>
-        </View>
+      
 
         <View>
           <View style={styles.cardHeader}>
             <View style={styles.avatar}>
-              <PatientImage />
+              {/* <PatientImage /> */}
             </View>
             <View style={{flex: 1}}>
-              <View style={styles.nameRow}>
-                <Text variant="subheading" style={styles.patientName}>{item.patientName}</Text>
+              <View style={styles.nameRowWrap}>
+                <Text variant="subheading"
+                  style={styles.patientName}
+                  numberOfLines={2}
+                
+                >
+                  {formatPatientName(item.patientName)}
+                  <Text style={styles.slashText}> / </Text>
+                  <Text style={styles.genderBadgeText}>F</Text>
+                  <Text style={styles.slashText}> / </Text>
+                  <Text style={styles.ageText}>32 years</Text>
+                </Text>
               </View>
               <View style={styles.row}>
-                <View style={styles.infoText}>
+                <View>
                   <Text>
-                    <Text  style={styles.phnLabel}>PHN: </Text>
-                    <Text  style={styles.phnValue}>{item.clinicContact}</Text>
-                  
+                    <Text style={styles.phnLabel}>PHN: </Text>
+                    <Text variant="subheading" style={styles.phnValue}>{item.clinicContact}</Text>
                   </Text>
                 </View>
-                <View style={styles.infoText}>
-                  <Text variant='paragraph'>{item.duration} mins</Text>
+                <View style={styles.timeInfoBox}>
+                  <Text style={styles.appointmentTime}>
+                    {item.startTime.slice(0, 5)} - {item.endTime.slice(0, 5)}
+                  </Text>
                 </View>
               </View>
             </View>
           </View>
           <View style={styles.divider} />
-          <Text style={styles.reasonText}>
-            Reason: {item.reason}, {item.reasonDesc}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',  paddingBottom: 2, paddingTop: 2 }}>
+            <Text style={styles.reasonText}>
+              Reason: {item.reason} {item.reasonDesc}
+            </Text>
+            <View style={styles.IconContainer}>
+            <TouchableOpacity onPress={() => handleAppointmentPress(item)}>
+              <Icon style={{justifyContent:'center',paddingTop:5}} name="arrow-top-right" size={28} color="#0049F8" />
+            </TouchableOpacity>
+            </View>
+       
+          </View>
+          
         </View>
 
         <View style={styles.statusContainer}>
@@ -269,7 +291,7 @@ export default function Appointment({navigation}) {
           </View>
           
          
-            <View style={[
+            {/* <View style={[
               styles.eligibilityBadge,
               { backgroundColor: item.eligibility === "YES" ? '#E3F2FD' : '#FFEBEE' }
             ]}>
@@ -279,11 +301,11 @@ export default function Appointment({navigation}) {
               ]}>
                 {item.eligibility === "YES" ? "Eligible" : "Not Eligible"}
               </Text>
-            </View>
+            </View> */}
        
         </View>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[
             styles.actionButton,
             {
@@ -296,7 +318,7 @@ export default function Appointment({navigation}) {
           }]}>
             {isNew ? 'Continue' : 'Waiting'}
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     );
   };
@@ -445,42 +467,76 @@ const styles = StyleSheet.create({
     lineHeight:18.2
     
   },
-  line: {
-    height: 1,
-    backgroundColor: '#ddd',
-    flex: 1,
-    margin: 10,
-  },
+  // line: {
+  //   height: 1,
+  //   backgroundColor: '#ddd',
+  //   flex: 1,
+  //   margin: 10,ZRF
+  // },
 
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFF',
     margin: 10,
     borderRadius: 8,
-    borderColor: '#0049F8',
-    borderWidth: 1,
+    borderColor: '#bfc9c2',
+    borderWidth: 0.5,
     position: 'relative',
   },
-  cardHeader: {flexDirection: 'row', marginBottom: 5,padding: moderateScale(12),paddingBottom:5},
-  avatar: {borderRadius: 25, marginRight: 10, marginBottom: 20},
-  nameRow: {flexDirection: 'row', alignItems: 'center'},
-  name: {
-    // fontWeight: '700',
-    marginRight: 5,
-  },
-  // genderIcon: {width: 14, height: 14},
+  cardHeader: {flexDirection: 'row',padding: moderateScale(8),},
 
+  nameRowWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    flex: 1,
+    marginBottom: 2,
+    width:'90%',
+    
+  },
+  patientName: {
+    
+    fontSize: 14,
+    color: '#222',
+    wordWrap: 'break-word',
+
+  },
+  genderAgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+ 
+  },
+  genderBadge: {
+    minWidth: 28,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: 'rgba(241,243,247,1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
+    paddingHorizontal: 6,
+  },
+  genderBadgeText: {
+    color: '#222',
+    fontSize: 14,
+  
+  },
+  ageText: {
+    fontSize: 14,
+    color: '#222',
+  },
   row: {
     flexDirection: 'row',
-    marginTop: verticalScale(5),
+    marginTop: verticalScale(1),
     flexWrap: 'nowrap',
-    marginBottom: verticalScale(5),
+    
   },
   infoText: {
     backgroundColor: 'rgba(241,243,247,1)',
     marginRight: scale(10),
-    marginBottom: verticalScale(5),
     borderRadius: moderateScale(4),
-    padding: moderateScale(4),
+    textAlign:'center', 
+    alignItems:'center',
+    justifyContent:'center',
   },
 
   statusContainer: {
@@ -516,9 +572,9 @@ const styles = StyleSheet.create({
   },
 
   description: {
-    marginBottom: 10,
+   
   },
-  actionButton: {padding: 16, borderRadius: 5},
+  actionButton: { borderRadius: 5},
   actionButtonText: {
     // fontWeight: '400',
     textAlign: 'center',
@@ -536,12 +592,12 @@ const styles = StyleSheet.create({
   genderText: {
     fontSize: 14,
     color: 'rgba(25,25,25,1)',
-    padding: 4,
+  
   },
   borderBottom: {
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
-    marginBottom: 15,
+  
   },
   emptyText: {
     padding: 10,
@@ -564,12 +620,7 @@ const styles = StyleSheet.create({
   appointmentTime: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4
-  },
-  patientName: {
-  
-    // color: '#333',
-    marginRight: 8
+
   },
   demographicType: {
     fontSize: 14,
@@ -585,11 +636,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#0049F826'
   },
   reasonText: {
-    padding: moderateScale(12),
+    padding: moderateScale(8),
     color: '#444'
   },
   doctorInfo: {
-    marginTop: verticalScale(4),
+
   },
   doctorName: {
     fontSize: 14,
@@ -603,24 +654,24 @@ const styles = StyleSheet.create({
   reasonDesc: {
     color: '#666',
     fontStyle: 'italic',
-    marginTop: verticalScale(4),
+   
   },
   timeHeader: {
     backgroundColor: '#f8f9fa',
-    padding: moderateScale(8),
+
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee'
   },
   phnLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#191919', // Dark color for PHN label
+    fontSize: 14,
+   
+   // Dark color for PHN label
 
   },
   phnValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '400',
     color: '#666666', // Faded color for PHN value
     fontFamily: 'Product Sans Regular',
@@ -637,6 +688,34 @@ const styles = StyleSheet.create({
   eligibilityText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  IconContainer:{
+    backgroundColor:'rgba(241,243,247,1)',
+    width:35,
+    height:35,
+    borderRadius:10,
+    justifyContent:'center',
+    alignItems:'center',
+  
+  
+    marginRight:10,
+    borderRadius:20,
+    
+  },
+  slashText: {
+    color: '#888',
+    fontWeight: 'normal',
+    fontSize: 16,
+    color: '#222',
+  },
+  timeInfoBox: {
+    backgroundColor: 'rgba(241,243,247,1)',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+  
+    marginLeft: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
