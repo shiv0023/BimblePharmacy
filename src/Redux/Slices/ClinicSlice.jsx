@@ -9,10 +9,10 @@ export const fetchSubdomains = createAsyncThunk(
     try {
       // console.log('Fetching subdomains...'); 
       // Based on the error message, the correct path should be under authentication
-      const response = await axiosInstance.get('/authentication/fetchAllClinicsSubdomains/');
+      const response = await axiosInstance.get('/authentication/fetchAllEntitiesSubdomains/');
       
       // console.log('Raw Response:', response); 
-      // console.log('Response Data:', response.data); 
+      console.log('d:', response.data); 
       
       if (!response.data) {
         return rejectWithValue('No data received from the server');
@@ -33,8 +33,8 @@ export const fetchSubdomains = createAsyncThunk(
       if (error.response && error.response.status === 404) {
             try {
               // console.log('Trying alternative endpoint...');
-          const altResponse = await axiosInstance.get('/team/fetchAllClinicsSubdomains/');
-          // console.log('Alternative endpoint success:', altResponse.data);
+          const altResponse = await axiosInstance.get('/authentication/fetchAllEntitiesSubdomains/');
+          console.log('Alternative endpoint success:', altResponse.data);
           return altResponse.data;
         } catch (altError) {
           console.error('Alternative endpoint also failed:', altError.message);

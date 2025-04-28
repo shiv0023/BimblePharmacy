@@ -286,12 +286,12 @@ export default function Login({navigation}) {
                         style={styles.suggestionItem}
                         onPress={() => {
                           setSubdomain(clinic.subdomainBimble);
-                          setClinicDisplayName(clinic.clinicName);
+                          setClinicDisplayName(clinic.entityName);
                           setShowSuggestions(false);
                         }}
                       >
                         <Text style={styles.suggestionText}>
-                          {clinic.clinicName}
+                          {clinic.entityName}
                         </Text>
                       </TouchableOpacity>
                     ))

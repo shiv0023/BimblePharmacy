@@ -14,7 +14,7 @@ export const fetchAppointments = createAsyncThunk(
       // Set the authorization header
       axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      const response = await axiosInstance.post('/appointment/fetchAllPatientsAppointments/', {
+      const response = await axiosInstance.post('/appointment/fetchAllPatientsAppointments/',{
         startDate,
         endDate
       });

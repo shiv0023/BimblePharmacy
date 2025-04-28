@@ -14,7 +14,7 @@ export const loginUser = createAsyncThunk(
   async ({ requestedData }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post(
-        '/authentication/loginClinic/',
+        '/authentication/loginEntity/',
         requestedData
       );
      await AsyncStorage.setItem("auth_tokens",response.data.access_token)
