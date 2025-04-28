@@ -212,7 +212,7 @@ export default function Login({navigation}) {
 
         navigation.navigate('Appointment');
       } catch (error) {
-        console.error('Login error:', error);
+        console.error('Login  error:', error);
       } finally {
         setIsLoading(false);
       }
