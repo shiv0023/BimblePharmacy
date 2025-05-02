@@ -12,7 +12,7 @@ export const fetchPatientDetails = createAsyncThunk(
         demographicNo: demographicNo
       });
 
-      console.log('Patient details response:', response.data);
+      console.log('ss:', response.data);
 
       if (response.data.status === 'success' && response.data.data) {
         const patientData = response.data.data;
@@ -108,6 +108,7 @@ const patientDetailsSlice = createSlice({
         state.data[demographicNo] = action.payload;
         state.loading = false;
         state.error = null;
+        console.log('Patient Details:', action.payload);
       })
       .addCase(fetchPatientDetails.rejected, (state, action) => {
         state.loading = false;

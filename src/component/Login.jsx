@@ -600,6 +600,7 @@ const styles = StyleSheet.create({
   forgotPassword: {
     textAlign: 'center',
     color: '#797979',
+    marginBottom: 20,
   },
   termsTextContainer: {
     flex: 1,

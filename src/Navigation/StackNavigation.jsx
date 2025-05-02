@@ -16,6 +16,8 @@ import Assessment from '../component/Assessment';
 import Prescription from '../component/Prescription';
 import PrescriptionPreview from '../components/PrescriptionPreview';
 import PDFViewers from '../component/Pdf';
+import FollowUpAssessment from '../component/FollowUpAssesment';
+import DrugPrescription from '../component/DrugPrescription';
 const Stack = createStackNavigator();
 const { width, height } = Dimensions.get('window');
 
@@ -138,6 +140,20 @@ export default function MyStack() {
           <Stack.Screen 
           name="pdf"
           component={PDFViewers} 
+          />
+          <Stack.Screen 
+            name="FollowUpAssessment" 
+            component={FollowUpAssessment}
+            options={{
+              headerShown: false
+            }}
+          />
+             <Stack.Screen 
+            name="DrugPrescription" 
+            component={DrugPrescription}
+            options={{
+              headerShown: false
+            }}
           />
         </Stack.Navigator>
       </Fragment>

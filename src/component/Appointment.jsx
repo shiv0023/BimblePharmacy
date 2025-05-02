@@ -39,49 +39,55 @@ import { fetchAppointments, setSelectedAppointmentAndFetchDetails } from '../Red
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
-// const appointments = [
-//   {
-//     id: '1',
-//     name: 'Sophia Christopher',
-//     gender: 'F',
-//     age: 30,
-//     phone: '5436789567',
-//     status: 'N',
-//     description:
-//       'Experience Fatigue due to lack of sleep. There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form.',
-//     avatar: <PatientFemaleImg />,
-//     genderIcon: 'https://example.com/icons/female.png',
-//   },
-//   {
-//     id: '2',
-//     name: 'Aiden Sheppard',
-//     gender: 'M',
-//     age: 25,
-//     phone: '6345789567',
-//     status: 'F',
-//     description: 'Experience Fatigue due to lack of sleep.',
-//     avatar: <PatientImage />,
-//     genderIcon: 'https://example.com/icons/male.png',
-//   },
-//   {
-//     id: '3',
-//     name: 'Aiden Sheppard',
-//     gender: 'M',
-//     age: 25,
-//     phone: '6345789567',
-//     status: 'F',
-//     description: 'Experience Fatigue due to lack of sleep.',
-//     avatar: <PatientImage />,
-//     genderIcon: 'https://example.com/icons/male.png',
-//   },
-// ];
+
+
 
 // Get window dimensions
 const { width, height } = Dimensions.get('window');
 
 function formatPatientName(name) {
-  // Remove spaces after commas and convert to uppercase
-  return name.replace(/, /g, ',').toUpperCase();
+  // Ensure a single space after each comma and convert to uppercase
+  return name.replace(/,\s*/g, ', ').toUpperCase();
+}
+
+function getFullGender(gender) {
+  if (!gender) return '';
+  if (gender.toUpperCase() === 'F') return 'Female';
+  if (gender.toUpperCase() === 'M') return 'Male';
+  return gender;
+}
+
+const formatTime = (timeString) => {
+  if (!timeString) return '';
+  
+  const [hours, minutes] = timeString.split(':');
+  const hour = parseInt(hours);
+  
+  if (hour === 12) {
+    return `${hours}:${minutes} PM`;
+  } else if (hour > 12) {
+    return `${hour - 12}:${minutes} PM`;
+  } else if (hour === 0) {
+    return `12:${minutes} AM`;
+  } else {
+    return `${hour}:${minutes} AM`;
+  }
+};
+
+function getAgeString(year, month, day) {
+  if (!year || !month || !day) return '';
+  const today = new Date();
+  const birthDate = new Date(year, month - 1, day);
+  let years = today.getFullYear() - birthDate.getFullYear();
+  let months = today.getMonth() - birthDate.getMonth();
+  if (today.getDate() < birthDate.getDate()) {
+    months--;
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  return `${years} years${months > 0 ? ` ${months} months` : ''}`;
 }
 
 export default function Appointment({navigation}) {
@@ -201,16 +207,42 @@ export default function Appointment({navigation}) {
     }
   };
 
-  const handleAppointmentPress = (appointment) => {
-    console.log(appointment.deliveryMethod, 'appointment.deliveryMethod')
-    dispatch(setSelectedAppointmentAndFetchDetails(appointment));
+  const handleAppointmentPress = (item) => {
+    // Format DOB
+    const dob = `${item.year_of_birth}-${item.month_of_birth}-${item.date_of_birth}`;
+    
+    // Format demographicNo
+    const formattedDemographicNo = String(item.demographicNo).replace(/\D/g, '');
+    
+    const ageString = getAgeString(item.year_of_birth, item.month_of_birth, item.date_of_birth);
+    
+    console.log('Navigating with params:', {
+      demographicNo: formattedDemographicNo,
+      reason: item.reason,
+      gender: getFullGender(item.gender),
+      ageString,
+      year_of_birth: item.year_of_birth,
+      month_of_birth: item.month_of_birth,
+      date_of_birth: item.date_of_birth,
+      dob: dob,
+    });
     
     navigation.navigate("Chat", {
-      from: appointment.status === 'N' ? 'NEW' : 'FOLLOWUP',
-      demographicNo: appointment.demographicNo,
-      status: appointment.status,
-      appointmentNo: appointment.appointmentNo,
-      deliveryMethod: appointment.deliveryMethod
+      date: item.appointmentDate,
+      reason: item.reason,
+      reasonDesc: item.reasonDesc || "This is reason description there is more to this description....",
+      demographicNo: formattedDemographicNo,
+      status: item.status,
+      appointmentNo: item.appointmentNo,
+      deliveryMethod: item.deliveryMethod,
+      gender: getFullGender(item.gender),
+      year_of_birth: item.year_of_birth,
+      month_of_birth: item.month_of_birth,
+      date_of_birth: item.date_of_birth,
+      dob: dob,
+      ageString,
+      patientName: item.patientName,
+      phn: item.phn,
     });
   };
 
@@ -235,90 +267,84 @@ export default function Appointment({navigation}) {
             </View>
             <View style={{flex: 1}}>
               <View style={styles.nameRowWrap}>
-                <Text variant="subheading"
-                  style={styles.patientName}
-                  numberOfLines={2}
-                
-                >
+                <Text  style={styles.patientName} numberOfLines={2}>
                   {formatPatientName(item.patientName)}
-                  <Text style={styles.slashText}> / </Text>
-                  <Text style={styles.genderBadgeText}>F</Text>
-                  <Text style={styles.slashText}> / </Text>
-                  <Text style={styles.ageText}>32 years</Text>
                 </Text>
+                
               </View>
+              <View style={styles.genderAgeInline}>
+                <Text style={styles.genderBadgeText}>{getFullGender(item.gender)}</Text>
+                <Text style={styles.slashText}> / </Text>
+                <Text style={styles.ageText}>{item.age} years</Text>
+                </View>
+                
               <View style={styles.row}>
-                <View>
+                {/* <View>
                   <Text>
                     <Text style={styles.phnLabel}>PHN: </Text>
-                    <Text variant="subheading" style={styles.phnValue}>{item.clinicContact}</Text>
+                    <Text variant="subheading" style={styles.phnValue}>{item.phn
+                    }</Text>
                   </Text>
-                </View>
+                </View> */}
                 <View style={styles.timeInfoBox}>
-                  <Text style={styles.appointmentTime}>
-                    {item.startTime.slice(0, 5)} - {item.endTime.slice(0, 5)}
-                  </Text>
+              
                 </View>
               </View>
             </View>
           </View>
           <View style={styles.divider} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',  paddingBottom: 2, paddingTop: 2 }}>
-            <Text style={styles.reasonText}>
-              Reason: {item.reason} {item.reasonDesc}
-            </Text>
-            <View style={styles.IconContainer}>
-            <TouchableOpacity onPress={() => handleAppointmentPress(item)}>
-              <Icon style={{justifyContent:'center',paddingTop:5}} name="arrow-top-right" size={28} color="#0049F8" />
-            </TouchableOpacity>
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',  
+            paddingBottom: 2, 
+            paddingTop: 2 
+          }}>
+            <View style={{flex: 1}}>
+              {/* Start time and demographic type row */}
+              <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',paddingHorizontal:2}}>
+                {/* Time on the left */}
+                <View style={{flexDirection: 'row', alignItems: 'center',marginLeft:6}}>
+                  <Icon name="clock-outline" size={16} color="#222" style={{marginRight: 4}} />
+                  <Text style={styles.appointmentTime}>
+                    {formatTime(item.startTime)}
+                  </Text>
+                </View>
+              
+                <Text style={{
+                  fontSize: 15,
+                  color: '#aaa',
+                  fontWeight: '400',
+                  textAlign: 'right',
+                  marginRight:8,
+                  fontFamily:'Product Sans Italic',
+              
+                }}>
+                  {(item.demographicType ||'').replace(/-/g,'')}
+                </Text>
+              </View>
+              
+           
+
+              {/* Reason Description + Arrow Icon in a row */}
+              <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',marginBottom:'6'}}>
+                <Text style={styles.reasonText} numberOfLines={2}>
+                {item.reason}, {item.reasonDesc }
+                </Text>
+                <View style={styles.IconContainer}>
+                  <TouchableOpacity onPress={() => handleAppointmentPress(item)}>
+                    <Icon name="arrow-top-right" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-       
           </View>
           
         </View>
 
-        <View style={styles.statusContainer}>
-          <View style={styles.statusBadgeWrapper}>
-            <LinearGradient
-              colors={isNew ? ['#2968FF', '#0049F8'] : ['#06D001', '#008D00']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
-              style={styles.statusBadge}>
-              <Text style={styles.statusBadgeText}>
-                {isNew ? 'N' : 'F'}
-              </Text>
-            </LinearGradient>
-          </View>
-          
-         
-            {/* <View style={[
-              styles.eligibilityBadge,
-              { backgroundColor: item.eligibility === "YES" ? '#E3F2FD' : '#FFEBEE' }
-            ]}>
-              <Text style={[
-                styles.eligibilityText,
-                { color: item.eligibility === "YES" ? '#0049F8' : '#D32F2F' }
-              ]}>
-                {item.eligibility === "YES" ? "Eligible" : "Not Eligible"}
-              </Text>
-            </View> */}
        
-        </View>
 
-        {/* <TouchableOpacity
-          style={[
-            styles.actionButton,
-            {
-              backgroundColor: isNew ? '#0049F8' : '#D0D8E7',
-            },
-          ]}
-          onPress={() => handleAppointmentPress(item)}>
-          <Text style={[styles.actionButtonText, {
-            color: isNew ? '#fff' : '#666',
-          }]}>
-            {isNew ? 'Continue' : 'Waiting'}
-          </Text>
-        </TouchableOpacity> */}
+      
       </View>
     );
   };
@@ -337,7 +363,7 @@ export default function Appointment({navigation}) {
                 onPress={() => setCurrentTabIndex(index)} 
                 style={styles.tabWrapper}
               >
-                <Text style={styles.tabText}>{tab}</Text>
+                <Text style={[styles.tabText, { textAlign: 'center',alignContent:'center',justifyContent:'center' }]}>{tab}</Text>
                 {currentTabIndex === index && <View style={styles.activeTab}></View>}
               </TouchableOpacity>
             ))}
@@ -347,7 +373,7 @@ export default function Appointment({navigation}) {
           {/* Current Date */}
           <View style={styles.dateWrapper}>
             <View style={styles.line} />
-            <Text variant="accent" style={styles.dateText}>{currentDate}</Text>
+            <Text style={styles.dateText}>{currentDate}</Text>
             <View style={styles.line} />
           </View>
 
@@ -356,6 +382,7 @@ export default function Appointment({navigation}) {
               data={userData.filter(item => {
                 const today = getCurrentDate();
                 const itemDate = item.appointmentDate;
+                const demographicType = (item.demographicType || '').toLowerCase();
                 
                 // Skip cancelled appointments
                 if (item.status === 'Cancelled') {
@@ -363,11 +390,11 @@ export default function Appointment({navigation}) {
                 }
                 
                 if (currentTabIndex === 0) {
-                  // Today's appointments
-                  return itemDate === today;
+                  // Today's appointments: show if not follow-up and date is today
+                  return itemDate === today && demographicType !== 'follow-up';
                 } else {
-                  // Upcoming appointments
-                  return itemDate > today;
+                  // Upcoming appointments: show if follow-up or date is after today
+                  return demographicType === 'follow-up' || itemDate > today;
                 }
               }).sort((a, b) => {
                 // Sort by date first
@@ -415,9 +442,11 @@ const styles = StyleSheet.create({
   tabs: {
     flexDirection: 'row',
     backgroundColor: '#0049F8',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
+ 
+
     
   },
   tabText: {
@@ -430,6 +459,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'Product Sans Regular',
     paddingTop:0,
+    textAlign: 'center',
+   
   },
   
   tabText1: {
@@ -438,6 +469,7 @@ const styles = StyleSheet.create({
     color: 'rgba(241,243,247,0.45)',
     fontFamily: 'Product Sans Regular',
     paddingTop:0,
+    
     
   },
   activeTab: {
@@ -464,7 +496,11 @@ const styles = StyleSheet.create({
   },
   dateText: {
     paddingHorizontal: 10,
-    lineHeight:18.2
+    lineHeight:14.2,
+    fontSize:12,
+    fontWeight:'400',
+    color:'#222',
+    fontFamily:'Product Sans Regular',
     
   },
   // line: {
@@ -489,21 +525,22 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     flex: 1,
-    marginBottom: 2,
+   
     width:'90%',
     
   },
   patientName: {
-    
+fontWeight:'400',
     fontSize: 14,
     color: '#222',
     wordWrap: 'break-word',
+   
 
   },
   genderAgeInline: {
     flexDirection: 'row',
     alignItems: 'center',
- 
+   
   },
   genderBadge: {
     minWidth: 28,
@@ -518,11 +555,12 @@ const styles = StyleSheet.create({
   genderBadgeText: {
     color: '#222',
     fontSize: 14,
-  
+    fontWeight:'300',
   },
   ageText: {
     fontSize: 14,
     color: '#222',
+    fontWeight:'300',
   },
   row: {
     flexDirection: 'row',
@@ -619,25 +657,28 @@ const styles = StyleSheet.create({
   },
   appointmentTime: {
     fontSize: 14,
-    color: '#666',
-
+    color: '#222',
+    fontWeight:'300',
   },
   demographicType: {
     fontSize: 14,
     color: '#666',
     backgroundColor: '#f0f0f0',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4
+    
+   
+ 
   },
   divider: {
     width: '100%',
-    height: 1,
-    backgroundColor: '#0049F826'
+    height: 2,
+    backgroundColor: '#e8e6df'
   },
   reasonText: {
-    padding: moderateScale(8),
-    color: '#444'
+  marginLeft:6,
+    fontSize: 14,
+    color: '#222',
+   fontWeight:'300',
+    width:'85%',
   },
   doctorInfo: {
 
@@ -652,9 +693,10 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   reasonDesc: {
-    color: '#666',
-    fontStyle: 'italic',
-   
+    color: '#888',
+    fontSize: 1,
+    fontStyle: '',
+    marginTop: 2,
   },
   timeHeader: {
     backgroundColor: '#f8f9fa',
@@ -690,14 +732,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   IconContainer:{
-    backgroundColor:'rgba(241,243,247,1)',
+    backgroundColor:'#0049F8',
     width:35,
     height:35,
     borderRadius:10,
     justifyContent:'center',
     alignItems:'center',
-  
-  
     marginRight:10,
     borderRadius:20,
     
