@@ -6,33 +6,22 @@ export const fetchPatientDetails = createAsyncThunk(
   'patientDetails/fetchPatient',
   async ({ demographicNo }, { rejectWithValue }) => {
     try {
-      // console.log('Fetching patient details for demographicNo:', demographicNo);
-      
+      // Ensure demographicNo is an integer
+      const demoNo = parseInt(demographicNo, 10);
+
+      if (isNaN(demoNo)) {
+        throw new Error('demographicNo must be an integer');
+      }
+
       const response = await axiosInstance.post('/patient/fetchPatient/', {
-        demographicNo: demographicNo
+        demographicNo: demoNo
       });
 
-      console.log('ss:', response.data);
-
       if (response.data.status === 'success' && response.data.data) {
-        const patientData = response.data.data;
-        
-        // Add debug log for allergies
-        console.log('Patient Data Allergies:', patientData.allergies);
-        
-        // Normalize the compliance value from patientAddress
-        if (patientData.patientAddress?.patientCompliance) {
-          patientData.patientCompliance = patientData.patientAddress.patientCompliance.toLowerCase();
-        } else if (patientData.patientCompliance) {
-          patientData.patientCompliance = patientData.patientCompliance.toLowerCase();
-        }
-
-        // console.log('Patient Compliance:', patientData.patientCompliance); // Debug log
-        return patientData;
+        return response.data.data;
       }
       return rejectWithValue('No patient data received');
     } catch (error) {
-      console.error('Patient details fetch error:', error);
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch patient details');
     }
   }
@@ -84,9 +73,9 @@ const patientDetailsSlice = createSlice({
   name: 'patientDetails',
   initialState: {
     data: {},
-    encounterNotes: [],
+
     loading: false,
-    notesLoading: false,
+
     error: null
   },
   reducers: {
@@ -106,9 +95,10 @@ const patientDetailsSlice = createSlice({
       .addCase(fetchPatientDetails.fulfilled, (state, action) => {
         const demographicNo = action.meta.arg.demographicNo;
         state.data[demographicNo] = action.payload;
+        state.dataaaa = action.payload
         state.loading = false;
         state.error = null;
-        console.log('Patient Details:', action.payload);
+        console.log('Patient Detailssssss:', action.payload);
       })
       .addCase(fetchPatientDetails.rejected, (state, action) => {
         state.loading = false;

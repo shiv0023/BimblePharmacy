@@ -16,85 +16,45 @@ export const addPatientDrug = createAsyncThunk(
     'drugs/addPatientDrug',
     async (drugData, { rejectWithValue }) => {
         try {
-            // Validate required parameters first
-            if (!drugData.appointmentNo) {
-                return rejectWithValue('Appointment number is required');
-            }
-
-            if (!drugData.demographicNo) {
-                return rejectWithValue('Patient demographic number is required');
-            }
-
-            // Validate drug data before formatting
-            if (!drugData.drugData || !Array.isArray(drugData.drugData)) {
-                return rejectWithValue('Invalid drug data format');
-            }
-
-            // Validate each drug in the array
-            const invalidDrugs = drugData.drugData.filter(drug => !drug.groupName);
-            if (invalidDrugs.length > 0) {
-                return rejectWithValue('All drugs must have a group name');
-            }
-
-            // Format the data with only required fields
-            const formattedData = {
-                demographicNo: parseInt(drugData.demographicNo),
-                appointmentNo: parseInt(drugData.appointmentNo),
-                drugData: drugData.drugData.map(drug => {
-                    if (!drug.groupName) {
-                        throw new Error('Group name is required for all drugs');
-                    }
-                    
-                    return {
-                        groupName: drug.groupName,
-                        drugForm: drug.drugForm || '',
-                        dosage: drug.dosage || drug.selectedDrugDetails?.strength || '',
-                        indication: drug.indication || '',
-                        instructions: drug.instructions || '',
-                        duration: parseInt(drug.duration) || 0,
-                        quantity: parseInt(drug.quantity) || 0,
-                        repeat: parseInt(drug.repeat) || 0,
-                        longTerm: drug.longTerm === 'Yes' ? true : false,
-                        startDate: drug.startDate || new Date().toISOString().split('T')[0]
-                    
-                    };
-                })
-            };
-
-            // Additional validation before sending
-            if (!formattedData.drugData.every(drug => drug.groupName)) {
-                return rejectWithValue('Missing group name for one or more drugs');
-            }
-
-            // console.log('Sending formatted drug data:', formattedData);
-
-            const response = await axiosInstance.post('/drugs/addPatientDrug/', formattedData);
+            console.log('Starting API call with data:', JSON.stringify(drugData, null, 2));
             
-  
+            const response = await axiosInstance.post('/drugs/addPatientDrug/', drugData);
+            console.log('Raw API Response:', response);
 
-            if (response.data && response.data.status === "Success") {
-                // Ensure we're properly extracting the batch ID
-                console.log('API Response:', response.data);
-                const batchId = response.data.data?.prescriptionBatchId || `batch_${Math.floor(100000 + Math.random() * 900000)}`;
-                
+            // Handle 204 No Content response
+            if (response.status === 204) {
                 return {
-                    status: response.data.status,
-                    message: response.data.message,
-                    drugData: formattedData.drugData,
-                    data: {
-                        ...response.data.data,
-                        prescriptionBatchId: batchId // Ensure batchId is nested under data
-                    }
+                    status: 'Success',
+                    message: 'Prescriptions added successfully',
+                    data: {}
                 };
             }
 
-            return rejectWithValue(response.data?.message || 'Invalid response format');
+            // Handle response with data
+            if (response.data) {
+                const status = response.data.status || response.data.Status;
+                if (status === 'Success' || status === 'success') {
+                    return {
+                        status: 'Success',
+                        message: response.data.message || 'Prescriptions added successfully',
+                        data: response.data.data || {}
+                    };
+                }
+            }
+
+            return rejectWithValue('Failed to add prescriptions');
         } catch (error) {
-            logError(error);
+            console.error('API Call Error:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                config: error.config
+            });
+            
             return rejectWithValue(
                 error.response?.data?.message || 
                 error.message || 
-                'Failed to add prescription'
+                'Failed to add prescriptions'
             );
         }
     }

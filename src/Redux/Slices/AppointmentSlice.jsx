@@ -40,7 +40,15 @@ export const fetchAppointments = createAsyncThunk(
 
   
 
-      return appointments;
+      return appointments.sort((a, b) => {
+        // Newest date first
+        if (a.appointmentDate > b.appointmentDate) return -1;
+        if (a.appointmentDate < b.appointmentDate) return 1;
+        // If same date, newest time first
+        if (a.startTime > b.startTime) return -1;
+        if (a.startTime < b.startTime) return 1;
+        return 0;
+      });
     } catch (error) {
       console.error('Fetch appointments error:', error);
       if (error.response) {

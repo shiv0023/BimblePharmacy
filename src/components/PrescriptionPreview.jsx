@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import Signature from 'react-native-signature-capture';
 import { fetchClinicDetails } from '../Redux/Slices/ClinicDetails';
 import PDFViewer from '../component/Pdf';
 import { useNavigation } from '@react-navigation/native';
+// import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
 
 
 const getProvinceAbbreviation = (provinceName) => {
@@ -45,7 +46,7 @@ const PrescriptionPreview = ({
   visible, 
   onClose, 
   prescriptionData, 
-  patientDetails,
+  patientDetails: initialPatientDetails,
 
   additionalNotes,
   setAdditionalNotes,
@@ -66,6 +67,12 @@ const PrescriptionPreview = ({
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const navigation = useNavigation();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const demographicNo = initialPatientDetails?.demographicNo;
+  // const patientDetailsState = useSelector((state) => state.patientDetails?.dataaaa);
+  // const patientData = demographicNo ? patientDetailsState.dataaaa[demographicNo] : {};
+
+  // console.log('Patient Data:', patientData);
+  
 
   const formatDate = (date) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -106,7 +113,6 @@ const PrescriptionPreview = ({
     return `batch_${Math.floor(100000 + Math.random() * 900000)}`;
   };
 
-  // console.log('patientDetailsdwcdccx', patientDetails);
   // Fetch clinic details when component mounts
   React.useEffect(() => {
     if (visible) {
@@ -155,10 +161,10 @@ const PrescriptionPreview = ({
   const validateFields = () => {
     const requiredFields = [
       { value: signature, message: 'Please add your signature' },
-      { value: patientDetails?.firstName, message: 'Patient first name is required' },
-      { value: patientDetails?.lastName, message: 'Patient last name is required' },
-      { value: patientDetails?.phn, message: 'Patient PHN is required' },
-      { value: prescriptionData?.drugData?.length, message: 'At least one medication is required' },
+      { value: patientData?.firstName, message: 'Patient first name is required' },
+      { value: patientData?.lastName, message: 'Patient last name is required' },
+      { value: patientData?.phn, message: 'Patient PHN is required' },
+      { value: prescriptionData?.data?.drugData?.length, message: 'At least one medication is required' },
     ];
 
     for (const field of requiredFields) {
@@ -193,77 +199,53 @@ const PrescriptionPreview = ({
       );
 
       // Log allergies before PDF generation
-      console.log('Allergies for PDF:', patientDetails?.allergies);
+      console.log('Allergies for PDF:', patientData.allergies);
 
       // Format the data for PDF generation
-      const content = {
-        orderId: prescriptionData?.data?.prescriptionBatchId ||'',
-        clinicInfo: {
-          logo: clinicDetails?.logo,
-          date: formatDate(new Date()),
-          name: clinicDetails?.clinicName,
-          address: clinicDetails?.address,
-          city: clinicDetails?.city,
-          province: getProvinceAbbreviation(clinicDetails?.province),
-          postalCode: clinicDetails?.postalCode,
-          phone: formatPhoneNumber(clinicDetails?.phoneNo),
-          fax: formatPhoneNumber(clinicDetails?.faxNo)
-        },
-        pharmacyDetails: {
-          name: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[0]?.trim() ,
-          address: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[1]?.trim() ,
-          city: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[2]?.trim() ,
-          province: getProvinceAbbreviation(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[3]?.trim()) ,
-          postalCode: patientDetails?.patientAddress?.preferredPharmacy?.split(',')[4]?.trim() ,
-          phone: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[5]?.trim()) ,
-          fax: formatPhoneNumber(patientDetails?.patientAddress?.preferredPharmacy?.split(',')[6]?.trim()) ,
-        },
-        patientInfo: {
-          name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}`,
-          phn: patientDetails?.phn || '',
-          gender: patientDetails?.gender || 'M',
-          originalDob: patientDetails?.dob,
-          age: calculateAge(patientDetails?.dob),
-          dob: `${formatDateForDOB(patientDetails?.dob)}/${calculateAge(patientDetails?.dob)} years`,
-          address: patientDetails?.patientAddress?.address || '',
-          city: patientDetails?.patientAddress?.city || '',
-          province: getProvinceAbbreviation(patientDetails?.patientAddress?.province) || '',
-          postalCode: patientDetails?.patientAddress?.postalCode || '',
-          phoneCell: formatPhoneNumber(patientDetails?.patientAddress?.phoneCell) ,
-          phoneWork: formatPhoneNumber(patientDetails?.patientAddress?.phoneWork) ,
-          phoneHome: formatPhoneNumber(patientDetails?.patientAddress?.phoneHome) ,
-          allergies: patientDetails?.allergies ? (
-            Array.isArray(patientDetails.allergies) ? 
-              patientDetails.allergies.join(', ') : 
-              patientDetails.allergies
-          ) : 'No Known Allergies',
-          compliance: patientDetails?.patientCompliance || prescriptionData?.drugData?.[0]?.patientCompliance ,
-          complianceFrequency: (patientDetails?.patientCompliance?.toLowerCase() === 'no' || 
-            prescriptionData?.drugData?.[0]?.patientCompliance?.toLowerCase() === 'no') 
-            ? prescriptionData?.drugData?.[0]?.complianceFrequency 
-            : null
-        },
-        medications: prescriptionData?.drugData?.map(drug => ({
-          name: drug.groupName,
-          route: drug.route || 'Topical',
-          form: drug.drugForm || '',
-          instructions: drug.instructions,
-          startDate: formatDate(drug.startDate),
-          endDate: formatDate(drug.endDate),
-          duration: drug.duration || '1',
-          quantity: drug.quantity || '2',
-          refills: drug.repeat || '0',
-          indication: drug.indication,
-          drugForm: drug.drugForm || ''
-        })) || [],
-        deliveryOption: deliveryOption,
-        signature: signature,
-        doctorInfo: {
-          name: 'Dr.doctor oscardoc',
-          license: '98765',
-          signedDate: new Date().toLocaleString()
-        }
-      };
+      // const content = {
+      //   orderId: prescriptionData?.data?.prescriptionBatchId ||'',
+      //   clinicInfo: {
+      //     logo: clinicDetails?.logo,
+      //     date: formatDate(new Date()),
+      //     name: clinicDetails?.clinicName,
+      //     address: clinicDetails?.address,
+      //     city: clinicDetails?.city,
+      //     province: getProvinceAbbreviation(clinicDetails?.province),
+      //     postalCode: clinicDetails?.postalCode,
+      //     phone: formatPhoneNumber(clinicDetails?.phoneNo),
+      //     fax: formatPhoneNumber(clinicDetails?.faxNo)
+      //   },
+      //   pharmacyDetails: {
+      //     name: patientData.pharmacyName,
+      //     address: patientData.address,
+      //     city: patientData.city,
+      //     province: getProvinceAbbreviation(patientData.province),
+      //     postalCode: patientData.postalCode,
+      //     phone: formatPhoneNumber(patientData.ext_data?.demo_cell),
+      //     fax: formatPhoneNumber(patientData.phoneWork)
+      //   },
+       
+      //   medications: prescriptionData?.data?.drugData?.map(drug => ({
+      //     name: drug.groupName,
+      //     route: drug.route || 'Topical',
+      //     form: drug.drugForm || '',
+      //     instructions: drug.instructions,
+      //     startDate: formatDate(drug.startDate),
+      //     endDate: formatDate(drug.endDate),
+      //     duration: drug.duration || '1',
+      //     quantity: drug.quantity || '2',
+      //     refills: drug.repeat || '0',
+      //     indication: drug.indication,
+      //     drugForm: drug.drugForm || ''
+      //   })) || [],
+      //   deliveryOption: deliveryOption,
+      //   signature: signature,
+      //   doctorInfo: {
+      //     name: 'Dr.doctor oscardoc',
+      //     license: '98765',
+      //     signedDate: new Date().toLocaleString()
+      //   }
+      // };
 
       // Set the content and show the PDF viewer
       setPdfContent(content);
@@ -278,13 +260,13 @@ const PrescriptionPreview = ({
   };
 
   // Add this debug log for patientDetails
-  console.log('PrescriptionPreview patientDetails:', patientDetails);
+  // console.log('PrescriptionPreview patientDetails:', patientData);
 
   // Update the Drug Allergies section
   const renderAllergies = () => {
-    console.log('Rendering allergies:', patientDetails?.allergies);
+    console.log('Rendering allergies:', patientData.allergies);
     
-    if (!patientDetails?.allergies) {
+    if (!patientData.allergies) {
       return (
         <View style={styles.allergyItem}>
           <Text style={styles.allergiesText}>No Known Allergies</Text>
@@ -292,12 +274,12 @@ const PrescriptionPreview = ({
       );
     }
 
-    if (Array.isArray(patientDetails.allergies)) {
-      return patientDetails.allergies.map((allergy, index) => (
+    if (Array.isArray(patientData.allergies)) {
+      return patientData.allergies.map((allergy, index) => (
         <View key={index} style={styles.allergyItem}>
           <Text style={styles.allergiesText}>
             {allergy}
-            {index < patientDetails.allergies.length - 1 ? ', ' : ''}
+            {index < patientData.allergies.length - 1 ? ', ' : ''}
           </Text>
         </View>
       ));
@@ -306,12 +288,114 @@ const PrescriptionPreview = ({
     // Handle string case
     return (
       <View style={styles.allergyItem}>
-        <Text style={styles.allergiesText}>{patientDetails.allergies}</Text>
+        <Text style={styles.allergiesText}>{patientData.allergies}</Text>
       </View>
     );
   };
 
+  useEffect(() => {
+    if (visible && initialPatientDetails?.demographicNo) {
+      console.log('Fetching patient details for:', initialPatientDetails.demographicNo);
+      dispatch(fetchPatientDetails({ demographicNo: initialPatientDetails.demographicNo }));
+    }
+  }, [visible, initialPatientDetails?.demographicNo, dispatch]);
+
   if (!visible) return null;
+
+  // if (patientDetailsState?.loading) {
+  //   return (
+  //     <Modal visible={visible} animationType="slide" transparent={true}>
+  //       <View style={styles.modalOverlay}>
+  //         <View style={styles.modalContent}>
+  //           <View style={styles.loadingContainer}>
+  //             <ActivityIndicator size="large" color="#0049F8" />
+  //             <Text style={styles.loadingText}>Loading patient details...</Text>
+  //           </View>
+  //         </View>
+  //       </View>
+  //     </Modal>
+  //   );
+  // }
+
+  const renderPatientInfo = () => (
+    <View style={styles.patientInfo}>
+      <Text style={styles.patientName}>
+        {patientData?.firstName || ''} {patientData?.lastName || ''} 
+        {patientData?.phn ? ` (PHN: ${patientData.phn})` : ''}
+      </Text>
+      <Text style={styles.patientDetails}>
+        {patientData?.gender || ''}/
+        {formatDateForDOB(patientData?.dob)}/
+        {calculateAge(patientData?.dob)} years
+      </Text>
+      <Text style={styles.patientDetails}>
+        {patientData?.address || ''}
+      </Text>
+      <Text style={styles.patientDetails}>
+        {patientData?.city || ''}, {getProvinceAbbreviation(patientData?.province)} {patientData?.postalCode || ''}
+      </Text>
+      <View style={styles.phoneContainer}>
+        {patientData?.phoneHome && (
+          <Text style={styles.patientDetails}>
+            Phone (H): {formatPhoneNumber(patientData.phoneHome)}
+          </Text>
+        )}
+        {patientData?.ext_data?.demo_cell && (
+          <Text style={styles.patientDetails}>
+            Phone (C): {formatPhoneNumber(patientData.ext_data.demo_cell)}
+          </Text>
+        )}
+        {patientData?.phoneWork && (
+          <Text style={styles.patientDetails}>
+            Phone (W): {formatPhoneNumber(patientData.phoneWork)}
+          </Text>
+        )}
+      </View>
+      {patientData?.email && (
+        <Text style={styles.patientDetails}>
+          Email: {patientData.email}
+        </Text>
+      )}
+      {patientData?.patientStatus && (
+        <Text style={styles.patientDetails}>
+          Status: {patientData.patientStatus}
+          {patientData.patientStatusDate ? ` (${formatDate(patientData.patientStatusDate)})` : ''}
+        </Text>
+      )}
+    </View>
+  );
+
+  const renderMedications = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Medications</Text>
+      {prescriptionData?.data?.drugData?.map((drug, index) => (
+        <View key={`medication-${index}`} style={styles.medicationCard}>
+          <View style={styles.medicationHeader}>
+            <Text style={styles.medicationName}>
+              {drug.groupName} ({drug.drugForm}) ({drug.route})
+            </Text>
+          </View>
+          <Text style={styles.cityProvinceText}>{drug.indication}</Text>
+          <Text style={styles.cityProvinceText}>
+            {drug.instructions}
+            {drug.patientCompliance?.toLowerCase() === 'no' && drug.complianceFrequency && (
+              <Text style={styles.dispenseText}>
+                {' '}({drug.complianceFrequency} Dispense)
+              </Text>
+            )}
+          </Text>
+          <View style={styles.cityProvinceText}>
+            <Text style={styles.cityProvinceText}>Quantity: {drug.quantity}</Text>
+            <Text style={styles.cityProvinceText}>Repeats: {drug.repeat}</Text>
+          </View>
+          <Text style={styles.cityProvinceText}>
+            Duration: {drug.duration} Days{'\n'}
+            ({formatDate(drug.startDate)} - {formatDate(drug.endDate)})
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
     <>
@@ -365,9 +449,7 @@ const PrescriptionPreview = ({
                       <Text style={styles.batchId}>Order #{getBatchId()}</Text>
                     </View>
                     <Text style={styles.date}>{formatDate(new Date())}</Text>
-                    <Text style={styles.clinicName}>
-                      {clinicDetails.clinicName}
-                    </Text>
+                
                     <View style={styles.addressContainer}>
                       <Text style={styles.addressText}>
                         {clinicDetails.address}
@@ -389,123 +471,54 @@ const PrescriptionPreview = ({
               </View>
 
               {/* Recipient/Pharmacy Section */}
-              <View style={styles.section}>
+              {/* <View style={styles.section}>
                 <Text style={styles.recipientTitle}>Recipient</Text>
                 <View style={styles.pharmacyContainer}>
-                  {patientDetails?.patientAddress?.preferredPharmacy ? (
+                  {patientData?.pharmacyName && (
                     <>
                       <Text style={styles.cityProvinceText}>
-                        {patientDetails.patientAddress.preferredPharmacy.split(',')[0].trim()}
+                        {patientData.pharmacyName}
                       </Text>
                       <Text style={styles.cityProvinceText}>
-                        {patientDetails.patientAddress.preferredPharmacy.split(',')[1].trim()}
+                        {patientData.address}
                       </Text>
                       <Text style={styles.cityProvinceText}>
-                        {patientDetails.patientAddress.preferredPharmacy.split(',')[2].trim()}, {patientDetails.patientAddress.preferredPharmacy.split(',')[3].trim()} {patientDetails.patientAddress.preferredPharmacy.split(',')[4].trim()}
+                        {patientData.city}, {getProvinceAbbreviation(patientData.province)} {patientData.postalCode}
                       </Text>
                       <Text style={styles.cityProvinceText}>
-                        Phone: {formatPhoneNumber(patientDetails.patientAddress.preferredPharmacy.split(',')[5]?.trim()) }
+                        Phone: {formatPhoneNumber(patientData.ext_data?.demo_cell)}
                       </Text>
-                      {/* <Text style={styles.cityProvinceText}>
-                        Fax: {formatPhoneNumber(patientDetails.patientAddress.preferredPharmacy.split(',')[6]?.trim()) }
-                      </Text> */}
-                    </>
-                  ) : (
-                    <>
-                      {/* <Text style={styles.pharmacyName}>PROSPER PHARMACY 24</Text>
-                      <Text style={styles.pharmacyAddress}>12818 72 Avenue</Text>
-                      <Text style={styles.pharmacyCityProvince}>Surrey, BC V3W 2M9</Text>
-                      <Text style={styles.pharmacyContact}>Phone: 604-543-6677</Text>
-                      <Text style={styles.pharmacyContact}>Fax: 604-543-443333</Text> */}
                     </>
                   )}
                 </View>
-              </View>
+              </View> */}
 
               {/* Patient Details */}
-              <View style={styles.section}>
+              {/* <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Patient Information</Text>
+                 
                 </View>
-                <View style={styles.patientInfo}>
-                  <Text style={styles.patientName}>
-                    {patientDetails?.firstName} {patientDetails?.lastName} (PHN: {patientDetails?.phn})
-                  </Text>
-                  <Text style={styles.patientDetails}>
-                    {patientDetails?.gender || 'M'}/{formatDateForDOB(patientDetails?.dob)}/{calculateAge(patientDetails?.dob)} years
-                  </Text>
-                  <Text style={styles.patientDetails}>
-                    {patientDetails?.patientAddress?.address}
-                  </Text>
-                  <Text style={styles.patientDetails}>
-                    {patientDetails?.patientAddress?.city}, {getProvinceAbbreviation(patientDetails?.patientAddress?.province)} {patientDetails?.patientAddress?.postalCode}
-                  </Text>
-                  <View style={styles.phoneContainer}>
-                    <Text style={styles.patientDetails}>
-                      Phone (C): {formatPhoneNumber(patientDetails?.patientAddress?.ext_data?.demo_cell)}
-                    </Text>
-                    <Text style={styles.patientDetails}>
-                      Phone (W): {formatPhoneNumber(patientDetails?.patientAddress?.phoneWork)}
-                    </Text>
-                    <Text style={styles.patientDetails}>
-                      Phone (H): {formatPhoneNumber(patientDetails?.patientAddress?.phoneHome)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
+       
+              </View> */}
 
               {/* Drug Allergies */}
-              <View style={styles.section}>
+              {/* <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Drug Allergies</Text>
                 <View style={styles.allergiesContainer}>
-                  {renderAllergies()}
+                  <Text style={styles.allergiesText}>
+                    {patientData?.allergies && Array.isArray(patientData.allergies) && patientData.allergies.length > 0
+                      ? patientData.allergies.filter(allergy => allergy).join(', ')
+                      : 'No Known Drug Allergies (NKDA)'}
+                  </Text>
                 </View>
-              </View>
+              </View> */}
 
               {/* Medications */}
-             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Medications</Text>
-                {prescriptionData?.drugData?.map((drug, index) => (
-                  <View key={`medication-${index}`} style={styles.medicationCard}>
-                    <View style={styles.medicationHeader}>
-                      <Text style={styles.medicationName}>
-                        {drug.groupName} ({drug.drugForm})   ({drug.route})
-                    
-                      </Text> <Text style={[styles.medicationRoute, { marginLeft: 4 }]}>
-                      
-                      </Text>
-                    </View>
-                    <Text style={styles.cityProvinceText}>{drug.indication}</Text>
-                    <Text style={styles.cityProvinceText}>
-                      {drug.instructions}
-                      {drug.patientCompliance?.toLowerCase() === 'no' && drug.complianceFrequency && (
-                        <Text style={styles.dispenseText}>
-                          {' '}({drug.complianceFrequency} Dispense)
-                        </Text>
-                      )}
-                    </Text>
-                    <View style={styles.cityProvinceText}>
-                      <Text style={styles.cityProvinceText}>Quantity: {drug.quantity}</Text>
-                      <Text style={styles.cityProvinceText}>Repeats: {drug.repeat}</Text>
-                    </View>
-                    <Text style={styles.cityProvinceText}>
-                      Duration: {drug.duration} Days{'\n'}
-                      ({formatDate(drug.startDate)} - {formatDate(drug.endDate)})
-                    </Text>
-                    <Text style={styles.cityProvinceText}>
-                      {pdfContent?.medications?.map((medication, index) => (
-                        <Text key={`med-form-${index}`} style={styles.cityProvinceText}>
-                          {medication.drugForm} 
-                        </Text>
-                      ))}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-
+              {renderMedications()}
 
               {/* Delivery Options */}
-              <View style={styles.section}>
+              {/* <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Delivery Option</Text>
                 <View style={styles.deliveryOptions}>
                   <TouchableOpacity 
@@ -533,7 +546,7 @@ const PrescriptionPreview = ({
                     ]}>Pickup</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </View> */}
 
               {/* Signature Section */}
               <View style={styles.section}>
@@ -718,6 +731,7 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 16,
     color: '#000',
+   fontWeight:'300',
    
     // marginBottom: 6,
   },
@@ -734,12 +748,13 @@ const styles = StyleSheet.create({
   },
   addressContainer: {
   
-    marginTop: 8,
+  
   },
   addressText: {
     fontSize: 16,
     color: '#000',
-    lineHeight: 24,
+    fontWeight:'300',
+    
   },
   cityProvinceText: {
     fontSize: 16,
@@ -753,23 +768,34 @@ const styles = StyleSheet.create({
   },
   patientInfo: {
     gap: 4,
+    backgroundColor: '#F8F9FA',
+    padding: 12,
+    borderRadius: 8,
   },
   patientName: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#000',
-  
-    fontWeight: '400',
+    fontWeight: '500',
+    marginBottom: 8,
   },
   patientDetails: {
     fontSize: 16,
-    color: '#000',
- 
-    fontWeight: '300',
+    color: '#333',
+    lineHeight: 24,
   },
-  patientAddress: {
-    fontSize: 14,
-    color: '#000',
- 
+  phoneContainer: {
+    marginTop: 8,
+    gap: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
   },
   allergiesText: {
     fontSize: 14,
@@ -793,41 +819,11 @@ const styles = StyleSheet.create({
     color: '#191919',
     marginRight: 4,
   },
-  medicationRoute: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '400',
-    fontStyle: 'italic',
-  },
   dispenseText: {
     fontSize: 14,
     color: '#666',
     fontWeight: '400',
     marginLeft: 4,
-  },
-  medicationIndication: {
-    fontSize: 14,
-    color: '#191919',
-    marginBottom: 4,
-  },
-  medicationInstructions: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  medicationDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    gap: 16,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#191919',
-  },
-  durationText: {
-    fontSize: 14,
-    color: '#666',
   },
   deliveryOptions: {
     flexDirection: 'row',
@@ -1078,9 +1074,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E6E8EC',
   },
-  phoneContainer: {
-    marginTop: 8,
-  },
   clinicHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1116,10 +1109,14 @@ const styles = StyleSheet.create({
   allergyItem: {
     marginBottom: 4,
   },
-  allergiesText: {
-    fontSize: 16,
-    color: '#191919',
-    lineHeight: 24,
+  patientInfoText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  phnLabel: {
+    fontWeight: '500',
+  },
+  phnValue: {
     fontWeight: '300',
   },
 });

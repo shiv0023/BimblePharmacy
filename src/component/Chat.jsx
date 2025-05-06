@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions, SafeAreaView, Scr
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { generateScopeAssessment } from '../Redux/Slices/GenerateAssessmentslice';
+import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
+import Feather from 'react-native-vector-icons/Feather';
 
 import CustomHeader from './CustomHeader';
 import AcneScopeAssessment from './ScopeAssessment';
@@ -10,6 +12,7 @@ import { Call } from './svgComponent';
 import { generateFollowupAssessment } from '../Redux/Slices/FollowUpAssessmentSlice';
 import { HeadersInner } from './HeaderIneer';
 import DrugPrescription from './DrugPrescription';
+import TickIcon from '../Utils/SvgComponent';
 
 const { width } = Dimensions.get('window');
 
@@ -50,11 +53,21 @@ const Chat = () => {
   const [preAssessmentAnswers, setPreAssessmentAnswers] = useState(null);
   const [loading, setLoading] = useState(false);
   const [patientDetails, setPatientDetails] = useState(null);
+  const [followupAssessmentDone, setFollowupAssessmentDone] = useState(false);
+  const [prescriptionDone, setPrescriptionDone] = useState(false);
+  const [scopeStatus, setScopeStatus] = useState(null);
 
   const getFullGender = (gender) => {
     if (!gender) return '';
     if (gender.toUpperCase() === 'F') return 'Female';
     if (gender.toUpperCase() === 'M') return 'Male';
+    return gender;
+  };
+
+  const getShortGender = (gender) => {
+    if (!gender) return 'N/A';
+    if (gender.toLowerCase() === 'female') return 'F';
+    if (gender.toLowerCase() === 'male') return 'M';
     return gender;
   };
 
@@ -70,6 +83,12 @@ const Chat = () => {
       console.warn('DemographicNo is missing from route params');
     }
   }, []);
+
+  useEffect(() => {
+    if (demographicNo) {
+      dispatch(fetchPatientDetails({ demographicNo }));
+    }
+  }, [dispatch, demographicNo]);
 
   console.log('Route Params:', {
     date,
@@ -106,53 +125,47 @@ const Chat = () => {
 
   const handleSubmitAssessment = async (data) => {
     try {
-      const { result, formattedPayload, scopeStatus } = data;
+      const { result, formattedPayload, scopeStatus: statusFromAssessment } = data;
 
       setPreAssessmentAnswers({
         reason: formattedPayload.reason,
         scopeAnswers: formattedPayload.scopeAnswers,
         gender: formattedPayload.gender,
-        dob: formattedPayload.dob
+        dob: formattedPayload.dob,
+        scope: statusFromAssessment
       });
+
+      // Set the scope status for display
+      setScopeStatus(statusFromAssessment);
 
       setShowAssessment(false);
 
-      // Decide where to go next based on scopeStatus
-      if (scopeStatus && scopeStatus.toLowerCase().includes('in scope')) {
-        // Go to prescription
-        navigation.navigate('DrugPrescription', {
+      if (statusFromAssessment && statusFromAssessment.toLowerCase().includes('out of scope')) {
+        navigation.navigate('SoapNotes', {
           demographicNo,
-          condition: formattedPayload.reason || reason,
+          scopeStatusReason: statusFromAssessment,
           gender,
           dob: formattedPayload.dob,
           phn
         });
       } else {
-        // Go to SOAP notes
-        navigation.navigate('SoapNotes', {
-          demographicNo,
-          reason: formattedPayload.reason || reason,
-          gender,
-          dob: formattedPayload.dob,
-          phn
-        });
+        handleFollowupAssessment();
       }
     } catch (error) {
-      console.error('Failed to submit assessment:', error);
+      // handle error
     }
   };
 
   const handleFollowupAssessment = () => {
-    if (!preAssessmentAnswers) {
-      Alert.alert('Error', 'Please complete the pre-assessment first');
-      return;
-    }
+    // if (!preAssessmentAnswers) {
+    //   Alert.alert('Error', 'Please complete the pre-assessment first');
+    //   return;
+    // }
 
-    // Format scope answers into the expected array format
     const formattedAnswers = Object.entries(preAssessmentAnswers.scopeAnswers).map(([question, answer], index) => ({
       questionId: index + 1,
-      question: question,  // Add the question text
-      answer: String(answer) // Ensure answer is a string
+      question: question,
+      answer: String(answer)
     }));
 
     const params = {
@@ -160,18 +173,17 @@ const Chat = () => {
       dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
       condition: preAssessmentAnswers.reason || reason,
       appointmentNo: route.params?.appointmentNo || demographicNo,
-      scope: 'in scope of pharmacist',
+      scope: preAssessmentAnswers.scope,
       answers: formattedAnswers,
       phn: phn,
-      // Add the original scope assessment answers for reference
       scopeAssessment: {
         reason: preAssessmentAnswers.reason,
         scopeAnswers: preAssessmentAnswers.scopeAnswers,
-        gender: preAssessmentAnswers.gender
+        gender: preAssessmentAnswers.gender,
+        scope: preAssessmentAnswers.scope
       }
     };
 
-    console.log('Navigating to FollowUpAssessment with params:', params);
     navigation.navigate('FollowUpAssessment', params);
   };
 
@@ -183,7 +195,6 @@ const Chat = () => {
         day: 'numeric'
       })
     : '';
-
 
   // Add the same helper function
   const formatTime = (timeString) => {
@@ -232,15 +243,15 @@ const Chat = () => {
           backgroundColor: isNew 
             ? "rgba(223, 233, 252, 1)" 
             : "rgba(220,232,221,1)",
-          marginTop: 0, // Remove top margin
-          borderRadius: 0, // Remove border radius
-          paddingVertical: 16, // Increase vertical padding
+          marginTop: 0,
+          borderRadius: 0,
+          paddingVertical: 16,
         }
       ]}>
         <Text style={styles.patientInfoText}>
           <Text style={styles.phnLabel}>PHN: </Text>
           <Text style={styles.phnValue}>
-            {`${phn} / ${gender || 'N/A'} / ${patientAge} Years`}
+            {`${phn} / ${getShortGender(gender)} / ${patientAge} Years`}
           </Text>
         </Text>
         <View style={[
@@ -256,6 +267,18 @@ const Chat = () => {
         </View>
       </View>
     );
+  };
+
+  const getScopeStatusLabel = (status) => {
+    if (!status) return null;
+    const lower = status.toLowerCase();
+    if (lower.includes('in scope')) {
+      return { label: 'In Scope', bgColor: '#27ae60' }; // green
+    }
+    if (lower.includes('refer') || lower.includes('out of scope')) {
+      return { label: 'Refer', bgColor: '#e74c3c' }; // red
+    }
+    return null;
   };
 
   return (
@@ -292,7 +315,7 @@ const Chat = () => {
         ) : (
           <>
             <CustomHeader 
-              title={patientName ? patientName.toUpperCase() : "SCOPE ASSESSMENT"} 
+              title={patientName ? patientName.replace(/,/g, ' ').trim() : "SCOPE ASSESSMENT"} 
               IconComponent={Call} 
             />
             
@@ -312,6 +335,23 @@ const Chat = () => {
                 {reason && `${reason}`}
                 {reasonDesc && `, ${reasonDesc}`}
               </Text>
+              {scopeStatus && getScopeStatusLabel(scopeStatus) && (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={{
+                    fontWeight: '350',
+                    color: '#fff',
+                    fontSize: 12,
+                    alignSelf: 'flex-start',
+                    backgroundColor: getScopeStatusLabel(scopeStatus).bgColor,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 6,
+                    overflow: 'hidden'
+                  }}>
+                    {getScopeStatusLabel(scopeStatus).label}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Spacer */}
@@ -328,23 +368,48 @@ const Chat = () => {
                   style={[styles.footerButton, { width: 130, height: 130 }]}
                   onPress={handlePreAssessment}
                 >
+                  {preAssessmentAnswers && (
+                    <View style={styles.checkmarkContainer}>
+                      <TickIcon />
+                    </View>
+                  )}
                   <View style={styles.buttonTextContainer}>
-                    <Text style={styles.footerButtonText}>Pre{'\n'}Assessment</Text>
+                    <Text style={styles.footerButtonText}>
+                      Pre{'\n'}Assessment
+                    </Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.footerButton, { width: 130, height: 130 }]}
-                  onPress={handleFollowupAssessment}
-                >
-                  <View style={styles.buttonTextContainer}>
-                    <Text style={styles.footerButtonText}>Followup{'\n'}Assessment</Text>
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.footerButton, { width: 130, height: 130 }]}
+                  style={[
+                    styles.footerButton, 
+                    { width: 130, height: 130 },
+                    !preAssessmentAnswers && styles.footerButtonDisabled
+                  ]}
                   onPress={() => {
-                    if (!preAssessmentAnswers) {
-                      Alert.alert('Error', 'Please complete the assessment first');
+                    handleFollowupAssessment();
+                  }}
+                  disabled={!preAssessmentAnswers}
+                >
+                  {followupAssessmentDone && (
+                    <View style={styles.checkmarkContainer}>
+                      <TickIcon />
+                    </View>
+                  )}
+                  <View style={styles.buttonTextContainer}>
+                    <Text style={styles.footerButtonText}>
+                      Followup{'\n'}Assessment
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[
+                    styles.footerButton, 
+                    { width: 130, height: 130 },
+                    (!preAssessmentAnswers || !followupAssessmentDone) && styles.footerButtonDisabled
+                  ]}
+                  onPress={() => {
+                    if (!preAssessmentAnswers || !followupAssessmentDone) {
+                      Alert.alert('Error', 'Please complete the previous steps first');
                       return;
                     }
                     navigation.navigate('DrugPrescription', {
@@ -352,17 +417,41 @@ const Chat = () => {
                       condition: preAssessmentAnswers.reason || reason,
                       gender: gender,
                       dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
-                      phn: phn
+                      phn: phn,
                     });
                   }}
+                  disabled={!preAssessmentAnswers || !followupAssessmentDone}
                 >
+                  {prescriptionDone && (
+                    <View style={styles.checkmarkContainer}>
+                      <TickIcon />
+                    </View>
+                  )}
                   <View style={styles.buttonTextContainer}>
-                    <Text style={styles.footerButtonText}>Generate{'\n'}Prescription</Text>
+                    <Text style={styles.footerButtonText}>
+                      Generate{'\n'}Prescription
+                    </Text>
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.footerButton, { width: 130, height: 130 }]}>
+                <TouchableOpacity 
+                  style={[
+                    styles.footerButton, 
+                    { width: 130, height: 130 },
+                    (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone) && styles.footerButtonDisabled
+                  ]}
+                  onPress={() => {
+                    if (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone) {
+                      Alert.alert('Error', 'Please complete the previous steps first');
+                      return;
+                    }
+                    // Your SOAP Notes logic here
+                  }}
+                  disabled={!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone}
+                >
                   <View style={styles.buttonTextContainer}>
-                    <Text style={styles.footerButtonText}>Generate{'\n'}SOAP Notes</Text>
+                    <Text style={styles.footerButtonText}>
+                      Generate{'\n'}SOAP Notes
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </ScrollView>
@@ -389,14 +478,14 @@ const styles = StyleSheet.create({
   },
   line: {
     flex: 1,
-    height: 1,
+    height: 0.5,
     backgroundColor: '#bbb',
     marginHorizontal: 10,
   },
   dateText: {
     fontSize: 14,
     color: '#222',
-    fontWeight: '400',
+    fontWeight: '300',
     textAlign: 'center',
     minWidth: 120,
   },
@@ -419,6 +508,7 @@ const styles = StyleSheet.create({
   footerRowWrapper: {
     marginHorizontal: 0,
     marginBottom: 4,
+   
   },
   footerRow: {
     flexDirection: 'row',
@@ -427,26 +517,35 @@ const styles = StyleSheet.create({
   },
   footerButton: {
     borderWidth: 1,
-    borderColor: '#222',
-    borderRadius: 12,
-    marginHorizontal: 4,
+    borderColor: '#bbb',
+    borderRadius: 16,
+    marginHorizontal: 8,
     backgroundColor: '#fff',
     position: 'relative',
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonTextContainer: {
     position: 'absolute',
     bottom: 18,
-    left: 18,
+    left: 6,
+    
+    
   },
   footerButtonText: {
     fontSize: 15,
     color: '#222',
     textAlign: 'left',
     fontWeight: '300',
+    lineHeight:17
+   
    
   },
-
-
+  footerButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#f0f0f0',
+  },
   questionContainer: {
     marginBottom: 20,
   },
@@ -574,14 +673,14 @@ const styles = StyleSheet.create({
   phnValue: {
     fontSize: 16,
     color: '222',
-    marginLeft: 2,
+
     fontWeight:'200'
   },
   newButtonContainer: {
     backgroundColor: '#008D00',
     borderRadius: 6,
 
-    minWidth: 60,
+    minWidth: 55,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -594,6 +693,26 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#666',
     fontSize: 14,
+  },
+  checkmarkContainer: {
+    position: 'absolute',
+    top: 5,
+    left: 5,
+    zIndex: 10,
+  },
+  scopeStatusContainer: {
+    marginHorizontal: 18,
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: 'red',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#b2dfdb',
+  },
+  scopeStatusText: {
+    fontSize: 15,
+    color: 'white',
+    fontWeight: '400',
   },
 });
 

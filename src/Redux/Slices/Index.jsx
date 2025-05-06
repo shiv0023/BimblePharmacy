@@ -7,6 +7,9 @@ import DrugReducer from './DrugSlice';
 import clinicDetailsReducer from './ClinicDetails';
 import generateAssessmentReducer from './GenerateAssessmentslice';
 import followupAssessmentReducer from './FollowUpAssessmentSlice';
+import medicationReducer from './MedicationlistSlice';
+import soapNotesReducer from './SoapNotesSlice';
+
 const rootReducer = combineReducers({
   user: AuthReducer,
   clinic: ClinicReducer,
@@ -16,6 +19,8 @@ const rootReducer = combineReducers({
   clinicDetails: clinicDetailsReducer,
   generateAssessment: generateAssessmentReducer,
   followupAssessment: followupAssessmentReducer,
+  medication: medicationReducer,
+  soapNotes: soapNotesReducer,
 });
 
 export default rootReducer;

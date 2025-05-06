@@ -18,6 +18,7 @@ import PrescriptionPreview from '../components/PrescriptionPreview';
 import PDFViewers from '../component/Pdf';
 import FollowUpAssessment from '../component/FollowUpAssesment';
 import DrugPrescription from '../component/DrugPrescription';
+import SoapNotes from '../component/SoapNotes';
 const Stack = createStackNavigator();
 const { width, height } = Dimensions.get('window');
 
@@ -155,6 +156,14 @@ export default function MyStack() {
               headerShown: false
             }}
           />
+             <Stack.Screen 
+            name="SoapNotes" 
+            component={SoapNotes}
+            options={{
+              headerShown: false
+            }}
+          />
+
         </Stack.Navigator>
       </Fragment>
     </SafeAreaProvider>

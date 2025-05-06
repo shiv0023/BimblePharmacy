@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert } from 'react-native';
 import CustomHeader from './CustomHeader';
 import { useDispatch, useSelector } from 'react-redux';
 import { getScopeStatus } from '../Redux/Slices/GenerateAssessmentslice';
@@ -146,19 +146,61 @@ const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ag
   };
 
   const handleCheckScope = async () => {
-    // Build scopeAnswers with correct types
+    // Only require answers for visible questions
+    const visibleQuestions = questions.filter((question, index) => {
+      if (question.dependsOn) {
+        const depIndex = questions.findIndex(q =>
+          (q.key && q.key === question.dependsOn.key) ||
+          (q.question && q.question === question.dependsOn.key)
+        );
+        if (depIndex === -1) return false;
+        const depAnswer = assessmentDataState[`question_${depIndex}`];
+        if (depAnswer !== question.dependsOn.value) return false;
+      }
+      // Optionally, keep your previous logic for the last question
+      if (index === questions.length - 1 && !showLastQuestion) {
+        return false;
+      }
+      return true;
+    });
+
+    const missing = visibleQuestions.filter((q, idx) => {
+      const answer = assessmentDataState[`question_${questions.indexOf(q)}`];
+      return typeof answer === 'undefined' || answer === null || answer === '';
+    });
+
+    if (missing.length > 0) {
+      Alert.alert('Please answer all questions before submitting.');
+      return;
+    }
+
+    setLocalLoading(true);
+
+    // Build scopeAnswers: include ALL questions, but for hidden ones, send empty string
     const scopeAnswers = {};
     questions.forEach((q, idx) => {
-      let answer = assessmentDataState[`question_${idx}`];
-      if (q.type === 'checkbox' && !Array.isArray(answer)) answer = [];
-      if ((q.type === 'text' || q.type === 'button') && typeof answer !== 'string') answer = '';
+      let isVisible = true;
+      if (q.dependsOn) {
+        const depIndex = questions.findIndex(qq =>
+          (qq.key && qq.key === q.dependsOn.key) ||
+          (qq.question && qq.question === q.dependsOn.key)
+        );
+        if (depIndex === -1) isVisible = false;
+        const depAnswer = assessmentDataState[`question_${depIndex}`];
+        if (depAnswer !== q.dependsOn.value) isVisible = false;
+      }
+      // Optionally, keep your previous logic for the last question
+      if (idx === questions.length - 1 && !showLastQuestion) {
+        isVisible = false;
+      }
+      // If visible, use the answer; if not, send empty string
+      let answer = isVisible ? assessmentDataState[`question_${idx}`] : '';
+      if (typeof answer === 'undefined' || answer === null) answer = '';
       scopeAnswers[q.question] = answer;
     });
 
     // Format DOB if not provided directly
     const formattedDob = dob || `${year_of_birth}-${month_of_birth}-${date_of_birth}`;
-
-    setLocalLoading(true);
 
     const payload = {
       reason: reason || '',
@@ -184,7 +226,7 @@ const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ag
       alert('Assessment submitted successfully');
     } catch (error) {
       console.error('Failed to get scope status:', error);
-      alert('Error: ' + (error.message || 'Failed to submit assessment'));
+      // alert('Error: ' + (error.message || 'Failed to submit assessment'));
     } finally {
       setLocalLoading(false);
     }
@@ -198,13 +240,33 @@ const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ag
         appointment?.date_of_birth
       );
 
+  const secondLastIndex = questions.length - 2;
+  const showLastQuestion = assessmentDataState[`question_${secondLastIndex}`] === 'Yes';
+
   return (
     <View style={styles.container}>
       <CustomHeader title=" Scope Assessment" />
       <ScrollView style={styles.scrollView}>
         {/* <Text style={styles.assessmentTitle}>Acne Scope Assessment</Text> */}
         
-        {questions.map((question, index) => renderQuestion(question, index))}
+        {questions.map((question, index) => {
+          // Handle conditional rendering based on dependsOn
+          if (question.dependsOn) {
+            // Find the index of the dependency question
+            const depIndex = questions.findIndex(q =>
+              (q.key && q.key === question.dependsOn.key) ||
+              (q.question && q.question === question.dependsOn.key)
+            );
+            if (depIndex === -1) return null;
+            const depAnswer = assessmentDataState[`question_${depIndex}`];
+            if (depAnswer !== question.dependsOn.value) return null;
+          }
+          // Optionally, keep your previous logic for the last question
+          if (index === questions.length - 1 && !showLastQuestion) {
+            return null;
+          }
+          return renderQuestion(question, index);
+        })}
 
         <TouchableOpacity 
           style={styles.submitButton} 
@@ -274,7 +336,7 @@ const styles = StyleSheet.create({
   buttonGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    
   },
   button: {
     flex: 1,
@@ -304,6 +366,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    
   },
   checkbox: {
     width: 24,
@@ -325,12 +388,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 18,
+
  
   },
   checkboxText: {
     fontSize: 16,
     color: '#222',
     flex: 1,
+    fontWeight:'200',
+
+    
+  
+   
   },
   submitButton: {
     backgroundColor: '#4CAF50',

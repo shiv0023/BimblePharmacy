@@ -33,10 +33,12 @@ export const generateFollowupAssessment = createAsyncThunk(
       const formattedPayload = {
         gender: payload.gender,
         dob: payload.dob,
-        condition: payload.reason || payload.condition,
+        reason: payload.reason || payload.condition,
         appointmentNo: payload.appointmentNo,
         scope: payload.scope || 'in scope of pharmacist',
-        answers: formattedAnswers  // Using the formatted object
+        answers: formattedAnswers  ,// Using the formatted object
+        reasonDescription: payload?.reasonDescription ||  "",  // Use from route params
+        allergies: payload?.allergies || '', 
       };
 
       console.log('Sending API payload:', formattedPayload);

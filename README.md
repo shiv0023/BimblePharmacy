@@ -96,3 +96,6 @@ To learn more about React Native, take a look at the following resources:
 
 
 
+
+parameter missing appointmnet No @SoapNotes.jsx @SoapNotesSlice.jsx @FollowUpAssesment.jsx 
+

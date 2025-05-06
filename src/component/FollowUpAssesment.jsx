@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { generateFollowupAssessment } from '../Redux/Slices/FollowUpAssessmentSlice';
+import { getMedicationList } from '../Redux/Slices/MedicationlistSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import CustomHeader from './CustomHeader';
 
@@ -38,6 +39,7 @@ const FollowUpAssessment = () => {
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -48,6 +50,7 @@ const FollowUpAssessment = () => {
       }
 
       try {
+        setIsDataLoading(true);
         const result = await dispatch(generateFollowupAssessment({
           gender,
           dob,
@@ -65,6 +68,8 @@ const FollowUpAssessment = () => {
           error.message || 'Failed to load follow-up questions'
         );
         navigation.goBack();
+      } finally {
+        setIsDataLoading(false);
       }
     };
 
@@ -97,39 +102,39 @@ const FollowUpAssessment = () => {
         answer: answer
       }));
 
-      const payload = {
-        gender,
-        dob,
-        condition,
-        appointmentNo,
-        scope,
-        answers: answersArray
-      };
+      const currentScope = scope || route.params?.scope;
 
-      console.log('Submitting payload:', payload);
-      Alert.alert(
-        'Success', 
-        'Assessment submitted successfully',
-        [
-          {
-            text: 'Proceed to Prescription',
-            onPress: () => navigation.navigate('DrugPrescription', {
-              demographicNo: appointmentNo,
-              condition: condition,
-              gender: gender,
-              dob: dob,
-              phn: route.params?.phn
-            })
-          }
-        ]
-      );
+      if (
+        currentScope &&
+        /(out of scope|refer)/i.test(currentScope)
+      ) {
+        navigation.navigate('SoapNotes', {
+          gender,
+          dob,
+          condition,
+          scope: currentScope,
+          scopeAnswers: route.params?.scopeAssessment?.scopeAnswers,
+          followUpAnswers: answersArray,
+          medications: "",
+          appointmentNo: appointmentNo,
+        });
+      } else {
+        navigation.navigate('DrugPrescription', {
+          demographicNo: appointmentNo,
+          reason: condition,
+          gender: gender,
+          dob: dob,
+          phn: route.params?.phn,
+          
+        });
+      }
     } catch (error) {
       console.error('Submit error:', error);
       Alert.alert('Error', 'Failed to submit assessment');
     }
   };
 
-  if (loading) {
+  if (isDataLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <CustomHeader title="Follow-up Assessment" />

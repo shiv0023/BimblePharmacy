@@ -95,6 +95,7 @@ export default function Appointment({navigation}) {
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTabIndex, setCurrentTabIndex] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const dispatch = useDispatch();
   const userData = useSelector((state) => state?.auth?.Appointment?.data || []);
 
@@ -230,7 +231,7 @@ export default function Appointment({navigation}) {
     navigation.navigate("Chat", {
       date: item.appointmentDate,
       reason: item.reason,
-      reasonDesc: item.reasonDesc || "This is reason description there is more to this description....",
+      reasonDesc: item.reasonDesc ,
       demographicNo: formattedDemographicNo,
       status: item.status,
       appointmentNo: item.appointmentNo,
@@ -243,7 +244,32 @@ export default function Appointment({navigation}) {
       ageString,
       patientName: item.patientName,
       phn: item.phn,
+
     });
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Call your fetchAppointmentsData function or dispatch your fetchAppointments action here
+      const token = await AsyncStorage.getItem('auth_token');
+      if (!token) {
+        console.error('No auth token found');
+        setRefreshing(false);
+        return;
+      }
+      const startDate = new Date().toISOString().split('T')[0];
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30);
+      dispatch(fetchAppointments({ 
+        startDate, 
+        endDate: endDate.toISOString().split('T')[0],
+        token 
+      }));
+    } catch (error) {
+      console.error('Error refreshing appointments:', error);
+    }
+    setRefreshing(false);
   };
 
   const renderItem = ({item}) => {
@@ -258,9 +284,10 @@ export default function Appointment({navigation}) {
             borderColor: isNew ? '#0049F8' : '#bfc9c2',
           },
         ]}>
-      
+         <TouchableOpacity onPress={() => handleAppointmentPress(item)}>
 
         <View>
+
           <View style={styles.cardHeader}>
             <View style={styles.avatar}>
               {/* <PatientImage /> */}
@@ -329,19 +356,20 @@ export default function Appointment({navigation}) {
               {/* Reason Description + Arrow Icon in a row */}
               <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',marginBottom:'6'}}>
                 <Text style={styles.reasonText} numberOfLines={2}>
-                {item.reason}, {item.reasonDesc }
+                  {item.reason}
+                  {item.reasonDesc ? `, ${item.reasonDesc}` : ''}
                 </Text>
                 <View style={styles.IconContainer}>
-                  <TouchableOpacity onPress={() => handleAppointmentPress(item)}>
+               
                     <Icon name="arrow-top-right" size={20} color="white" />
-                  </TouchableOpacity>
+                 
                 </View>
               </View>
             </View>
           </View>
-          
+        
         </View>
-
+        </TouchableOpacity>
        
 
       
@@ -354,7 +382,7 @@ export default function Appointment({navigation}) {
         <StatusBar backgroundColor={Platform.OS === 'ios' ? 'red' : '#0049F8'} barStyle="light-content" />
         <CustomHeader title="Appointments" IconComponent={AppointmentUserIcon} />
         {/* Appointment List */}
-        <View style={styles.content}>
+        <View style={[styles.content, refreshing && { backgroundColor: 'black' }]}>
           {/* Tabs */}
           <View style={styles.tabs}>
             {tabs.map((tab, index) => (
@@ -390,11 +418,11 @@ export default function Appointment({navigation}) {
                 }
                 
                 if (currentTabIndex === 0) {
-                  // Today's appointments: show if not follow-up and date is today
-                  return itemDate === today && demographicType !== 'follow-up';
+                  // Today's appointments: show if date is today (regardless of type)
+                  return itemDate === today;
                 } else {
-                  // Upcoming appointments: show if follow-up or date is after today
-                  return demographicType === 'follow-up' || itemDate > today;
+                  // Upcoming appointments: show if date is after today
+                  return itemDate > today;
                 }
               }).sort((a, b) => {
                 // Sort by date first
@@ -405,6 +433,8 @@ export default function Appointment({navigation}) {
               })}
               renderItem={renderItem}
               keyExtractor={item => item.appointmentNo.toString()}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
               ListEmptyComponent={
                 <Text style={styles.emptyText}>
                   No appointments available for {currentTabIndex === 0 ? 'today' : 'upcoming days'}
