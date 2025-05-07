@@ -15,7 +15,7 @@ const DrugPrescription = ({ route, navigation }) => {
   const dispatch = useDispatch();
   const { 
     demographicNo, 
-    reason,
+    condition,
     firstName,
     lastName,
     phn,
@@ -67,11 +67,15 @@ const DrugPrescription = ({ route, navigation }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [additionalNotes, setAdditionalNotes] = useState('');
 
+  const [editingDrugIndex, setEditingDrugIndex] = useState(null);
+
+  const [submitLoading, setSubmitLoading] = useState(false);
+
   useEffect(() => {
     // Fetch medications when component mounts
     const fetchMedications = async () => {
       try {
-        await dispatch(getMedicationList(reason)).unwrap();
+        await dispatch(getMedicationList(condition)).unwrap();
       } catch (error) {
         console.error('Error fetching medications:', error);
         Alert.alert('Error', 'Failed to fetch medication list');
@@ -79,7 +83,7 @@ const DrugPrescription = ({ route, navigation }) => {
     };
 
     fetchMedications();
-  }, [dispatch, reason]);
+  }, [dispatch, condition]);
 
   useEffect(() => {
     if (drugData.startDate && drugData.duration) {
@@ -107,7 +111,7 @@ const DrugPrescription = ({ route, navigation }) => {
     }
     if (drugData.refills) {
       // Format refills with leading zero if less than 10
-      const refillsStr = drugData.refills.toString().padStart(2, '0');
+      const refillsStr = drugData.refills.toString().padStart(2, '');
       autoSig += ` ${refillsStr} Refills allowed.`;
     }
 
@@ -126,7 +130,21 @@ const DrugPrescription = ({ route, navigation }) => {
     <TouchableOpacity
       style={styles.dropdownItem}
       onPress={() => {
-        setDrugData({ ...drugData, drugName: item.name, instructions: item.sig || '' });
+        if (editingDrugIndex !== null) {
+          handleEditDrug(editingDrugIndex, 'drugName', item.name);
+          handleEditDrug(editingDrugIndex, 'instructions', item.sig || '');
+          setEditingDrugIndex(null);
+        } else {
+          setDrugData({
+            ...drugData,
+            drugName: item.name,
+            instructions: item.sig || '',
+            startDate: new Date(),
+            duration: '',
+            quantity: '',
+            refills: '',
+          });
+        }
         setShowDrugDropdown(false);
         setSearchQuery('');
       }}
@@ -154,14 +172,35 @@ const DrugPrescription = ({ route, navigation }) => {
               <Text style={styles.cancelIconText}>✕</Text>
             </TouchableOpacity>
           </View>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search medications..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
           <ScrollView>
-            {medications.map((item, index) => (
+            {filteredMedications.map((item, index) => (
               <TouchableOpacity
                 key={index}
                 style={styles.dropdownItem}
                 onPress={() => {
-                  setDrugData({ ...drugData, drugName: item.name, instructions: item.sig || '' });
+                  if (editingDrugIndex !== null) {
+                    handleEditDrug(editingDrugIndex, 'drugName', item.name);
+                    handleEditDrug(editingDrugIndex, 'instructions', item.sig || '');
+                    setEditingDrugIndex(null);
+                  } else {
+                    setDrugData({
+                      ...drugData,
+                      drugName: item.name,
+                      instructions: item.sig || '',
+                      startDate: new Date(),
+                      duration: '',
+                      quantity: '',
+                      refills: '',
+                    });
+                  }
                   setShowDrugDropdown(false);
+                  setSearchQuery('');
                 }}
               >
                 <Text style={styles.dropdownItemText}>{item.name}</Text>
@@ -173,25 +212,98 @@ const DrugPrescription = ({ route, navigation }) => {
     </Modal>
   );
 
-  const DrugCard = ({ drug, onDelete, index }) => (
+  const DrugCard = ({ drug, onDelete, index, onEdit, calculateEndDate }) => (
     <View style={styles.drugCard}>
       <View style={styles.drugCardHeader}>
-        <Text style={styles.drugCardTitle}>{drug.drugName}</Text>
+        <TextInput
+          style={[styles.input, styles.drugInput]}
+          value={drug.drugName}
+          onChangeText={(text) => onEdit(index, 'drugName', text)}
+          placeholder="Select or type medication..."
+          onFocus={() => {
+            setShowDrugDropdown(true);
+            setEditingDrugIndex(index);
+          }}
+        />
         <TouchableOpacity onPress={() => onDelete(index)} style={styles.deleteButton}>
           <Text style={styles.deleteButtonText}>✕</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.drugCardContent}>
-        <Text style={styles.drugCardText}>Start Date: {drug.startDate.toISOString().split('T')[0]}</Text>
-        <Text style={styles.drugCardText}>Duration: {drug.duration} days</Text>
-        <Text style={styles.drugCardText}>Quantity: {drug.quantity}</Text>
-        <Text style={styles.drugCardText}>Refills: {drug.refills}</Text>
-        <Text style={styles.drugCardText}>Instructions: {drug.instructions}</Text>
+        <View style={styles.row}>
+          <View style={styles.halfInput}>
+            <Text style={styles.label}>Start Date</Text>
+            <TextInput
+              style={styles.input}
+              value={drug.startDate ? drug.startDate.toISOString().split('T')[0] : ''}
+              onChangeText={(text) => onEdit(index, 'startDate', new Date(text))}
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+          <View style={styles.halfInput}>
+            <Text style={styles.label}>Duration (Days)</Text>
+            <TextInput
+              style={styles.input}
+              value={drug.duration}
+              onChangeText={(text) => onEdit(index, 'duration', text)}
+              keyboardType="numeric"
+              placeholder="Duration"
+            />
+          </View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.halfInput}>
+            <Text style={styles.label}>End Date</Text>
+            <TextInput
+              style={styles.input}
+              value={
+                drug.startDate && drug.duration
+                  ? calculateEndDate(drug.startDate, drug.duration)
+                  : ''
+              }
+              editable={false}
+              placeholder="Auto-calculated"
+              placeholderTextColor="#999"
+            />
+          </View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.halfInput}>
+            <Text style={styles.label}>Quantity</Text>
+            <TextInput
+              style={styles.input}
+              value={drug.quantity}
+              onChangeText={(text) => onEdit(index, 'quantity', text)}
+              keyboardType="numeric"
+              placeholder="Quantity"
+            />
+          </View>
+          <View style={styles.halfInput}>
+            <Text style={styles.label}>Refills</Text>
+            <TextInput
+              style={styles.input}
+              value={drug.refills}
+              onChangeText={(text) => onEdit(index, 'refills', text)}
+              keyboardType="numeric"
+              placeholder="Refills"
+            />
+          </View>
+        </View>
+        <Text style={styles.label}>Instructions (SIG)</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={drug.instructions}
+          onChangeText={(text) => onEdit(index, 'instructions', text)}
+          multiline
+          placeholder="Instructions"
+        />
       </View>
     </View>
   );
+
   const handleSubmit = async () => {
     try {
+      setSubmitLoading(true); // Start loader
       // Validate if there's any data to submit
       if (!drugData.drugName && drugs.length === 0) {
         Alert.alert('Error', 'Please add at least one medication');
@@ -211,7 +323,7 @@ const DrugPrescription = ({ route, navigation }) => {
   
       // Format drugs data
       const formattedDrugs = allDrugs.map(drug => ({
-        indication: reason || '',
+        indication: condition || '',
         instructions: drug.instructions || '',
         duration: parseInt(drug.duration) || 0,
         quantity: parseInt(drug.quantity) || 0,
@@ -225,7 +337,7 @@ const DrugPrescription = ({ route, navigation }) => {
   
       const payload = {
         demographicNo: parseInt(demographicNo),
-        appointmentNo: parseInt(demographicNo),
+        appointmentNo: parseInt(route.params.appointmentNo),
         drugData: formattedDrugs
       };
   
@@ -236,7 +348,9 @@ const DrugPrescription = ({ route, navigation }) => {
   
       // Success case - both 204 and Success status
       if (result && (result.status === 'Success' || result.status === 204)) {
-        // Show the PrescriptionPreview modal instead of navigating back
+        if (route.params?.onDone) {
+          route.params.onDone();
+        }
         setShowPreview(true);
       } else {
         throw new Error('Failed to add prescriptions');
@@ -248,16 +362,27 @@ const DrugPrescription = ({ route, navigation }) => {
         error?.message || 'Failed to add prescriptions. Please try again.',
         [{ text: 'OK' }]
       );
+    } finally {
+      setSubmitLoading(false); // Stop loader
     }
   };
 
-  // Add function to handle adding another drug
-  const handleAddAnotherDrug = () => {
+  const handleAddOrUpdateDrug = () => {
     if (!drugData.drugName) {
       Alert.alert('Error', 'Please fill in the current drug details first');
       return;
     }
-    setDrugs([...drugs, drugData]);
+    if (editingDrugIndex !== null) {
+      // Update existing drug
+      const updatedDrugs = [...drugs];
+      updatedDrugs[editingDrugIndex] = { ...drugData };
+      setDrugs(updatedDrugs);
+      setEditingDrugIndex(null);
+    } else {
+      // Add new drug
+      setDrugs([...drugs, drugData]);
+    }
+    // Reset form
     setDrugData({
       drugName: '',
       startDate: new Date(),
@@ -295,6 +420,42 @@ const DrugPrescription = ({ route, navigation }) => {
     navigation.goBack();
   };
 
+  const handleEditDrug = (index, field, value) => {
+    const updatedDrugs = [...drugs];
+    updatedDrugs[index] = {
+      ...updatedDrugs[index],
+      [field]: field === 'startDate' ? new Date(value) : value
+    };
+
+    // If duration or refills changed, update instructions (SIG)
+    if (field === 'duration' || field === 'refills') {
+      const baseSig = updatedDrugs[index].instructions
+        // Remove previous auto-generated lines
+        .replace(/Follow up in \d+ days\.?/gi, '')
+        .replace(/\d+\s*Refills allowed\.?/gi, '')
+        .replace(/Quantity allowed: \d+\.?/gi, '')
+        .trim();
+
+      let autoSig = '';
+      if (updatedDrugs[index].duration) {
+        autoSig += ` Follow up in ${updatedDrugs[index].duration} days.`;
+      }
+      if (updatedDrugs[index].refills !== undefined && updatedDrugs[index].refills !== '') {
+        const refillsStr = updatedDrugs[index].refills.toString();
+        autoSig += ` ${refillsStr} Refills allowed.`;
+      }
+
+      updatedDrugs[index].instructions = (baseSig + autoSig).trim();
+    }
+
+    setDrugs(updatedDrugs);
+  };
+
+  const handleEditDrugClick = (index) => {
+    setDrugData({ ...drugs[index] });
+    setEditingDrugIndex(index);
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -326,18 +487,21 @@ const DrugPrescription = ({ route, navigation }) => {
         <ScrollView style={styles.scrollView}>
           <View style={styles.formContainer}>
             <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-              <Text style={styles.closeText}>✕</Text>
+              {/* <Text style={styles.closeText}>✕</Text> */}
             </TouchableOpacity>
 
-            <Text style={styles.label}>Drug Name</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDrugDropdown(true)}
-            >
-              <Text style={drugData.drugName ? styles.selectedDrugText : styles.placeholderText}>
-                {drugData.drugName || "Select medication..."}
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Drug Name</Text>
+              <View style={styles.drugInputContainer}>
+                <TextInput
+                  style={[styles.input, styles.drugInput]}
+                  value={drugData.drugName}
+                  onChangeText={(text) => setDrugData({ ...drugData, drugName: text })}
+                  placeholder="Select or type medication..."
+                  onFocus={() => setShowDrugDropdown(true)}
+                />
+              </View>
+            </View>
 
             <DrugDropdownModal />
 
@@ -354,13 +518,18 @@ const DrugPrescription = ({ route, navigation }) => {
 
             {showDatePicker && (
               <DateTimePicker
-                value={drugData.startDate}
+                value={editingDrugIndex !== null ? drugs[editingDrugIndex].startDate : drugData.startDate}
                 mode="date"
                 display="default"
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
                   if (selectedDate) {
-                    setDrugData({ ...drugData, startDate: selectedDate });
+                    if (editingDrugIndex !== null) {
+                      handleEditDrug(editingDrugIndex, 'startDate', selectedDate);
+                      setEditingDrugIndex(null);
+                    } else {
+                      setDrugData({ ...drugData, startDate: selectedDate });
+                    }
                   }
                 }}
               />
@@ -389,21 +558,28 @@ const DrugPrescription = ({ route, navigation }) => {
               </View>
             </View>
 
-            <Text style={styles.label}>Quantity</Text>
-            <TextInput
-              style={styles.input}
-              value={drugData.quantity}
-              onChangeText={(text) => setDrugData({ ...drugData, quantity: text })}
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.label}>Refills</Text>
-            <TextInput
-              style={styles.input}
-              value={drugData.refills}
-              onChangeText={(text) => setDrugData({ ...drugData, refills: text })}
-              keyboardType="numeric"
-            />
+            <View style={styles.row}>
+              <View style={styles.halfInput}>
+                <Text style={styles.label}>Quantity</Text>
+                <TextInput
+                  style={styles.input}
+                  value={drugData.quantity}
+                  onChangeText={(text) => setDrugData({ ...drugData, quantity: text })}
+                  keyboardType="numeric"
+                  placeholder="Quantity"
+                />
+              </View>
+              <View style={styles.halfInput}>
+                <Text style={styles.label}>Refills</Text>
+                <TextInput
+                  style={styles.input}
+                  value={drugData.refills}
+                  onChangeText={(text) => setDrugData({ ...drugData, refills: text })}
+                  keyboardType="numeric"
+                  placeholder="Refills"
+                />
+              </View>
+            </View>
 
             <Text style={styles.label}>Instructions (SIG)</Text>
             <TextInput
@@ -414,6 +590,15 @@ const DrugPrescription = ({ route, navigation }) => {
               placeholder="Apply a thin layer to affected area..."
             />
 
+            <TouchableOpacity 
+              style={styles.secondaryButton}
+              onPress={handleAddOrUpdateDrug}
+            >
+              <Text style={styles.secondaryText}>
+                {editingDrugIndex !== null ? 'Save Changes' : '+ Add Another Drug'}
+              </Text>
+            </TouchableOpacity>
+
             {drugs.length > 0 && (
               <View style={styles.drugsList}>
                 <Text style={styles.drugsListTitle}>Added Medications</Text>
@@ -422,25 +607,24 @@ const DrugPrescription = ({ route, navigation }) => {
                     key={index}
                     drug={drug}
                     onDelete={handleDeleteDrug}
+                    onEdit={handleEditDrug}
                     index={index}
+                    calculateEndDate={calculateEndDate}
                   />
                 ))}
               </View>
             )}
 
-            <TouchableOpacity 
-              style={styles.secondaryButton}
-              onPress={handleAddAnotherDrug}
-            >
-              <Text style={styles.secondaryText}>+ Add Another Drug</Text>
-            </TouchableOpacity>
-
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.blueButton}>
+              {/* <TouchableOpacity style={styles.blueButton}>
                 <Text style={styles.buttonText}>Generate SOAP Note</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.greenButton} onPress={handleSubmit}>
-                <Text style={styles.buttonText}>Write Prescription</Text>
+              </TouchableOpacity> */}
+              <TouchableOpacity style={styles.greenButton} onPress={handleSubmit} disabled={submitLoading}>
+                {submitLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Write Prescription</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -450,6 +634,7 @@ const DrugPrescription = ({ route, navigation }) => {
           onClose={() => setShowPreview(false)}
           prescriptionData={{
             data: {
+              appointmentNo: Number(route.params.appointmentNo),
               prescriptionBatchId: `batch_${Math.floor(100000 + Math.random() * 900000)}`,
               drugData: [...drugs, ...(drugData.drugName ? [drugData] : [])].map(drug => ({
                 groupName: drug.drugName,
@@ -462,7 +647,7 @@ const DrugPrescription = ({ route, navigation }) => {
                 duration: parseInt(drug.duration) || 0,
                 quantity: parseInt(drug.quantity) || 0,
                 repeat: parseInt(drug.refills) || 0,
-                indication: reason || '',
+                indication: condition || '',
                 patientCompliance: 'Yes',
                 longTerm: false
               }))
@@ -470,6 +655,7 @@ const DrugPrescription = ({ route, navigation }) => {
           }}
           patientDetails={{
             demographicNo: demographicNo,
+            appointmentNo: route.params.appointmentNo,
             firstName: firstName,
             lastName: lastName,
             phn: phn,
@@ -501,21 +687,26 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   scrollView: { flex: 1 },
   formContainer: { padding: 16 },
-  label: { fontSize: 14, fontWeight: '250', marginVertical: 8 },
+  label: { fontSize: 14, fontWeight: '250', marginVertical: 4 },
   input: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    padding: 12, fontSize: 12, backgroundColor: '#f9f9f9'
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    backgroundColor: '#fff',
+    color: '#333',
   },
   textArea: {
     height: 100, textAlignVertical: 'top'
   },
-  closeButton: { alignItems: 'flex-end', marginBottom: 10 },
-  closeText: { fontSize: 24, color: '#e74c3c' },
+  // closeButton: { alignItems: 'flex-end', marginBottom: 10,borderRadius:10,paddingBottom:10 },
+  // closeText: { fontSize: 24, color: '#e74c3c',padding:6,textAlign:'center' },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   halfInput: { flex: 0.48 },
   secondaryButton: {
     backgroundColor: '#f8f9fa',
-    padding: 14,
+    padding: 10,
     borderRadius: 8,
     alignItems: 'center',
     marginVertical: 20,
@@ -541,14 +732,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+
+ 
   },
   greenButton: {
     backgroundColor: '#27ae60',
@@ -557,13 +742,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+ 
   },
   buttonText: {
     color: '#fff',
@@ -677,13 +856,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   drugCardContent: {
-    gap: 8,
+    
+  },
+  drugCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+  },
+  drugCardLabel: {
+    width: 100,
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  drugCardInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    padding: 8,
+    fontSize: 14,
+    backgroundColor: '#fff',
+  },
+  drugCardTextArea: {
+    height: 60,
+    
   },
   drugCardText: {
     fontSize: 14,
-    color: '#444',
-    lineHeight: 20,
-    fontWeight: '400',
+    color: '#333',
   },
   deleteButton: {
     padding: 8,
@@ -698,6 +899,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#ff4444',
     fontWeight: '600',
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    margin: 16,
+    fontSize: 14,
+    backgroundColor: '#fff',
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  drugInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  drugInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  selectButton: {
+    backgroundColor: '#0049F8',
+    padding: 12,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  selectButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

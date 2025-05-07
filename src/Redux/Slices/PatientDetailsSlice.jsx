@@ -56,6 +56,7 @@ export const fetchEncounterNotes = createAsyncThunk(
       }
 
       // Return the data
+      console.log (response.data.data,'hello')
       return response.data.data || [];
 
     } catch (error) {
@@ -69,10 +70,39 @@ export const fetchEncounterNotes = createAsyncThunk(
   }
 );
 
+// Save Rx Encounter Notes thunk
+export const saveRxEncounterNotes = createAsyncThunk(
+  'patientDetails/saveRxEncounterNotes',
+  async (payload, { rejectWithValue }) => {
+    try {
+      // Log payload for debugging
+      console.log('Saving Rx Encounter Notes payload:', payload);
+      const response = await axiosInstance.post('/drugs/saveRxEncounterNotes/', payload);
+      console.log(response,'message')
+
+      if (response.data.status === 'Success') {
+        return response.data;
+      }
+      // Log the error for debugging
+      console.log('API error response:', response.data);
+          
+    } catch (error) {
+      // Defensive error handling
+      let errorMsg = 'Failed to save Rx encounter notes';
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMsg = error.response.data.message;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      return rejectWithValue(errorMsg);
+    }
+  }
+);
+
 const patientDetailsSlice = createSlice({
   name: 'patientDetails',
   initialState: {
-    data: {},
+    data:[],
 
     loading: false,
 
@@ -119,7 +149,7 @@ const patientDetailsSlice = createSlice({
       .addCase(fetchEncounterNotes.rejected, (state, action) => {
         state.notesLoading = false;
         state.error = action.payload;
-        console.error('Failed to fetch encounter notes:', action.payload);
+        console.error('Failed to fetch encounter notess:', action.payload);
       });
   }
 });

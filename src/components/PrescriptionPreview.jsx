@@ -18,8 +18,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import Signature from 'react-native-signature-capture';
 import { fetchClinicDetails } from '../Redux/Slices/ClinicDetails';
 import PDFViewer from '../component/Pdf';
-import { useNavigation } from '@react-navigation/native';
-// import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { fetchPatientDetails, fetchEncounterNotes, saveRxEncounterNotes } from '../Redux/Slices/PatientDetailsSlice';
 
 
 const getProvinceAbbreviation = (provinceName) => {
@@ -66,10 +66,12 @@ const PrescriptionPreview = ({
   const [pdfUri, setPdfUri] = useState(null);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const navigation = useNavigation();
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const route = useRoute();
+
   const demographicNo = initialPatientDetails?.demographicNo;
-  // const patientDetailsState = useSelector((state) => state.patientDetails?.dataaaa);
-  // const patientData = demographicNo ? patientDetailsState.dataaaa[demographicNo] : {};
+  const patientData = useSelector(
+    state => demographicNo ? state.auth.patientDetails.data[demographicNo] : initialPatientDetails
+  ) || initialPatientDetails;
 
   // console.log('Patient Data:', patientData);
   
@@ -294,11 +296,10 @@ const PrescriptionPreview = ({
   };
 
   useEffect(() => {
-    if (visible && initialPatientDetails?.demographicNo) {
-      console.log('Fetching patient details for:', initialPatientDetails.demographicNo);
-      dispatch(fetchPatientDetails({ demographicNo: initialPatientDetails.demographicNo }));
+    if (visible && demographicNo) {
+      dispatch(fetchPatientDetails({ demographicNo }));
     }
-  }, [visible, initialPatientDetails?.demographicNo, dispatch]);
+  }, [visible, demographicNo, dispatch]);
 
   if (!visible) return null;
 
@@ -321,7 +322,11 @@ const PrescriptionPreview = ({
     <View style={styles.patientInfo}>
       <Text style={styles.patientName}>
         {patientData?.firstName || ''} {patientData?.lastName || ''} 
-        {patientData?.phn ? ` (PHN: ${patientData.phn})` : ''}
+        </Text>
+        <Text style={{fontSize:14,fontWeight:300,}}>
+        {patientData?.phn ? ` PHN: ${patientData.phn}` : ''}
+
+  
       </Text>
       <Text style={styles.patientDetails}>
         {patientData?.gender || ''}/
@@ -351,17 +356,8 @@ const PrescriptionPreview = ({
           </Text>
         )}
       </View>
-      {patientData?.email && (
-        <Text style={styles.patientDetails}>
-          Email: {patientData.email}
-        </Text>
-      )}
-      {patientData?.patientStatus && (
-        <Text style={styles.patientDetails}>
-          Status: {patientData.patientStatus}
-          {patientData.patientStatusDate ? ` (${formatDate(patientData.patientStatusDate)})` : ''}
-        </Text>
-      )}
+
+  
     </View>
   );
 
@@ -396,6 +392,53 @@ const PrescriptionPreview = ({
       ))}
     </View>
   );
+
+  const handlePrintAndPaste = async () => {
+    console.log ('pressingss')
+    try {
+      // Only include allowed fields in drugData
+      const allowedDrugFields = [
+        'indication',
+        'instructions',
+        'duration',
+        'quantity',
+        'repeat',
+        'groupName',
+        'drugForm',
+        'startDate'
+      ];
+
+      // Filter each drug object to only include allowed fields
+      const filteredDrugData = (prescriptionData?.data?.drugData || []).map(drug => {
+        const filtered = {};
+        allowedDrugFields.forEach(field => {
+          if (drug[field] !== undefined) filtered[field] = drug[field];
+        });
+        return filtered;
+      });
+console.log ( prescriptionData?.data?.appointmentNo,'Appointment NO')
+      const payload = {
+    
+        demographicNo: Number(patientData.demographicNo),
+        appointmentNo: Number(prescriptionData?.data?.appointmentNo),
+        drugData: filteredDrugData
+      };
+
+      // Debug: log the payload to verify structure
+      console.log('Saving Rx Encounter Notes payload:', payload);
+
+      const result = await dispatch(saveRxEncounterNotes(payload)).unwrap();
+
+      Alert.alert('Success', result.message || 'Record saved successfully!');
+      if (onPrintAndPaste) {
+        onPrintAndPaste();
+      }
+      setShowPreview(false);
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', error?.message || 'Failed to save Rx encounter notes');
+    }
+  };
 
   return (
     <>
@@ -494,13 +537,12 @@ const PrescriptionPreview = ({
               </View> */}
 
               {/* Patient Details */}
-              {/* <View style={styles.section}>
+              <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Patient Information</Text>
-                 
                 </View>
-       
-              </View> */}
+                {renderPatientInfo()}
+              </View>
 
               {/* Drug Allergies */}
               {/* <View style={styles.section}>
@@ -619,32 +661,12 @@ const PrescriptionPreview = ({
 
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
-           
-              <TouchableOpacity 
-                style={[
-                  styles.actionButton, 
-                  styles.generateButton,
-                  isGeneratingPdf && styles.disabledButton
-                ]}
-                onPress={handleGeneratePDF}
-                disabled={isGeneratingPdf}
-              >
-                {isGeneratingPdf ? (
-                  <View style={styles.loaderContainer}>
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text style={[styles.actionButtonText, styles.loaderText]}>
-                      Generating PDF...
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.actionButtonText}>Generate PDF</Text>
-                )}
-              </TouchableOpacity>
+       
               <TouchableOpacity 
                 style={[styles.actionButton, styles.printButton]}
-                onPress={onPrintAndPaste}
+                onPress={handlePrintAndPaste}
               >
-                <Text style={styles.actionButtonText}>paste into EMR</Text>
+                <Text style={styles.actionButtonText}> Print & paste into EMR</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.actionButton, styles.faxButton]}
@@ -727,6 +749,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#191919',
     marginBottom: 10,
+    fontWeight:500
   },
   date: {
     fontSize: 16,
@@ -767,21 +790,19 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   patientInfo: {
-    gap: 4,
-    backgroundColor: '#F8F9FA',
-    padding: 12,
-    borderRadius: 8,
+    fontSize: 16,
+    marginBottom: 4,
+    fontWeight: '300',
   },
   patientName: {
-    fontSize: 18,
-    color: '#000',
-    fontWeight: '500',
-    marginBottom: 8,
+    fontSize: 16,
+    marginBottom: 4,
+    fontWeight: '300',
   },
   patientDetails: {
     fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
+    marginBottom: 4,
+    fontWeight: '300',
   },
   phoneContainer: {
     marginTop: 8,
@@ -812,10 +833,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     marginBottom: 8,
+    fontWeight:300
   },
   medicationName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '400',
     color: '#191919',
     marginRight: 4,
   },

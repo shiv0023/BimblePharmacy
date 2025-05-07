@@ -12,6 +12,7 @@ import {
   Dimensions,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import {
   AppointmentStatus,
@@ -124,6 +125,7 @@ export default function Appointment({navigation}) {
         const token = await AsyncStorage.getItem('auth_token');
         if (!token) {
           console.error('No auth token found');
+          setIsLoading(false);
           return;
         }
 
@@ -131,15 +133,15 @@ export default function Appointment({navigation}) {
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + 30); 
         
-       
-        
-        dispatch(fetchAppointments({ 
+        await dispatch(fetchAppointments({ 
           startDate, 
           endDate: endDate.toISOString().split('T')[0],
           token 
         }));
       } catch (error) {
         console.error('Error fetching appointments:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -244,7 +246,6 @@ export default function Appointment({navigation}) {
       ageString,
       patientName: item.patientName,
       phn: item.phn,
-
     });
   };
 
@@ -405,7 +406,11 @@ export default function Appointment({navigation}) {
             <View style={styles.line} />
           </View>
 
-          {userData.length > 0 ? (
+          {isLoading ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" color="#0049F8" />
+            </View>
+          ) : userData.length > 0 ? (
             <FlatList
               data={userData.filter(item => {
                 const today = getCurrentDate();
@@ -435,11 +440,7 @@ export default function Appointment({navigation}) {
               keyExtractor={item => item.appointmentNo.toString()}
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>
-                  No appointments available for {currentTabIndex === 0 ? 'today' : 'upcoming days'}
-                </Text>
-              }
+              ListEmptyComponent={null}
             />
           ) : (
             <Text style={styles.emptyText}>No appointments available</Text>

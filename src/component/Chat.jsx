@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, SafeAreaView, ScrollView, TextInput, StatusBar, Platform, Alert, ActivityIndicator } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { generateScopeAssessment } from '../Redux/Slices/GenerateAssessmentslice';
-import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
+import { fetchPatientDetails, fetchEncounterNotes } from '../Redux/Slices/PatientDetailsSlice';
 import Feather from 'react-native-vector-icons/Feather';
 
 import CustomHeader from './CustomHeader';
@@ -56,7 +56,14 @@ const Chat = () => {
   const [followupAssessmentDone, setFollowupAssessmentDone] = useState(false);
   const [prescriptionDone, setPrescriptionDone] = useState(false);
   const [scopeStatus, setScopeStatus] = useState(null);
-
+  const [followUpAnswers, setFollowUpAnswers] = useState(null);
+  const [scopeAnswers, setScopeAnswers] = useState(null);
+  const [appointmentNo, setAppointmentNo] = useState(null);
+  const [scope, setScope] = useState(null);
+  const [soapNotesDone, setSoapNotesDone] = useState(false);
+  const encounterNotes = useSelector(state => state.auth?.patientDetails?.encounterNotes || []);
+  const notesLoading = useSelector(state => state.patientDetails?.notesLoading || false);
+console.log (encounterNotes,'encounter')
   const getFullGender = (gender) => {
     if (!gender) return '';
     if (gender.toUpperCase() === 'F') return 'Female';
@@ -87,6 +94,12 @@ const Chat = () => {
   useEffect(() => {
     if (demographicNo) {
       dispatch(fetchPatientDetails({ demographicNo }));
+    }
+  }, [dispatch, demographicNo]);
+
+  useEffect(() => {
+    if (demographicNo) {
+      dispatch(fetchEncounterNotes({ demographicNo }));
     }
   }, [dispatch, demographicNo]);
 
@@ -135,22 +148,10 @@ const Chat = () => {
         scope: statusFromAssessment
       });
 
-      // Set the scope status for display
       setScopeStatus(statusFromAssessment);
+      setAssessmentData(formattedPayload.scopeAnswers);
 
       setShowAssessment(false);
-
-      if (statusFromAssessment && statusFromAssessment.toLowerCase().includes('out of scope')) {
-        navigation.navigate('SoapNotes', {
-          demographicNo,
-          scopeStatusReason: statusFromAssessment,
-          gender,
-          dob: formattedPayload.dob,
-          phn
-        });
-      } else {
-        handleFollowupAssessment();
-      }
     } catch (error) {
       // handle error
     }
@@ -181,6 +182,14 @@ const Chat = () => {
         scopeAnswers: preAssessmentAnswers.scopeAnswers,
         gender: preAssessmentAnswers.gender,
         scope: preAssessmentAnswers.scope
+      },
+      onDone: (result) => {
+        setFollowupAssessmentDone(true);
+        setScopeStatus(result.scopeStatus);
+        setFollowUpAnswers(result.followUpAnswers);
+        setScopeAnswers(result.scopeAnswers);
+        setAppointmentNo(result.appointmentNo);
+        setScope(result.scope);
       }
     };
 
@@ -281,8 +290,39 @@ const Chat = () => {
     return null;
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      if (route.params?.followupAssessmentDone) {
+        setFollowupAssessmentDone(true);
+      }
+      if (route.params?.scopeStatus) {
+        setScopeStatus(route.params.scopeStatus);
+      }
+      if (route.params?.soapNotesDone) {
+        setSoapNotesDone(true);
+      }
+      // ...set other state as needed
+    }, [route.params])
+  );
+
+  const getTodayDateString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const todayDate = getTodayDateString();
+  const todayEncounterNotes = (encounterNotes || []).filter(
+    encounter => encounter.appointment_date === todayDate && encounter.notesData && encounter.notesData.length > 0
+  );
+
+  console.log('Chat - Appointment No:', route.params.appointmentNo);
+
   return (
     <>
+      
       <StatusBar
         backgroundColor="#0049F8"
         barStyle="light-content"
@@ -296,6 +336,7 @@ const Chat = () => {
       {Platform.OS === 'android' && (
         <StatusBar backgroundColor="#0049F8" barStyle="light-content" />
       )}
+      
       <SafeAreaView style={styles.container}>
         {showAssessment ? (
           <AcneScopeAssessment 
@@ -311,52 +352,80 @@ const Chat = () => {
             month_of_birth={month_of_birth}
             date_of_birth={date_of_birth}
             dob={`${year_of_birth}-${month_of_birth}-${date_of_birth}`}
+            previousAnswers={assessmentData}
           />
         ) : (
           <>
             <CustomHeader 
-              title={patientName ? patientName.replace(/,/g, ' ').trim() : "SCOPE ASSESSMENT"} 
+              title={patientName ? patientName.replace(/,/g, ' ').trim().toUpperCase() : ""} 
               IconComponent={Call} 
             />
             
-            {/* Add the patient info section here */}
             {renderPatientInfo()}
-
-            {/* Date with lines */}
+      
             <View style={styles.dateRow}>
               <View style={styles.line} />
               <Text style={styles.dateText}>{formattedDate}</Text>
               <View style={styles.line} />
             </View>
 
-            {/* Message bubble */}
-            <View style={styles.messageBubble}>
-              <Text style={styles.messageText}>
-                {reason && `${reason}`}
-                {reasonDesc && `, ${reasonDesc}`}
-              </Text>
-              {scopeStatus && getScopeStatusLabel(scopeStatus) && (
-                <View style={{ marginTop: 10 }}>
-                  <Text style={{
-                    fontWeight: '350',
-                    color: '#fff',
-                    fontSize: 12,
-                    alignSelf: 'flex-start',
-                    backgroundColor: getScopeStatusLabel(scopeStatus).bgColor,
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 6,
-                    overflow: 'hidden'
-                  }}>
-                    {getScopeStatusLabel(scopeStatus).label}
-                  </Text>
-                </View>
-              )}
-            </View>
+            {/* Main scrollable content */}
+            <ScrollView style={styles.mainScrollView}>
+            
+              <View>
+         
+              {/* Message bubble */}
+              <View style={styles.messageBubble}>
+                <Text style={styles.messageText}>
+                  {reason && `${reason}`}
+                  {reasonDesc && `, ${reasonDesc}`}
+                </Text>
+                {/* Scope status */}
+                {scopeStatus && getScopeStatusLabel(scopeStatus) && (
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={{
+                      fontWeight: '350',
+                      color: '#fff',
+                      fontSize: 12,
+                      alignSelf: 'flex-start',
+                      backgroundColor: getScopeStatusLabel(scopeStatus).bgColor,
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 6,
+                      overflow: 'hidden'
+                    }}>
+                      {getScopeStatusLabel(scopeStatus).label}
+                    </Text>
+                  </View>
+                )}
+              </View>
 
-            {/* Spacer */}
-            <View style={{ flex: 1 }} />
-
+              {/* Encounter Notes Section */}
+              <View style={styles.encounterNotesContainer}>
+                {notesLoading ? (
+                  <Text style={{ color: '#888' }}>Loading encounter notes...</Text>
+                ) : todayEncounterNotes.length > 0 ? (
+                  <View style={styles.notesScrollContainer}>
+                    {todayEncounterNotes.map((encounter, idx) =>
+                      encounter.notesData.map((noteObj, noteIdx) => (
+                        <View
+                          key={`${idx}-${noteIdx}`}
+                          style={styles.noteCard}
+                        >
+                          <Text style={styles.noteText}>
+                            {noteObj.note}
+                          </Text>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                ) : (
+                  <Text style={{ color: '#888' }}>No encounter notes for today.</Text>
+                )}
+              </View>
+              </View>
+            </ScrollView>
+           
             {/* Footer buttons */}
             <View style={styles.footerRowWrapper}>
               <ScrollView
@@ -401,53 +470,89 @@ const Chat = () => {
                     </Text>
                   </View>
                 </TouchableOpacity>
+                {scopeStatus && scopeStatus.toLowerCase().includes('refer') ? null : (
+                  <TouchableOpacity 
+                    style={[
+                      styles.footerButton, 
+                      { width: 130, height: 130 },
+                      (!preAssessmentAnswers || !followupAssessmentDone) && styles.footerButtonDisabled
+                    ]}
+                    onPress={() => {
+                      if (!preAssessmentAnswers || !followupAssessmentDone) {
+                        Alert.alert('Error', 'Please complete the previous steps first');
+                        return;
+                      }
+                      navigation.navigate('DrugPrescription', {
+                        demographicNo: demographicNo,
+                        condition: preAssessmentAnswers.reason || reason,
+                        gender: gender,
+                        dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
+                        phn: phn,
+                        appointmentNo: route.params.appointmentNo,
+                        onDone: () => setPrescriptionDone(true),
+                      });
+                    }}
+                    disabled={!preAssessmentAnswers || !followupAssessmentDone}
+                  >
+                    {prescriptionDone && (
+                      <View style={styles.checkmarkContainer}>
+                        <TickIcon />
+                      </View>
+                    )}
+                    <View style={styles.buttonTextContainer}>
+                      <Text style={styles.footerButtonText}>
+                        Generate{'\n'}Prescription
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity 
                   style={[
                     styles.footerButton, 
                     { width: 130, height: 130 },
-                    (!preAssessmentAnswers || !followupAssessmentDone) && styles.footerButtonDisabled
+                    (scopeStatus && scopeStatus.toLowerCase().includes('refer')
+                      ? (!preAssessmentAnswers || !followupAssessmentDone)
+                      : (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone)
+                    ) && styles.footerButtonDisabled
                   ]}
                   onPress={() => {
-                    if (!preAssessmentAnswers || !followupAssessmentDone) {
+                    if (
+                      (scopeStatus && scopeStatus.toLowerCase().includes('refer')
+                        ? (!preAssessmentAnswers || !followupAssessmentDone)
+                        : (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone)
+                      )
+                    ) {
                       Alert.alert('Error', 'Please complete the previous steps first');
                       return;
                     }
-                    navigation.navigate('DrugPrescription', {
-                      demographicNo: demographicNo,
-                      condition: preAssessmentAnswers.reason || reason,
-                      gender: gender,
+                    navigation.navigate('SoapNotes', {
+                      demographicNo,
+                      appointmentNo,
+                      gender,
                       dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
+                      allergies: route.params?.allergies || '',
                       phn: phn,
+                      followUpAnswers,
+                      scopeAnswers,
+                      scope,
+                      reason: preAssessmentAnswers?.reason || reason,
+                      medications: route.params?.medications || [],
+                      firstName: route.params?.firstName,
+                      lastName: route.params?.lastName,
+                      onDone: () => setSoapNotesDone(true),
                     });
                   }}
-                  disabled={!preAssessmentAnswers || !followupAssessmentDone}
+                  disabled={
+                    scopeStatus && scopeStatus.toLowerCase().includes('refer')
+                      ? (!preAssessmentAnswers || !followupAssessmentDone)
+                      : (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone)
+                  }
                 >
-                  {prescriptionDone && (
+                  {soapNotesDone && (
                     <View style={styles.checkmarkContainer}>
                       <TickIcon />
                     </View>
                   )}
-                  <View style={styles.buttonTextContainer}>
-                    <Text style={styles.footerButtonText}>
-                      Generate{'\n'}Prescription
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[
-                    styles.footerButton, 
-                    { width: 130, height: 130 },
-                    (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone) && styles.footerButtonDisabled
-                  ]}
-                  onPress={() => {
-                    if (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone) {
-                      Alert.alert('Error', 'Please complete the previous steps first');
-                      return;
-                    }
-                    // Your SOAP Notes logic here
-                  }}
-                  disabled={!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone}
-                >
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.footerButtonText}>
                       Generate{'\n'}SOAP Notes
@@ -713,6 +818,37 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'white',
     fontWeight: '400',
+  },
+  mainScrollView: {
+    flex: 1
+    ,
+    paddingBottom: 20,
+  
+   
+  },
+  
+  encounterNotesContainer: {
+    marginHorizontal: 18,
+    marginTop: 10,
+  },
+  
+  notesScrollContainer: {
+    maxHeight: 300, // Adjust this value as needed
+  },
+  
+  noteCard: {
+    marginBottom: 10,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#bbb',
+    padding: 16,
+  },
+  
+  noteText: {
+    color: '#333',
+    fontSize: 14,
+    marginBottom: 4,
   },
 });
 

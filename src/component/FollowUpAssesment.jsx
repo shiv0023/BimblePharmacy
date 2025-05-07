@@ -104,30 +104,17 @@ const FollowUpAssessment = () => {
 
       const currentScope = scope || route.params?.scope;
 
-      if (
-        currentScope &&
-        /(out of scope|refer)/i.test(currentScope)
-      ) {
-        navigation.navigate('SoapNotes', {
-          gender,
-          dob,
-          condition,
-          scope: currentScope,
+      const result = {
+        scopeStatus: currentScope,
+        followUpAnswers: answersArray,
           scopeAnswers: route.params?.scopeAssessment?.scopeAnswers,
-          followUpAnswers: answersArray,
-          medications: "",
-          appointmentNo: appointmentNo,
-        });
-      } else {
-        navigation.navigate('DrugPrescription', {
-          demographicNo: appointmentNo,
-          reason: condition,
-          gender: gender,
-          dob: dob,
-          phn: route.params?.phn,
-          
-        });
+          appointmentNo,
+        scope: currentScope,
+      };
+      if (route.params?.onDone) {
+        route.params.onDone(result);
       }
+      navigation.goBack();
     } catch (error) {
       console.error('Submit error:', error);
       Alert.alert('Error', 'Failed to submit assessment');
@@ -179,7 +166,7 @@ const FollowUpAssessment = () => {
         {questions.length > 0 && currentQuestion && (
           <View style={styles.questionContainer}>
             <Text style={styles.questionText}>
-              {`${currentQuestionIndex + 1}. ${currentQuestion.question}`}
+              {currentQuestion.question}
             </Text>
             <View style={styles.optionsContainer}>
               {currentQuestion.options.map((option, index) => (

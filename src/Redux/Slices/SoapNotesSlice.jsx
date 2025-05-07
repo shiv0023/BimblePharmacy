@@ -6,6 +6,7 @@ export const fetchSoapNotes = createAsyncThunk(
   'soapNotes/fetchSoapNotes',
   async (params, { rejectWithValue }) => {
     try {
+      console.log (params,'payload data')
       const response = await axiosInstance.post('/appointment/generateSoapNotes/', params);
       console.log (response,'soapnotessss')
       return response.data.data.soapNote; 

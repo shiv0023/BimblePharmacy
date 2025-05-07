@@ -32,7 +32,19 @@ function getAgeString(year, month, day) {
   return `${years} years${months > 0 ? ` ${months} months` : ''}`;
 }
 
-const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ageString, year_of_birth, month_of_birth, date_of_birth, dob }) => {
+const AcneScopeAssessment = ({
+  questions,
+  onSubmit,
+  onCancel,
+  gender,
+  reason,
+  ageString,
+  year_of_birth,
+  month_of_birth,
+  date_of_birth,
+  dob,
+  previousAnswers
+}) => {
   const dispatch = useDispatch();
   const scopeStatusLoading = useSelector(
     state => state.generateAssessment?.scopeStatusLoading || false
@@ -48,7 +60,9 @@ const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ag
   useEffect(() => {
     const initialState = {};
     questions.forEach((q, idx) => {
-      if (q.type === 'checkbox') {
+      if (previousAnswers && previousAnswers[q.question] !== undefined) {
+        initialState[`question_${idx}`] = previousAnswers[q.question];
+      } else if (q.type === 'checkbox') {
         initialState[`question_${idx}`] = [];
       } else if (q.question.toLowerCase().includes('how old are you')) {
         initialState[`question_${idx}`] = ageString || getAgeString(year_of_birth, month_of_birth, date_of_birth) || '';
@@ -57,7 +71,7 @@ const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ag
       }
     });
     setAssessmentDataState(initialState);
-  }, [questions, ageString, year_of_birth, month_of_birth, date_of_birth]);
+  }, [questions, ageString, year_of_birth, month_of_birth, date_of_birth, previousAnswers]);
 
   const renderQuestion = (question, index) => {
     switch (question.type) {
@@ -109,6 +123,9 @@ const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ag
         return (
           <View style={styles.questionContainer} key={index}>
             <Text style={styles.questionText}>{question.question}</Text>
+            {question.note && (
+              <Text style={styles.noteText}>{question.note}</Text>
+            )}
             <View style={styles.checkboxGroup}>
               {question.options.map((option, optionIndex) => {
                 const isSelected = assessmentDataState[`question_${index}`]?.includes(option);
@@ -223,7 +240,7 @@ const AcneScopeAssessment = ({ questions, onSubmit, onCancel, gender, reason, ag
         },
         scopeStatus: result?.scopeStatus
       });
-      alert('Assessment submitted successfully');
+      // alert('Assessment submitted successfully');
     } catch (error) {
       console.error('Failed to get scope status:', error);
       // alert('Error: ' + (error.message || 'Failed to submit assessment'));
@@ -316,7 +333,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 10,
     fontWeight: '200',
-    marginLeft:6
+    marginLeft:2
   },
   noteText: {
     fontWeight: '200',
