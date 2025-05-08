@@ -112,7 +112,7 @@ const PrescriptionPreview = ({
     if (prescriptionData?.data?.prescriptionBatchId) {
       return prescriptionData.data.prescriptionBatchId;
     }
-    return `batch_${Math.floor(100000 + Math.random() * 900000)}`;
+   
   };
 
   // Fetch clinic details when component mounts
@@ -322,11 +322,9 @@ const PrescriptionPreview = ({
     <View style={styles.patientInfo}>
       <Text style={styles.patientName}>
         {patientData?.firstName || ''} {patientData?.lastName || ''} 
-        </Text>
-        <Text style={{fontSize:14,fontWeight:300,}}>
-        {patientData?.phn ? ` PHN: ${patientData.phn}` : ''}
-
-  
+      </Text>
+      <Text style={styles.patientName}>
+        {patientData?.phn ? `PHN: ${patientData.phn}` : ''}
       </Text>
       <Text style={styles.patientDetails}>
         {patientData?.gender || ''}/
@@ -356,8 +354,6 @@ const PrescriptionPreview = ({
           </Text>
         )}
       </View>
-
-  
     </View>
   );
 
@@ -368,7 +364,7 @@ const PrescriptionPreview = ({
         <View key={`medication-${index}`} style={styles.medicationCard}>
           <View style={styles.medicationHeader}>
             <Text style={styles.medicationName}>
-              {drug.groupName} ({drug.drugForm}) ({drug.route})
+              {drug.groupName}  
             </Text>
           </View>
           <Text style={styles.cityProvinceText}>{drug.indication}</Text>
@@ -394,8 +390,13 @@ const PrescriptionPreview = ({
   );
 
   const handlePrintAndPaste = async () => {
-    console.log ('pressingss')
     try {
+      // Validation: Check if signature exists
+      if (!signature) {
+        Alert.alert('Signature Required', 'Please add your signature before proceeding.');
+        return;
+      }
+
       // Only include allowed fields in drugData
       const allowedDrugFields = [
         'indication',
@@ -416,24 +417,15 @@ const PrescriptionPreview = ({
         });
         return filtered;
       });
-console.log ( prescriptionData?.data?.appointmentNo,'Appointment NO')
+
       const payload = {
-    
         demographicNo: Number(patientData.demographicNo),
         appointmentNo: Number(prescriptionData?.data?.appointmentNo),
         drugData: filteredDrugData
       };
 
-      // Debug: log the payload to verify structure
-      console.log('Saving Rx Encounter Notes payload:', payload);
-
       const result = await dispatch(saveRxEncounterNotes(payload)).unwrap();
-
       Alert.alert('Success', result.message || 'Record saved successfully!');
-      if (onPrintAndPaste) {
-        onPrintAndPaste();
-      }
-      setShowPreview(false);
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', error?.message || 'Failed to save Rx encounter notes');
@@ -491,7 +483,7 @@ console.log ( prescriptionData?.data?.appointmentNo,'Appointment NO')
                       </View>
                       <Text style={styles.batchId}>Order #{getBatchId()}</Text>
                     </View>
-                    <Text style={styles.date}>{formatDate(new Date())}</Text>
+                    <Text style={styles.addressText}>{formatDate(new Date())}</Text>
                 
                     <View style={styles.addressContainer}>
                       <Text style={styles.addressText}>
@@ -748,7 +740,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#191919',
-    marginBottom: 10,
+    marginBottom: 0,
     fontWeight:500
   },
   date: {
@@ -799,6 +791,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontWeight: '300',
   },
+  phnText: {
+    fontSize: 14,
+    fontWeight: '300',
+    color: '#222',
+    marginBottom: 4,
+  },
   patientDetails: {
     fontSize: 16,
     marginBottom: 4,
@@ -823,29 +821,26 @@ const styles = StyleSheet.create({
     color: '#191919',
   },
   medicationCard: {
-  
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 0,
+    marginBottom: 0,
   },
   medicationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    marginBottom: 8,
+    marginBottom: 0,
     fontWeight:300
   },
   medicationName: {
     fontSize: 16,
     fontWeight: '400',
     color: '#191919',
-    marginRight: 4,
+    marginRight: 0,
   },
   dispenseText: {
     fontSize: 14,
     color: '#666',
     fontWeight: '400',
-    marginLeft: 4,
   },
   deliveryOptions: {
     flexDirection: 'row',

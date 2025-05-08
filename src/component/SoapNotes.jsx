@@ -107,6 +107,9 @@ const SoapNotes = ({ route, navigation }) => {
           route.params?.firstName,
           route.params?.lastName
         );
+        if (route.params?.onDone) {
+          route.params.onDone();
+        }
       } else {
         console.error('Invalid response:', response.data);
         Alert.alert('Error', 'No valid PDF data received from server');
@@ -275,20 +278,31 @@ const SoapNotes = ({ route, navigation }) => {
       {/* Modal to show PDF */}
       <Modal visible={pdfVisible} onRequestClose={() => setPdfVisible(false)}>
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', padding: 10 }}>
-            <TouchableOpacity onPress={() => setPdfVisible(false)} style={{ padding: 8 }}>
-              <Text style={{ fontSize: 18, color: '#0049F8', fontWeight: 'bold' }}>Close</Text>
+  
+          <View style={{ flex: 1 }}>
+            {pdfSource && (
+              <Pdf
+                source={pdfSource}
+                style={{ flex: 1 }}
+                onError={error => {
+                  Alert.alert('PDF Error', error.message);
+                }}
+              />
+            )}
+            <TouchableOpacity
+              onPress={() => setPdfVisible(false)}
+              style={{
+                backgroundColor: '#0049F8',
+                paddingVertical: 14,
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: 16,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Close</Text>
             </TouchableOpacity>
           </View>
-          {pdfSource && (
-            <Pdf
-              source={pdfSource}
-              style={{ flex: 1 }}
-              onError={error => {
-                Alert.alert('PDF Error', error.message);
-              }}
-            />
-          )}
         </View>
       </Modal>
     </>

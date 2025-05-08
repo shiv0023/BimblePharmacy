@@ -45,10 +45,10 @@ export const fetchEncounterNotes = createAsyncThunk(
         demographicNo: parseInt(demographicNo) // Ensure number format
       });
 
-      // console.log('API Response:', {
-      //   status: response.status,
-      //   data: response.data
-      // });
+      console.log('API Responsess:', {
+        status: response.status,
+        data: response.data
+      });
 
       // Validate response
       if (!response.data) {
@@ -113,6 +113,9 @@ const patientDetailsSlice = createSlice({
       state.data = {};
       state.encounterNotes = [];
       state.error = null;
+    },
+    clearEncounterNotes: (state) => {
+      state.encounterNotes = [];
     }
   },
   extraReducers: (builder) => {
@@ -154,5 +157,5 @@ const patientDetailsSlice = createSlice({
   }
 });
 
-export const { clearPatientDetails } = patientDetailsSlice.actions;
+export const { clearPatientDetails, clearEncounterNotes } = patientDetailsSlice.actions;
 export default patientDetailsSlice.reducer; 

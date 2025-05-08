@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, SafeAreaView, ScrollView, TextInput, StatusBar, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, SafeAreaView, ScrollView, TextInput, StatusBar, Platform, Alert, ActivityIndicator, Modal } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { generateScopeAssessment } from '../Redux/Slices/GenerateAssessmentslice';
-import { fetchPatientDetails, fetchEncounterNotes } from '../Redux/Slices/PatientDetailsSlice';
+import { fetchPatientDetails, fetchEncounterNotes, clearEncounterNotes } from '../Redux/Slices/PatientDetailsSlice';
 import Feather from 'react-native-vector-icons/Feather';
+import Pdf from 'react-native-pdf';
 
 import CustomHeader from './CustomHeader';
 import AcneScopeAssessment from './ScopeAssessment';
@@ -63,6 +64,8 @@ const Chat = () => {
   const [soapNotesDone, setSoapNotesDone] = useState(false);
   const encounterNotes = useSelector(state => state.auth?.patientDetails?.encounterNotes || []);
   const notesLoading = useSelector(state => state.patientDetails?.notesLoading || false);
+  const pdfPath = route.params?.pdfPath;
+  const [showPdf, setShowPdf] = useState(false);
 console.log (encounterNotes,'encounter')
   const getFullGender = (gender) => {
     if (!gender) return '';
@@ -320,6 +323,12 @@ console.log (encounterNotes,'encounter')
 
   console.log('Chat - Appointment No:', route.params.appointmentNo);
 
+  useEffect(() => {
+    return () => {
+      dispatch(clearEncounterNotes());
+    };
+  }, [dispatch]);
+
   return (
     <>
       
@@ -371,58 +380,59 @@ console.log (encounterNotes,'encounter')
 
             {/* Main scrollable content */}
             <ScrollView style={styles.mainScrollView}>
-            
               <View>
-         
-              {/* Message bubble */}
-              <View style={styles.messageBubble}>
-                <Text style={styles.messageText}>
-                  {reason && `${reason}`}
-                  {reasonDesc && `, ${reasonDesc}`}
-                </Text>
-                {/* Scope status */}
-                {scopeStatus && getScopeStatusLabel(scopeStatus) && (
-                  <View style={{ marginTop: 10 }}>
-                    <Text style={{
-                      fontWeight: '350',
-                      color: '#fff',
-                      fontSize: 12,
-                      alignSelf: 'flex-start',
-                      backgroundColor: getScopeStatusLabel(scopeStatus).bgColor,
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      overflow: 'hidden'
-                    }}>
-                      {getScopeStatusLabel(scopeStatus).label}
-                    </Text>
-                  </View>
-                )}
-              </View>
+                {/* Reason Card with Scope Status */}
+                <View style={styles.card}>
+                  <Text style={styles.messageText}>
+                    {reason && `${reason}`}
+                    {reasonDesc && `, ${reasonDesc}`}
+                  </Text>
+                  {/* Scope status */}
+                  {scopeStatus && getScopeStatusLabel(scopeStatus) && (
+                    <View style={{ marginTop: 10 }}>
+                      <Text style={{
+                        fontWeight: '350',
+                        color: '#fff',
+                        fontSize: 12,
+                        alignSelf: 'flex-start',
+                        backgroundColor: getScopeStatusLabel(scopeStatus).bgColor,
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        overflow: 'hidden'
+                      }}>
+                        {getScopeStatusLabel(scopeStatus).label}
+                      </Text>
+                    </View>
+                  )}
+                </View>
 
-              {/* Encounter Notes Section */}
-              <View style={styles.encounterNotesContainer}>
-                {notesLoading ? (
-                  <Text style={{ color: '#888' }}>Loading encounter notes...</Text>
-                ) : todayEncounterNotes.length > 0 ? (
-                  <View style={styles.notesScrollContainer}>
-                    {todayEncounterNotes.map((encounter, idx) =>
-                      encounter.notesData.map((noteObj, noteIdx) => (
-                        <View
-                          key={`${idx}-${noteIdx}`}
-                          style={styles.noteCard}
-                        >
-                          <Text style={styles.noteText}>
-                            {noteObj.note}
-                          </Text>
-                        </View>
-                      ))
-                    )}
-                  </View>
-                ) : (
-                  <Text style={{ color: '#888' }}>No encounter notes for today.</Text>
-                )}
-              </View>
+                {/* Encounter Notes Section */}
+                <View style={styles.encounterNotesContainer}>
+                  {notesLoading ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color="#0049F8" />
+                      <Text style={styles.loadingText}>Loading encounter notes...</Text>
+                    </View>
+                  ) : encounterNotes && encounterNotes.length > 0 ? (
+                    encounterNotes
+                      .filter(encounter => encounter.notesData && encounter.notesData.length > 0)
+                      .map((encounter, idx) =>
+                        encounter.notesData.map((noteObj, noteIdx) => (
+                          <View key={`encounter-${idx}-note-${noteIdx}`} style={styles.encounterNoteCard}>
+                            <Text style={styles.noteText}>{noteObj.note}</Text>
+                            <Text style={styles.noteTimestamp}>
+                              {new Date(encounter.appointment_date).toLocaleDateString()}
+                            </Text>
+                          </View>
+                        ))
+                      )
+                  ) : (
+                    <View style={styles.emptyNotesContainer}>
+                      <Text style={styles.emptyNotesText}>No encounter notes available.</Text>
+                    </View>
+                  )}
+                </View>
               </View>
             </ScrollView>
            
@@ -561,9 +571,42 @@ console.log (encounterNotes,'encounter')
                 </TouchableOpacity>
               </ScrollView>
             </View>
+
+            {/* Button to open PDF */}
+            {pdfPath && (
+              <TouchableOpacity
+                style={{
+                  margin: 16,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: '#0049F8',
+                  borderRadius: 8,
+                  backgroundColor: '#f0f4ff',
+                }}
+                onPress={() => setShowPdf(true)}
+              >
+                <Text style={{ color: '#0049F8', fontWeight: 'bold' }}>View SOAP PDF Document</Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
       </SafeAreaView>
+
+      {/* Modal to show PDF */}
+      <Modal visible={showPdf} onRequestClose={() => setShowPdf(false)}>
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity onPress={() => setShowPdf(false)} style={{ padding: 12 }}>
+            <Text style={{ color: '#0049F8', fontWeight: 'bold' }}>Close</Text>
+          </TouchableOpacity>
+          <Pdf
+            source={{ uri: `file://${pdfPath}` }}
+            style={{ flex: 1, margin: 10 }}
+            onError={error => {
+              Alert.alert('PDF Error', error.message);
+            }}
+          />
+        </View>
+      </Modal>
     </>
   );
 };
@@ -594,26 +637,87 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     minWidth: 120,
   },
-  messageBubble: {
-    backgroundColor: '#fff',
+  mainScrollView: {
+    flex: 1,
+    paddingBottom: 20,
+  },
+  card: {
+    marginHorizontal: 18,
+    marginTop: 10,
+    marginBottom: 10,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#bbb',
-    marginHorizontal: 18,
-    padding: 16,
-    marginBottom: 10,
+    padding: 10,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
   messageText: {
     fontSize: 16,
     color: '#222',
     textAlign: 'left',
     lineHeight: 24,
-    fontWeight:'300',
+    fontWeight: '300',
+  },
+  encounterNotesContainer: {
+    marginHorizontal: 18,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  encounterNoteCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#bbb',
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+
+  },
+  noteText: {
+    color: '#333',
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 6,
+    fontWeight: '300',
+  },
+  noteTimestamp: {
+    color: '#666',
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'right',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 100,
+  },
+  loadingText: {
+    color: '#666',
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: '300',
+  },
+  emptyNotesContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyNotesText: {
+    color: '#666',
+    fontSize: 14,
+    fontStyle: 'italic',
   },
   footerRowWrapper: {
     marginHorizontal: 0,
     marginBottom: 4,
-   
   },
   footerRow: {
     flexDirection: 'row',
@@ -635,8 +739,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 18,
     left: 6,
-    
-    
   },
   footerButtonText: {
     fontSize: 15,
@@ -644,8 +746,6 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontWeight: '300',
     lineHeight:17
-   
-   
   },
   footerButtonDisabled: {
     opacity: 0.5,
@@ -665,95 +765,6 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 16,
     backgroundColor: '#fff',
-  },
-  noteText: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-    marginBottom: 10,
-  },
-  checkboxGroup: {
-    marginTop: 10,
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#ddd',
-    marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxSelected: {
-    borderColor: '#0049F8',
-  },
-  checkboxInner: {
-    width: 12,
-    height: 12,
-    backgroundColor: '#0049F8',
-    borderRadius: 2,
-  },
-  checkboxText: {
-    fontSize: 16,
-    color: '#222',
-    flex: 1,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  button: {
-    flex: 1,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  buttonSelected: {
-    backgroundColor: '#0049F8',
-    borderColor: '#0049F8',
-  },
-  buttonText: {
-    fontSize: 16,
-    color: '#222',
-  },
-  buttonTextSelected: {
-    color: '#fff',
-  },
-  submitButton: {
-    backgroundColor: '#4CAF50',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  cancelButton: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  cancelButtonText: {
-    color: '#222',
-    fontSize: 18,
-    fontWeight: '500',
   },
   patientInfo: {
     flexDirection: 'row',
@@ -778,13 +789,11 @@ const styles = StyleSheet.create({
   phnValue: {
     fontSize: 16,
     color: '222',
-
     fontWeight:'200'
   },
   newButtonContainer: {
     backgroundColor: '#008D00',
     borderRadius: 6,
-
     minWidth: 55,
     alignItems: 'center',
     justifyContent: 'center',
@@ -818,37 +827,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'white',
     fontWeight: '400',
-  },
-  mainScrollView: {
-    flex: 1
-    ,
-    paddingBottom: 20,
-  
-   
-  },
-  
-  encounterNotesContainer: {
-    marginHorizontal: 18,
-    marginTop: 10,
-  },
-  
-  notesScrollContainer: {
-    maxHeight: 300, // Adjust this value as needed
-  },
-  
-  noteCard: {
-    marginBottom: 10,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#bbb',
-    padding: 16,
-  },
-  
-  noteText: {
-    color: '#333',
-    fontSize: 14,
-    marginBottom: 4,
   },
 });
 

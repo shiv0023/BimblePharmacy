@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, ScrollView, SafeAreaView, Alert, ActivityIndicator,
-  FlatList, Modal, StatusBar, Platform
+  FlatList, Modal, StatusBar, Platform, KeyboardAvoidingView
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -70,6 +70,10 @@ const DrugPrescription = ({ route, navigation }) => {
   const [editingDrugIndex, setEditingDrugIndex] = useState(null);
 
   const [submitLoading, setSubmitLoading] = useState(false);
+
+  const [prescriptionBatchId, setPrescriptionBatchId] = useState(null);
+
+  const [isOtherDrug, setIsOtherDrug] = useState(false);
 
   useEffect(() => {
     // Fetch medications when component mounts
@@ -184,6 +188,7 @@ const DrugPrescription = ({ route, navigation }) => {
                 key={index}
                 style={styles.dropdownItem}
                 onPress={() => {
+                  setIsOtherDrug(false);
                   if (editingDrugIndex !== null) {
                     handleEditDrug(editingDrugIndex, 'drugName', item.name);
                     handleEditDrug(editingDrugIndex, 'instructions', item.sig || '');
@@ -206,6 +211,25 @@ const DrugPrescription = ({ route, navigation }) => {
                 <Text style={styles.dropdownItemText}>{item.name}</Text>
               </TouchableOpacity>
             ))}
+            {/* Add the "Other" option */}
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => {
+                setIsOtherDrug(true);
+                setShowDrugDropdown(false);
+                setDrugData({
+                  ...drugData,
+                  drugName: '',
+                  instructions: '',
+                  startDate: new Date(),
+                  duration: '',
+                  quantity: '',
+                  refills: '',
+                });
+              }}
+            >
+              <Text style={[styles.dropdownItemText, { fontStyle: 'italic', color: 'black' }]}>Other</Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </View>
@@ -303,7 +327,7 @@ const DrugPrescription = ({ route, navigation }) => {
 
   const handleSubmit = async () => {
     try {
-      setSubmitLoading(true); // Start loader
+      setSubmitLoading(true);
       // Validate if there's any data to submit
       if (!drugData.drugName && drugs.length === 0) {
         Alert.alert('Error', 'Please add at least one medication');
@@ -329,8 +353,8 @@ const DrugPrescription = ({ route, navigation }) => {
         quantity: parseInt(drug.quantity) || 0,
         repeat: parseInt(drug.refills) || 0,
         groupName: drug.drugName,
-        drugForm: "Tablet",
-        dosage: "50mg",
+        drugForm: "",
+        dosage: "",
         startDate: drug.startDate.toISOString().split('T')[0],
         longTerm: false
       }));
@@ -345,6 +369,11 @@ const DrugPrescription = ({ route, navigation }) => {
   
       const result = await dispatch(addPatientDrug(payload)).unwrap();
       console.log('API Response:', result);
+  
+      // Store the prescriptionBatchId from the API response
+      if (result?.data?.prescriptionBatchId) {
+        setPrescriptionBatchId(result.data.prescriptionBatchId);
+      }
   
       // Success case - both 204 and Success status
       if (result && (result.status === 'Success' || result.status === 204)) {
@@ -363,7 +392,7 @@ const DrugPrescription = ({ route, navigation }) => {
         [{ text: 'OK' }]
       );
     } finally {
-      setSubmitLoading(false); // Stop loader
+      setSubmitLoading(false);
     }
   };
 
@@ -382,7 +411,7 @@ const DrugPrescription = ({ route, navigation }) => {
       // Add new drug
       setDrugs([...drugs, drugData]);
     }
-    // Reset form
+    // Reset form and isOtherDrug
     setDrugData({
       drugName: '',
       startDate: new Date(),
@@ -391,6 +420,7 @@ const DrugPrescription = ({ route, navigation }) => {
       refills: '',
       instructions: '',
     });
+    setIsOtherDrug(false);
   };
 
   // Add function to handle deleting a drug
@@ -484,163 +514,178 @@ const DrugPrescription = ({ route, navigation }) => {
       )}
       <SafeAreaView style={styles.container}>
         <CustomHeader title="Drug Prescription" />
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.formContainer}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-              {/* <Text style={styles.closeText}>✕</Text> */}
-            </TouchableOpacity>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+        >
+          <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
+            <View style={styles.formContainer}>
+              <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+                {/* <Text style={styles.closeText}>✕</Text> */}
+              </TouchableOpacity>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Drug Name</Text>
-              <View style={styles.drugInputContainer}>
-                <TextInput
-                  style={[styles.input, styles.drugInput]}
-                  value={drugData.drugName}
-                  onChangeText={(text) => setDrugData({ ...drugData, drugName: text })}
-                  placeholder="Select or type medication..."
-                  onFocus={() => setShowDrugDropdown(true)}
-                />
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Drug Name</Text>
+                <View style={styles.drugInputContainer}>
+                  {isOtherDrug ? (
+                    <TextInput
+                      style={[styles.input, styles.drugInput]}
+                      value={drugData.drugName}
+                      onChangeText={(text) => setDrugData({ ...drugData, drugName: text })}
+                      placeholder="Enter custom drug name"
+                    />
+                  ) : (
+                    <TextInput
+                      style={[styles.input, styles.drugInput]}
+                      value={drugData.drugName}
+                      onChangeText={(text) => setDrugData({ ...drugData, drugName: text })}
+                      placeholder="Select or type medication..."
+                      onFocus={() => setShowDrugDropdown(true)}
+                    />
+                  )}
+                </View>
               </View>
-            </View>
 
-            <DrugDropdownModal />
+              <DrugDropdownModal />
 
-            {/* Show SIG if a drug is selected */}
+              {/* Show SIG if a drug is selected */}
    
 
-            <Text style={styles.label}>Start Date</Text>
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={{fontSize:14}}>{drugData.startDate.toISOString().split('T')[0]}</Text>
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={editingDrugIndex !== null ? drugs[editingDrugIndex].startDate : drugData.startDate}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    if (editingDrugIndex !== null) {
-                      handleEditDrug(editingDrugIndex, 'startDate', selectedDate);
-                      setEditingDrugIndex(null);
-                    } else {
-                      setDrugData({ ...drugData, startDate: selectedDate });
-                    }
-                  }
-                }}
-              />
-            )}
-
-            <View style={styles.row}>
-              <View style={styles.halfInput}>
-                <Text style={styles.label}>Duration (Days)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={drugData.duration}
-                  onChangeText={(text) => setDrugData({ ...drugData, duration: text })}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={styles.halfInput}>
-                <Text style={styles.label}>End Date</Text>
-                <TextInput
-                  style={styles.input}
-                  value={endDate || 'Auto-calculated'}
-                  editable={false}
-                  placeholder="Auto-calculated"
-                  placeholderTextColor="#999"
-                />
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <View style={styles.halfInput}>
-                <Text style={styles.label}>Quantity</Text>
-                <TextInput
-                  style={styles.input}
-                  value={drugData.quantity}
-                  onChangeText={(text) => setDrugData({ ...drugData, quantity: text })}
-                  keyboardType="numeric"
-                  placeholder="Quantity"
-                />
-              </View>
-              <View style={styles.halfInput}>
-                <Text style={styles.label}>Refills</Text>
-                <TextInput
-                  style={styles.input}
-                  value={drugData.refills}
-                  onChangeText={(text) => setDrugData({ ...drugData, refills: text })}
-                  keyboardType="numeric"
-                  placeholder="Refills"
-                />
-              </View>
-            </View>
-
-            <Text style={styles.label}>Instructions (SIG)</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={drugData.instructions}
-              onChangeText={(text) => setDrugData({ ...drugData, instructions: text })}
-              multiline
-              placeholder="Apply a thin layer to affected area..."
-            />
-
-            <TouchableOpacity 
-              style={styles.secondaryButton}
-              onPress={handleAddOrUpdateDrug}
-            >
-              <Text style={styles.secondaryText}>
-                {editingDrugIndex !== null ? 'Save Changes' : '+ Add Another Drug'}
-              </Text>
-            </TouchableOpacity>
-
-            {drugs.length > 0 && (
-              <View style={styles.drugsList}>
-                <Text style={styles.drugsListTitle}>Added Medications</Text>
-                {drugs.map((drug, index) => (
-                  <DrugCard
-                    key={index}
-                    drug={drug}
-                    onDelete={handleDeleteDrug}
-                    onEdit={handleEditDrug}
-                    index={index}
-                    calculateEndDate={calculateEndDate}
-                  />
-                ))}
-              </View>
-            )}
-
-            <View style={styles.buttonRow}>
-              {/* <TouchableOpacity style={styles.blueButton}>
-                <Text style={styles.buttonText}>Generate SOAP Note</Text>
-              </TouchableOpacity> */}
-              <TouchableOpacity style={styles.greenButton} onPress={handleSubmit} disabled={submitLoading}>
-                {submitLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Write Prescription</Text>
-                )}
+              <Text style={styles.label}>Start Date</Text>
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={{fontSize:14}}>{drugData.startDate.toISOString().split('T')[0]}</Text>
               </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={editingDrugIndex !== null ? drugs[editingDrugIndex].startDate : drugData.startDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(false);
+                    if (selectedDate) {
+                      if (editingDrugIndex !== null) {
+                        handleEditDrug(editingDrugIndex, 'startDate', selectedDate);
+                        setEditingDrugIndex(null);
+                      } else {
+                        setDrugData({ ...drugData, startDate: selectedDate });
+                      }
+                    }
+                  }}
+                />
+              )}
+
+              <View style={styles.row}>
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>Duration (Days)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={drugData.duration}
+                    onChangeText={(text) => setDrugData({ ...drugData, duration: text })}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>End Date</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={endDate || 'Auto-calculated'}
+                    editable={false}
+                    placeholder="Auto-calculated"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.row}>
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>Quantity</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={drugData.quantity}
+                    onChangeText={(text) => setDrugData({ ...drugData, quantity: text })}
+                    keyboardType="numeric"
+                    placeholder="Quantity"
+                  />
+                </View>
+                <View style={styles.halfInput}>
+                  <Text style={styles.label}>Refills</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={drugData.refills}
+                    onChangeText={(text) => setDrugData({ ...drugData, refills: text })}
+                    keyboardType="numeric"
+                    placeholder="Refills"
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.label}>Instructions (SIG)</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={drugData.instructions}
+                onChangeText={(text) => setDrugData({ ...drugData, instructions: text })}
+                multiline
+                placeholder="Apply a thin layer to affected area..."
+              />
+
+              <TouchableOpacity 
+                style={styles.secondaryButton}
+                onPress={handleAddOrUpdateDrug}
+              >
+                <Text style={styles.secondaryText}>
+                  {editingDrugIndex !== null ? 'Save Changes' : '+ Add Another Drug'}
+                </Text>
+              </TouchableOpacity>
+
+              {drugs.length > 0 && (
+                <View style={styles.drugsList}>
+                  <Text style={styles.drugsListTitle}>Added Medications</Text>
+                  {drugs.map((drug, index) => (
+                    <DrugCard
+                      key={index}
+                      drug={drug}
+                      onDelete={handleDeleteDrug}
+                      onEdit={handleEditDrug}
+                      index={index}
+                      calculateEndDate={calculateEndDate}
+                    />
+                  ))}
+                </View>
+              )}
+
+              <View style={styles.buttonRow}>
+                {/* <TouchableOpacity style={styles.blueButton}>
+                  <Text style={styles.buttonText}>Generate SOAP Note</Text>
+                </TouchableOpacity> */}
+                <TouchableOpacity style={styles.greenButton} onPress={handleSubmit} disabled={submitLoading}>
+                  {submitLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Write Prescription</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
         <PrescriptionPreview
           visible={showPreview}
           onClose={() => setShowPreview(false)}
           prescriptionData={{
             data: {
               appointmentNo: Number(route.params.appointmentNo),
-              prescriptionBatchId: `batch_${Math.floor(100000 + Math.random() * 900000)}`,
+              prescriptionBatchId: prescriptionBatchId,
               drugData: [...drugs, ...(drugData.drugName ? [drugData] : [])].map(drug => ({
                 groupName: drug.drugName,
-                drugForm: "Tablet",
-                route: "Oral",
-                dosage: "50mg",
+                drugForm: "",
+                route: "",
+                dosage: "",
                 instructions: drug.instructions,
                 startDate: drug.startDate.toISOString().split('T')[0],
                 endDate: calculateEndDate(drug.startDate, drug.duration),
