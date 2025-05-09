@@ -7,7 +7,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
 import { addPatientDrug } from '../Redux/Slices/DrugSlice';
-import { getMedicationList } from '../Redux/Slices/MedicationlistSlice';
+import {   } from '../Redux/Slices/MedicationlistSlice';
 import CustomHeader from './CustomHeader';
 import PrescriptionPreview from '../components/PrescriptionPreview';
 
@@ -877,9 +877,9 @@ const styles = StyleSheet.create({
   drugCard: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
-    padding: 16,
+
     marginBottom: 15,
-    borderWidth: 1,
+    
     borderColor: '#e0e0e0',
    
  

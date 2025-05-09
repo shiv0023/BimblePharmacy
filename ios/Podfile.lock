@@ -1781,6 +1781,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNFileViewer (2.1.5):
+    - React-Core
   - RNFS (2.20.0):
     - React-Core
   - RNGestureHandler (2.25.0):
@@ -1804,7 +1806,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNPermissions (5.3.0):
+  - RNPermissions (5.4.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1989,7 +1991,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNShare (12.0.10):
+  - RNShare (12.0.11):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2156,6 +2158,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
+  - RNFileViewer (from `../node_modules/react-native-file-viewer`)
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
@@ -2324,6 +2327,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-masked-view/masked-view"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
+  RNFileViewer:
+    :path: "../node_modules/react-native-file-viewer"
   RNFS:
     :path: "../node_modules/react-native-fs"
   RNGestureHandler:
@@ -2420,12 +2425,13 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 6afcd80a5b7f25742648444dfc4b166518d239fd
   RNCMaskedView: 7da5771779ec8f3514482f61288bbd644af26600
   RNDateTimePicker: cb7723bf9b1c985aca258ba0f5a31885fc970186
+  RNFileViewer: ce7ca3ac370e18554d35d6355cffd7c30437c592
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNGestureHandler: 70b13f8ce59310fcd4e2b4170d7c5ad85f991867
-  RNPermissions: 6ffe6044b04aaa05106fdcbcef941e8847b58d30
+  RNPermissions: 95fa8fb9675e050fc5d79e961e3019ea9cb7a728
   RNReanimated: e70ef65973823dbf0e85a0aec48e9383fb77d72f
   RNScreens: 71d02bc2e6db79773a57fc9a1bdaf09df10d9126
-  RNShare: 9c87c0df4bd49af69382b6367a92600026b8b7bc
+  RNShare: 7841cf0397be3234b509e10c815eafb1b05983d6
   RNSVG: 2343e3c8afd2faa16055a34bf60c60c4338f1f17
   RNVectorIcons: eacd321244b1bd2a70d69dcb54cb875c69da1d3b
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748

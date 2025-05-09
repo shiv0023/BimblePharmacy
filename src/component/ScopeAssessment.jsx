@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
 import CustomHeader from './CustomHeader';
 import { useDispatch, useSelector } from 'react-redux';
 import { getScopeStatus } from '../Redux/Slices/GenerateAssessmentslice';
+import RNFS from 'react-native-fs';
+import FileViewer from 'react-native-file-viewer';
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import ScopeAssessmentPdf from '../component/ScopeAssessmentpdf.'; // fix the import path if needed
+import { fetchClinicDetails } from '../Redux/Slices/ClinicDetails'; // adjust path as needed
+import { getStaticScopeAssessmentHtml } from './ScopeAssessmentpdf..jsx';
+import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
 
 function calculateFullAge(year, month, day) {
   if (!year || !month || !day) return null;
@@ -43,7 +50,8 @@ const AcneScopeAssessment = ({
   month_of_birth,
   date_of_birth,
   dob,
-  previousAnswers
+  previousAnswers,
+  demographicNo
 }) => {
   const dispatch = useDispatch();
   const scopeStatusLoading = useSelector(
@@ -56,6 +64,16 @@ const AcneScopeAssessment = ({
   const appointment = useSelector(state => state.appointment?.selectedAppointment);
 
   const computedAgeString = ageString || getAgeString(year_of_birth, month_of_birth, date_of_birth);
+
+  const clinicDetails = useSelector(state => state.auth?.clinicDetails.data);
+
+  const patientDetails = useSelector(state => state.auth?.patientDetails.data[demographicNo]);
+
+  useEffect(() => {
+    if (!clinicDetails) {
+      dispatch(fetchClinicDetails());
+    }
+  }, [clinicDetails, dispatch]);
 
   useEffect(() => {
     const initialState = {};
@@ -72,6 +90,12 @@ const AcneScopeAssessment = ({
     });
     setAssessmentDataState(initialState);
   }, [questions, ageString, year_of_birth, month_of_birth, date_of_birth, previousAnswers]);
+
+  useEffect(() => {
+    if (demographicNo) {
+      dispatch(fetchPatientDetails({ demographicNo }));
+    }
+  }, [demographicNo, dispatch]);
 
   const renderQuestion = (question, index) => {
     switch (question.type) {
@@ -240,10 +264,71 @@ const AcneScopeAssessment = ({
         },
         scopeStatus: result?.scopeStatus
       });
-      // alert('Assessment submitted successfully');
+
+      // Update patient data preparation with patientDetails
+      const clinic = {
+        clinicName: clinicDetails?.entityName,
+        address: clinicDetails?.address,
+        city: clinicDetails?.city,
+        province: clinicDetails?.province,
+        postalCode: clinicDetails?.postalCode,
+        phone: clinicDetails?.phoneNo,
+        fax: clinicDetails?.faxNo,
+        logo: clinicDetails?.logo, // If you have a base64 logo, convert and use it
+      };
+
+      const patient = {
+        name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}${patientDetails?.gender ? '/' + (patientDetails.gender === 'M' ? 'Male' : 'Female') : ''}`,
+        dob: patientDetails?.dob || '',
+        age: calculateFullAge(
+          patientDetails?.dob?.split('-')[0],
+          patientDetails?.dob?.split('-')[1],
+          patientDetails?.dob?.split('-')[2]
+        ),
+        phn: patientDetails?.phn || '',
+        address: `${patientDetails?.address || ''}${patientDetails?.city ? ', ' + patientDetails.city : ''}${patientDetails?.postalCode ? ', ' + patientDetails.postalCode : ''}`,
+        reason: reason || '',
+      };
+
+      const questionsArr = questions.map(q => q.question);
+      const answersArr = questions.map((q, idx) => scopeAnswers[q.question] || '');
+
+      // Generate PDF
+      const htmlContent = getStaticScopeAssessmentHtml({
+        clinic,
+        patient,
+        questions: questionsArr,
+        answers: answersArr,
+        assessmentResult: result?.assessmentResult || '',
+        scopeStatus: result?.scopeStatus || '',
+      });
+
+      // Create PDF file
+      const options = {
+        html: htmlContent,
+        fileName: `Scope_Assessment_${patientDetails?.firstName}_${patientDetails?.lastName}_${new Date().toISOString().split("T")[0]}`,
+        directory: Platform.OS === 'android' ? 'Download' : 'Documents',
+        base64: false
+      };
+
+      try {
+        const file = await RNHTMLtoPDF.convert(options);
+        
+        // Open the PDF
+        await FileViewer.open(file.filePath, {
+          showOpenWithDialog: true,
+          onDismiss: () => {
+            console.log('PDF viewer dismissed');
+          }
+        });
+      } catch (error) {
+        console.error('PDF generation error:', error);
+        Alert.alert('Error', 'Failed to generate PDF');
+      }
+
     } catch (error) {
       console.error('Failed to get scope status:', error);
-      // alert('Error: ' + (error.message || 'Failed to submit assessment'));
+      Alert.alert('Error', 'Failed to process assessment');
     } finally {
       setLocalLoading(false);
     }
@@ -259,6 +344,21 @@ const AcneScopeAssessment = ({
 
   const secondLastIndex = questions.length - 2;
   const showLastQuestion = assessmentDataState[`question_${secondLastIndex}`] === 'Yes';
+
+  const generateAndOpenPdf = async () => {
+    try {
+      const fileName = `Scope_Assessment_${firstName}_${lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
+      const options = {
+        html: htmlContent,
+        fileName: fileName.replace('.pdf', ''),
+        directory: Platform.OS === 'android' ? 'Download' : 'Documents',
+      };
+      const file = await RNHTMLtoPDF.convert(options);
+      await FileViewer.open(file.filePath, { showOpenWithDialog: true });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to open PDF: ' + error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>

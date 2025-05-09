@@ -16,6 +16,35 @@ export const fetchSoapNotes = createAsyncThunk(
   }
 );
 
+export const saveSoapPdfDocument = createAsyncThunk(
+  'soapNotes/saveSoapPdfDocument',
+  async ({ demographicNo, pdfFile }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append('data', JSON.stringify({ demographicNo }));
+      formData.append('pdfFile', {
+        uri: pdfFile.uri,
+        name: pdfFile.name,
+        type: 'application/pdf',
+      });
+
+      const response = await axiosInstance.post(
+        '/appointment/savePatientDocument/',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      console.log (response.data,'document')
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 const soapNotesSlice = createSlice({
   name: 'soapNotes',
   initialState: {

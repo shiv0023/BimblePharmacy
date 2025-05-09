@@ -12,6 +12,8 @@ import {
   Alert,
   TouchableOpacity,
   PermissionsAndroid,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSoapNotes } from '../Redux/Slices/SoapNotesSlice';
@@ -214,66 +216,68 @@ const SoapNotes = ({ route, navigation }) => {
       <StatusBar backgroundColor="#0049F8" barStyle="light-content" />
       {Platform.OS === 'ios' && <View style={{ height: 44, backgroundColor: '#0049F8' }} />}
       
-      <SafeAreaView style={styles.container}>
-        <CustomHeader title="SOAP Notes" />
-        <RichToolbar
-                editor={richText}
-                actions={[
-                  actions.setBold,
-                  actions.setItalic,
-                  actions.insertBulletsList,
-                  actions.insertOrderedList,
-                  actions.setUnderline,
-                  actions.insertLink,
-                  HIGHLIGHT,
-                ]}
-                iconMap={{
-                  [HIGHLIGHT]: () => <Text style={{ fontWeight: 'bold', color: 'orange' }}>HL</Text>,
-                }}
-                onPressAddImage={() => {}}
-                onPress={handleCustomAction}
-                style={styles.toolbar}
-              />
-        <KeyboardAwareScrollView
-          contentContainerStyle={styles.contentContainer}
-          keyboardShouldPersistTaps="handled"
-          extraScrollHeight={Platform.OS === 'ios' ? 80 : 100}
-        >
-          {loading && <ActivityIndicator size="large" color="#0049F8" />}
-          {error && <Text style={styles.errorText}>{error}</Text>}
-          {!loading && (
-            <>
-              <RichEditor
-                ref={richText}
-                initialContentHTML={htmlContent}
-                onChange={setHtmlContent}
-                style={styles.richEditor}
-                placeholder="Write SOAP notes here..."
-                editorStyle={{
-                  backgroundColor: '#fff',
-                  color: '#222',
-                  placeholderColor: '#aaa',
-                  contentCSSText: 'font-size: 16px; padding: 8px;',
-                }}
-              />
-            
-            </>
-          )}
-        </KeyboardAwareScrollView>
-        <TouchableOpacity
-          style={[
-            styles.customPdfButton,
-            pdfLoading && styles.customPdfButtonDisabled
-          ]}
-          onPress={handleGeneratePdf}
-          disabled={pdfLoading}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.customPdfButtonText}>
-            {pdfLoading ? 'Generating PDF...' : 'Generate SOAP Notes PDF'}
-          </Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <SafeAreaView style={styles.container}>
+          <CustomHeader title="SOAP Notes" />
+          <RichToolbar
+                    editor={richText}
+                    actions={[
+                      actions.setBold,
+                      actions.setItalic,
+                      actions.insertBulletsList,
+                      actions.insertOrderedList,
+                      actions.setUnderline,
+                      actions.insertLink,
+                      HIGHLIGHT,
+                    ]}
+                    iconMap={{
+                      [HIGHLIGHT]: () => <Text style={{ fontWeight: 'bold', color: 'orange' }}>HL</Text>,
+                    }}
+                    onPressAddImage={() => {}}
+                    onPress={handleCustomAction}
+                    style={styles.toolbar}
+                  />
+          <KeyboardAwareScrollView
+            contentContainerStyle={styles.contentContainer}
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={Platform.OS === 'ios' ? 80 : 100}
+          >
+            {loading && <ActivityIndicator size="large" color="#0049F8" />}
+            {error && <Text style={styles.errorText}>{error}</Text>}
+            {!loading && (
+              <>
+                <RichEditor
+                  ref={richText}
+                  initialContentHTML={htmlContent}
+                  onChange={setHtmlContent}
+                  style={styles.richEditor}
+                  placeholder="Write SOAP notes here..."
+                  editorStyle={{
+                    backgroundColor: '#fff',
+                    color: '#222',
+                    placeholderColor: '#aaa',
+                    contentCSSText: 'font-size: 16px; padding: 8px;',
+                  }}
+                />
+              
+              </>
+            )}
+          </KeyboardAwareScrollView>
+          <TouchableOpacity
+            style={[
+              styles.customPdfButton,
+              pdfLoading && styles.customPdfButtonDisabled
+            ]}
+            onPress={handleGeneratePdf}
+            disabled={pdfLoading}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.customPdfButtonText}>
+              {pdfLoading ? 'Generating PDF...' : 'Generate SOAP Notes PDF'}
+            </Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
 
       {/* Modal to show PDF */}
       <Modal visible={pdfVisible} onRequestClose={() => setPdfVisible(false)}>
@@ -300,7 +304,7 @@ const SoapNotes = ({ route, navigation }) => {
                 borderRadius: 8,
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Close</Text>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' ,marginBottom:10}}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
