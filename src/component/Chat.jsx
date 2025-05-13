@@ -362,6 +362,7 @@ console.log (encounterNotes,'encounter')
             date_of_birth={date_of_birth}
             dob={`${year_of_birth}-${month_of_birth}-${date_of_birth}`}
             previousAnswers={assessmentData}
+            appointmentNo={route.params?.appointmentNo}
           />
         ) : (
           <>

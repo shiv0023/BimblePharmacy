@@ -16,6 +16,13 @@ import { generateFollowupAssessment } from '../Redux/Slices/FollowUpAssessmentSl
 import { getMedicationList } from '../Redux/Slices/MedicationlistSlice';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import CustomHeader from './CustomHeader';
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import FileViewer from 'react-native-file-viewer';
+import { getFollowUpAssessmentHtml } from './FollowupAssessmentpdf'; // Make sure the import path is correct
+import { getScopeAssessmentHtml } from './ScopeAssessmentpdf'; // Make sure the import path is correct
+import { fetchClinicDetails } from '../Redux/Slices/ClinicDetails';
+import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
+
 
 const FollowUpAssessment = () => {
   const dispatch = useDispatch();
@@ -28,11 +35,15 @@ const FollowUpAssessment = () => {
     condition, 
     appointmentNo, 
     scope,
-    answers: initialAnswers = []
+    answers: initialAnswers = [],
+    patient
   } = route.params || {};
 
   const followupAssessment = useSelector(state => state.auth.followupAssessment || {});
-  console.log('Component State:', followupAssessment);
+  const clinicDetails = useSelector(state => state.auth?.clinicDetails.data);
+console.log(clinicDetails,'hello')
+  const patientDetails = useSelector(state => state.auth?.patientDetails.dataaaa);
+  console.log(patientDetails,'hellogx')
   const questions = followupAssessment.data || [];
   const loading = followupAssessment.loading || false;
   const error = followupAssessment.error;
@@ -76,6 +87,13 @@ const FollowUpAssessment = () => {
     fetchQuestions();
   }, [dispatch, navigation, route.params]);
 
+  useEffect(() => {
+    dispatch(fetchClinicDetails());
+    if (route.params?.demographicNo) {
+      dispatch(fetchPatientDetails({ demographicNo: route.params.demographicNo }));
+    }
+  }, [dispatch, route.params?.demographicNo]);
+
   const handleAnswerSelect = (answer) => {
     setAnswers(prev => ({
       ...prev,
@@ -104,16 +122,58 @@ const FollowUpAssessment = () => {
 
       const currentScope = scope || route.params?.scope;
 
-      const result = {
-        scopeStatus: currentScope,
-        followUpAnswers: answersArray,
+      // Map clinic details to expected keys
+      const mappedClinic = {
+        clinicName: clinicDetails?.entityName || '',
+        address: clinicDetails?.address || '',
+        city: clinicDetails?.city || '',
+        province: clinicDetails?.province || '',
+        postalCode: clinicDetails?.postalCode || '',
+        phone: clinicDetails?.phoneNo || '',
+        fax: clinicDetails?.faxNo || '',
+        logo: clinicDetails?.logo ? `https://api.bimble.pro/media/${clinicDetails.logo}` : '',
+        // add more fields as needed
+      };
+
+      // Generate HTML with the data directly from Redux
+      const htmlContent = getFollowUpAssessmentHtml({
+        clinic: mappedClinic,
+        patient: patientDetails,
+        questions: questions.map(q => q.question),
+        answers: questions.map((q, idx) => answers[idx] || ''),
+        followUpDate: new Date().toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }),
+        statusText: currentScope && currentScope.toLowerCase().includes('refer') ? 'Refer' : 'In Scope',
+        statusClass: currentScope && currentScope.toLowerCase().includes('refer') ? 'refer' : 'inscope',
+        logoBase64: mappedClinic.logo,
+        reason: condition
+      });
+
+      // Generate PDF
+      const options = {
+        html: htmlContent,
+        fileName: `FollowUp_Assessment_${patientDetails?.firstName}_${patientDetails?.lastName}_${new Date().toISOString().split("T")[0]}`,
+        directory: Platform.OS === 'android' ? 'Download' : 'Documents',
+        base64: false
+      };
+
+      const file = await RNHTMLtoPDF.convert(options);
+      await FileViewer.open(file.filePath, { showOpenWithDialog: true });
+
+      // Handle the result
+      if (route.params?.onDone) {
+        route.params.onDone({
+          scopeStatus: currentScope,
+          followUpAnswers: answersArray,
           scopeAnswers: route.params?.scopeAssessment?.scopeAnswers,
           appointmentNo,
-        scope: currentScope,
-      };
-      if (route.params?.onDone) {
-        route.params.onDone(result);
+          scope: currentScope,
+        });
       }
+
       navigation.goBack();
     } catch (error) {
       console.error('Submit error:', error);

@@ -7,7 +7,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
 import { addPatientDrug } from '../Redux/Slices/DrugSlice';
-import {   } from '../Redux/Slices/MedicationlistSlice';
+import { getMedicationList } from '../Redux/Slices/MedicationlistSlice';
 import CustomHeader from './CustomHeader';
 import PrescriptionPreview from '../components/PrescriptionPreview';
 
@@ -33,12 +33,9 @@ const DrugPrescription = ({ route, navigation }) => {
   } = route.params;
   
   // Update selectors to match the state structure from MedicationlistSlice
-  const medicationState = useSelector((state) => state.auth.medication || []);
-  const medications = medicationState.medications || [];
-  console.log (medicationState,'hellsoss')
-  console.log (medications,'hellsos')
-
-  const loading = medicationState.loading || false;
+  const medicationState = useSelector((state) => state.auth.medication);
+  const medications = medicationState?.medications || [];
+  const loading = medicationState?.loading;
 
   const [drugs, setDrugs] = useState([]);
 

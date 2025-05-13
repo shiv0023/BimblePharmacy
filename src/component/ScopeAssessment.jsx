@@ -51,12 +51,17 @@ const AcneScopeAssessment = ({
   date_of_birth,
   dob,
   previousAnswers,
-  demographicNo
+  demographicNo,
+  appointmentNo
 }) => {
   const dispatch = useDispatch();
   const scopeStatusLoading = useSelector(
     state => state.generateAssessment?.scopeStatusLoading || false
   );
+
+  const clinic = useSelector(state => state.auth?.clinicDetails?.data);
+  console.log(clinic,'hii')
+  const patientDetails = useSelector(state => state.auth?.patientDetails?.dataaaa || {});
 
   const [assessmentDataState, setAssessmentDataState] = useState({});
   const [localLoading, setLocalLoading] = useState(false);
@@ -65,15 +70,11 @@ const AcneScopeAssessment = ({
 
   const computedAgeString = ageString || getAgeString(year_of_birth, month_of_birth, date_of_birth);
 
-  const clinicDetails = useSelector(state => state.auth?.clinicDetails.data);
-
-  const patientDetails = useSelector(state => state.auth?.patientDetails.data[demographicNo]);
-
   useEffect(() => {
-    if (!clinicDetails) {
+    if (!clinic) {
       dispatch(fetchClinicDetails());
     }
-  }, [clinicDetails, dispatch]);
+  }, [clinic, dispatch]);
 
   useEffect(() => {
     const initialState = {};
@@ -248,46 +249,26 @@ const AcneScopeAssessment = ({
       gender: gender || '',
       scopeAnswers: scopeAnswers,
       dob: formattedDob,
+      appointmentNo: appointmentNo,
     };
 
     console.log('Payload with DOB:', payload);
 
     try {
       const result = await dispatch(getScopeStatus(payload)).unwrap();
-      onSubmit && onSubmit({
-        result,
-        formattedPayload: {
-          reason: reason || '',
-          scopeAnswers: scopeAnswers,
-          gender: gender || '',
-          dob: formattedDob
-        },
-        scopeStatus: result?.scopeStatus
-      });
-
-      // Update patient data preparation with patientDetails
-      const clinic = {
-        clinicName: clinicDetails?.entityName,
-        address: clinicDetails?.address,
-        city: clinicDetails?.city,
-        province: clinicDetails?.province,
-        postalCode: clinicDetails?.postalCode,
-        phone: clinicDetails?.phoneNo,
-        fax: clinicDetails?.faxNo,
-        logo: clinicDetails?.logo, // If you have a base64 logo, convert and use it
-      };
-
+      
+      // Use the clinic and patientDetails from the component level
       const patient = {
         name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}${patientDetails?.gender ? '/' + (patientDetails.gender === 'M' ? 'Male' : 'Female') : ''}`,
         dob: patientDetails?.dob || '',
-        age: calculateFullAge(
-          patientDetails?.dob?.split('-')[0],
-          patientDetails?.dob?.split('-')[1],
-          patientDetails?.dob?.split('-')[2]
-        ),
         phn: patientDetails?.phn || '',
-        address: `${patientDetails?.address || ''}${patientDetails?.city ? ', ' + patientDetails.city : ''}${patientDetails?.postalCode ? ', ' + patientDetails.postalCode : ''}`,
-        reason: reason || '',
+        address: [
+          patientDetails?.address,
+          patientDetails?.city,
+          patientDetails?.province,
+          patientDetails?.postalCode
+        ].filter(Boolean).join(', '),
+        reason: reason || ''
       };
 
       const questionsArr = questions.map(q => q.question);
@@ -306,7 +287,7 @@ const AcneScopeAssessment = ({
       // Create PDF file
       const options = {
         html: htmlContent,
-        fileName: `Scope_Assessment_${patientDetails?.firstName}_${patientDetails?.lastName}_${new Date().toISOString().split("T")[0]}`,
+        fileName: `Scope_Assessment_${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''} ${new Date().toISOString().split("T")[0]}`,
         directory: Platform.OS === 'android' ? 'Download' : 'Documents',
         base64: false
       };
@@ -325,6 +306,18 @@ const AcneScopeAssessment = ({
         console.error('PDF generation error:', error);
         Alert.alert('Error', 'Failed to generate PDF');
       }
+
+      onSubmit && onSubmit({
+        result,
+        formattedPayload: {
+          reason: reason || '',
+          scopeAnswers: scopeAnswers,
+          gender: gender || '',
+          dob: formattedDob,
+          appointmentNo: ''
+        },
+        scopeStatus: result?.scopeStatus
+      });
 
     } catch (error) {
       console.error('Failed to get scope status:', error);
