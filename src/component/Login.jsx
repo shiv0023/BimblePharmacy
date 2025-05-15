@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   StatusBar,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 
 import {useDispatch, useSelector} from 'react-redux';
@@ -49,54 +50,19 @@ export default function Login({navigation}) {
   const authResponse = useSelector(state => state?.user);
   const error = authResponse?.error || null;
 
-  const clinicState = useSelector(state => {
-    const clinicData = state?.auth?.clinic;
+  const clinicData = useSelector(state => state?.auth?.clinic?.data || []);
+  const isLoadingClinic = useSelector(state => state?.auth?.clinic?.loading || false);
 
-    return clinicData || {};
-  });
-  const {subdomains = [], loading = false} = clinicState;
-
-  // Log whenever subdomains changes
-  useEffect(() => {
-   
-  }, [subdomains]);
-
-  // Test API call directly
-  const testApiCall = async () => {
-    setIsLoading(true);
-    try {
+  // Memoize filtered suggestions
+  const filteredSuggestions = useMemo(() => {
+    if (!clinicData || !Array.isArray(clinicData)) return [];
+    if (!subdomainBimble) return [];
     
-      const response = await dispatch(fetchSubdomains()).unwrap();
-    
-    } catch (error) {
-      console.error('API Call Failed:', error);
-      
-      // More detailed error logging
-      if (error.message) {
-        console.error('Error message:', error.message);
-      }
-      
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-      } else if (error.request) {
-        console.error('Request made but no response received');
-        console.error('Request details:', error.request);
-      } else {
-        console.error('Error setting up request:', error);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return clinicData.filter(clinic => 
+      clinic?.subdomainBimble?.toLowerCase()?.includes(subdomainBimble.toLowerCase())
+    );
+  }, [clinicData, subdomainBimble]);
 
-  useEffect(() => {
-    testApiCall();
-  }, []);
-
-  useEffect(() => {
-
-  }, [subdomains, loading]);
   useEffect(() => {
     const checkAuthToken = async () => {
       const token = await AsyncStorage.getItem('auth_token');
@@ -110,32 +76,24 @@ export default function Login({navigation}) {
   }, [dispatch, navigation]);
 
   useEffect(() => {
-    const checkSavedCredentials = async () => {
+    const loadSavedCredentials = async () => {
       try {
         const savedCredentials = await AsyncStorage.getItem('userCredentials');
         if (savedCredentials) {
-          const {subdomain, username, password, pin, clinicDisplayName} =
-            JSON.parse(savedCredentials);
-          console.log('Remember Me - Saved User Data:', {
-            subdomain,
-            username,
-            pin,
-            hasPassword: !!password,
-          });
-
-          setSubdomain(subdomain);
-          setUsername(username);
-          setPassword(password);
-          setPin(pin);
+          const parsed = JSON.parse(savedCredentials);
+          setSubdomain(parsed.subdomainBimble || '');
+          setUsername(parsed.username || '');
+          setPassword(parsed.password || '');
+          setPin(parsed.pin || '');
+          setClinicDisplayName(parsed.clinicDisplayName || '');
           setRememberMe(true);
-          setClinicDisplayName(clinicDisplayName);
         }
       } catch (error) {
-        console.error('Error loading remembered data:', error);
+        console.error('Error loading saved credentials:', error);
       }
     };
 
-    checkSavedCredentials();
+    loadSavedCredentials();
   }, []);
 
   const [errors, setErrors] = useState({
@@ -181,41 +139,42 @@ export default function Login({navigation}) {
   };
 
   const handleLogin = async () => {
-    if (validateInputs()) {
-      setIsLoading(true);
-      try {
-        const requestedData = {
-          subdomainBimble,
-          username,
-          password,
-          pin,
-        };
+    if (!validateInputs()) return;
 
-        const response = await dispatch(loginUser({requestedData})).unwrap();
+    setIsLoading(true);
+    try {
+      const credentials = {
+        subdomainBimble: subdomainBimble.trim(),
+        username: username.trim(),
+        password: password.trim(),
+        pin: pin.trim()
+      };
 
-        await AsyncStorage.setItem('auth_token', response.access_token);
+      const response = await dispatch(loginUser({ requestedData: credentials })).unwrap();
 
-        if (rememberMe) {
-          await AsyncStorage.setItem(
-            'userCredentials',
-            JSON.stringify({
-              subdomain: subdomainBimble,
-              username,
-              password,
-              pin,
-              clinicDisplayName: clinicDisplayName,
-            }),
-          );
-        } else {
-          await AsyncStorage.removeItem('userCredentials');
-        }
+      await AsyncStorage.setItem('auth_token', response.access_token);
 
-        navigation.navigate('Appointment');
-      } catch (error) {
-        console.error('Login  error:', error);
-      } finally {
-        setIsLoading(false);
+      if (rememberMe) {
+        await AsyncStorage.setItem(
+          'userCredentials',
+          JSON.stringify({
+            ...credentials,
+            clinicDisplayName
+          })
+        );
+      } else {
+        await AsyncStorage.removeItem('userCredentials');
       }
+
+      navigation.navigate('Appointment', { subdomain: subdomainBimble });
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert(
+        'Login Failed',
+        error.message || 'Unable to login. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -244,65 +203,55 @@ export default function Login({navigation}) {
           style={styles.input}
           placeholder="Clinic Name"
           value={clinicDisplayName || subdomainBimble}
-          onChangeText={(text) => {
-     
+          onChangeText={text => {
+            if (!text) {
+              setSubdomain('');
+              setClinicDisplayName('');
+              setShowSuggestions(false);
+              return;
+            }
             setSubdomain(text);
             setClinicDisplayName('');
-            setErrors((prev) => ({ ...prev, subdomain: false }));
-
-            if (text.length > 0) {
-              setShowSuggestions(true);
-            } else {
-              setShowSuggestions(false);
-            }
+            setErrors(prev => ({ ...prev, subdomain: false }));
+            setShowSuggestions(true);
           }}
           onFocus={() => {
-          
-            if (subdomainBimble.length > 0) {
+            if (subdomainBimble) {
               setShowSuggestions(true);
             }
           }}
           placeholderTextColor={'black'}
         />
-        {showSuggestions && subdomainBimble.length > 0 && (
+        
+        {/* Only show suggestions if we have input and suggestions are enabled */}
+        {showSuggestions && subdomainBimble && (
           <View style={styles.suggestionsContainer}>
-            {loading ? (
+            {isLoadingClinic ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color="#2968FF" />
               </View>
+            ) : filteredSuggestions.length > 0 ? (
+              filteredSuggestions.map((clinic, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.suggestionItem}
+                  onPress={() => {
+                    setSubdomain(clinic.subdomainBimble || '');
+                    setClinicDisplayName(clinic.entityName || '');
+                    setShowSuggestions(false);
+                  }}
+                >
+                  <Text style={styles.suggestionText}>
+                    {clinic.entityName || ''}
+                  </Text>
+                </TouchableOpacity>
+              ))
             ) : (
-              <>
-                {subdomains?.data && subdomains.data.length > 0 ? (
-                  subdomains.data
-                    .filter((clinic) => {
-                      // Ensure the subdomainBimble is defined and perform a case-insensitive match
-                      return clinic.subdomainBimble
-                        ?.toLowerCase()
-                        .startsWith(subdomainBimble.toLowerCase());
-                    })
-                    .map((clinic, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.suggestionItem}
-                        onPress={() => {
-                          setSubdomain(clinic.subdomainBimble);
-                          setClinicDisplayName(clinic.entityName);
-                          setShowSuggestions(false);
-                        }}
-                      >
-                        <Text style={styles.suggestionText}>
-                          {clinic.entityName}
-                        </Text>
-                      </TouchableOpacity>
-                    ))
-                ) : (
-                  <View style={styles.noSuggestionsContainer}>
-                    <Text style={styles.noSuggestionsText}>
-                      No matching clinics found
-                    </Text>
-                  </View>
-                )}
-              </>
+              <View style={styles.noSuggestionsContainer}>
+                <Text style={styles.noSuggestionsText}>
+                  No matching clinics found
+                </Text>
+              </View>
             )}
           </View>
         )}

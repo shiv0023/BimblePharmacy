@@ -91,7 +91,9 @@ function getAgeString(year, month, day) {
   return `${years} years${months > 0 ? ` ${months} months` : ''}`;
 }
 
-export default function Appointment({navigation}) {
+export default function Appointment({navigation, route}) {
+  const subdomain = route?.params?.subdomain;
+  console.log('Subdomain:', subdomain);
   const [currentDate, setCurrentDate] = useState('');
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -228,12 +230,13 @@ export default function Appointment({navigation}) {
       month_of_birth: item.month_of_birth,
       date_of_birth: item.date_of_birth,
       dob: dob,
+      remarks: item.remarks
     });
     
     navigation.navigate("Chat", {
       date: item.appointmentDate,
       reason: item.reason,
-      reasonDesc: item.reasonDesc ,
+      reasonDesc: item.reasonDesc,
       demographicNo: formattedDemographicNo,
       status: item.status,
       appointmentNo: item.appointmentNo,
@@ -246,6 +249,9 @@ export default function Appointment({navigation}) {
       ageString,
       patientName: item.patientName,
       phn: item.phn,
+      remarks: item.remarks,
+      scopeStatus: item.remarks,
+      subdomain: subdomain,
     });
   };
 

@@ -22,6 +22,7 @@ import { getFollowUpAssessmentHtml } from './FollowupAssessmentpdf'; // Make sur
 import { getScopeAssessmentHtml } from './ScopeAssessmentpdf'; // Make sure the import path is correct
 import { fetchClinicDetails } from '../Redux/Slices/ClinicDetails';
 import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
+import { savePdfDocument } from '../Redux/Slices/SoapNotesSlice';
 
 
 const FollowUpAssessment = () => {
@@ -54,11 +55,17 @@ console.log(clinicDetails,'hello')
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      if (!gender || !dob || !condition || !appointmentNo || !scope) {
-        Alert.alert('Error', 'Missing required parameters');
-        navigation.goBack();
-        return;
-      }
+      // Get scope from remarks or other sources
+      const currentScope = scope || 
+                         route.params?.scopeAssessment?.scope || 
+                         route.params?.remarks;
+
+      // Get scope answers from pre-assessment or create default ones from remarks
+      const scopeAnswers = route.params?.scopeAssessment?.scopeAnswers || 
+                          (route.params?.remarks ? {
+                            condition: condition,
+                            status: route.params.remarks
+                          } : {});
 
       try {
         setIsDataLoading(true);
@@ -67,11 +74,21 @@ console.log(clinicDetails,'hello')
           dob,
           condition,
           appointmentNo,
-          scope,
-          scopeAnswers: route.params?.scopeAssessment?.scopeAnswers
+          scope: currentScope,
+          scopeAnswers: scopeAnswers
         })).unwrap();
 
         console.log('Follow-up questions result:', result);
+        
+        // Initialize answers if we have initial answers
+        if (initialAnswers?.length > 0) {
+          const initialAnswersMap = {};
+          initialAnswers.forEach((answer, index) => {
+            initialAnswersMap[index] = answer;
+          });
+          setAnswers(initialAnswersMap);
+        }
+
       } catch (error) {
         console.error('Error fetching follow-up questions:', error);
         Alert.alert(
@@ -85,7 +102,7 @@ console.log(clinicDetails,'hello')
     };
 
     fetchQuestions();
-  }, [dispatch, navigation, route.params]);
+  }, [dispatch, navigation, gender, dob, condition, appointmentNo, scope, route.params]);
 
   useEffect(() => {
     dispatch(fetchClinicDetails());
@@ -135,10 +152,24 @@ console.log(clinicDetails,'hello')
         // add more fields as needed
       };
 
-      // Generate HTML with the data directly from Redux
+      // Format patient details properly
+      const formattedPatient = {
+        name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}${patientDetails?.gender ? '/' + (patientDetails.gender === 'M' ? 'Male' : 'Female') : ''}`,
+        dob: patientDetails?.dob || dob || '',
+        phn: patientDetails?.phn || route.params?.phn || '',
+        address: [
+          patientDetails?.address,
+          patientDetails?.city,
+          patientDetails?.province,
+          patientDetails?.postalCode
+        ].filter(Boolean).join(', '),
+        reason: condition || ''
+      };
+
+      // Generate HTML with the formatted patient data
       const htmlContent = getFollowUpAssessmentHtml({
         clinic: mappedClinic,
-        patient: patientDetails,
+        patient: formattedPatient, // Use the formatted patient details
         questions: questions.map(q => q.question),
         answers: questions.map((q, idx) => answers[idx] || ''),
         followUpDate: new Date().toLocaleDateString('en-US', { 
@@ -155,13 +186,45 @@ console.log(clinicDetails,'hello')
       // Generate PDF
       const options = {
         html: htmlContent,
-        fileName: `FollowUp_Assessment_${patientDetails?.firstName}_${patientDetails?.lastName}_${new Date().toISOString().split("T")[0]}`,
+        fileName: `FollowUp_Assessment_${patientDetails?.firstName}_${patientDetails?.lastName}_${new Date().toISOString().split("T")[0]}.pdf`,
         directory: Platform.OS === 'android' ? 'Download' : 'Documents',
         base64: false
       };
 
       const file = await RNHTMLtoPDF.convert(options);
-      await FileViewer.open(file.filePath, { showOpenWithDialog: true });
+      
+      // Get and validate demographicNo
+      const numericDemographicNo = parseInt(route.params?.demographicNo, 10);
+      if (isNaN(numericDemographicNo)) {
+        console.error('Invalid demographicNo:', route.params?.demographicNo);
+        Alert.alert('Warning', 'Invalid patient information format');
+        return;
+      }
+
+      // Save PDF to document storage
+      try {
+        const saveDocumentResponse = await dispatch(savePdfDocument({
+          demographicNo: numericDemographicNo,
+          pdfFile: {
+            uri: Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`,
+            name: options.fileName,
+            type: 'application/pdf'
+          }
+        })).unwrap();
+        
+        console.log('PDF saved to document storage:', saveDocumentResponse);
+      } catch (saveError) {
+        console.error('Error saving PDF to document storage:', saveError);
+        Alert.alert('Warning', 'PDF generated but failed to save to document storage');
+      }
+
+      // Show the PDF regardless of save status
+      await FileViewer.open(file.filePath, {
+        showOpenWithDialog: true,
+        onDismiss: () => {
+          console.log('PDF viewer dismissed');
+        }
+      });
 
       // Handle the result
       if (route.params?.onDone) {

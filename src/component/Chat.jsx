@@ -33,8 +33,10 @@ const Chat = () => {
     reasonDesc,
     startTime,
     patientName,
-    phn
+    phn,
+    subdomain,
   } = route.params || {};
+  console.log('Subdomain in Chat screen:', subdomain);
   const [showAssessment, setShowAssessment] = useState(false);
   const [assessmentData, setAssessmentData] = useState({
     age: '',
@@ -66,6 +68,7 @@ const Chat = () => {
   const notesLoading = useSelector(state => state.patientDetails?.notesLoading || false);
   const pdfPath = route.params?.pdfPath;
   const [showPdf, setShowPdf] = useState(false);
+  const [isPreAssessmentDone, setIsPreAssessmentDone] = useState(false);
 console.log (encounterNotes,'encounter')
   const getFullGender = (gender) => {
     if (!gender) return '';
@@ -117,12 +120,44 @@ console.log (encounterNotes,'encounter')
     rawParams: route.params
   });
 
+  useEffect(() => {
+    if (route.params?.remarks) {
+      // If we have remarks, set the scope status and mark pre-assessment as done
+      const scopeAnswersFromRemarks = {
+        // Add any default answers based on the remarks
+        condition: route.params.reason || '',
+        status: route.params.remarks
+      };
+
+      setScopeStatus(route.params.remarks);
+      setIsPreAssessmentDone(true);
+      
+      // Set pre-assessment answers with the basic info and scope answers
+      setPreAssessmentAnswers({
+        reason: reason,
+        scopeAnswers: scopeAnswersFromRemarks,
+        gender: gender,
+        dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
+        scope: route.params.remarks
+      });
+
+      // Also set assessment data for consistency
+      setAssessmentData(scopeAnswersFromRemarks);
+    }
+  }, [route.params?.remarks]);
+
   const handlePreAssessment = async () => {
+    if (isPreAssessmentDone) {
+      Alert.alert('Info', 'Pre-assessment has already been completed for this appointment.');
+      return;
+    }
+
     try {
       // Format parameters
       const formattedParams = {
         reason: String(reason || '').trim(),
-        gender: getFullGender(gender)
+        gender: getFullGender(gender),
+        subdomain: subdomain 
       };
 
       console.log('Sending formatted params:', formattedParams);
@@ -142,6 +177,13 @@ console.log (encounterNotes,'encounter')
   const handleSubmitAssessment = async (data) => {
     try {
       const { result, formattedPayload, scopeStatus: statusFromAssessment } = data;
+      console.log('Received scope status:', statusFromAssessment); // Debug log
+
+      if (!statusFromAssessment) {
+        console.error('No scope status received from assessment');
+        Alert.alert('Error', 'Failed to get scope status from assessment');
+        return;
+      }
 
       setPreAssessmentAnswers({
         reason: formattedPayload.reason,
@@ -153,38 +195,91 @@ console.log (encounterNotes,'encounter')
 
       setScopeStatus(statusFromAssessment);
       setAssessmentData(formattedPayload.scopeAnswers);
-
       setShowAssessment(false);
     } catch (error) {
-      // handle error
+      console.error('Error in handleSubmitAssessment:', error);
     }
   };
 
   const handleFollowupAssessment = () => {
-    // if (!preAssessmentAnswers) {
-    //   Alert.alert('Error', 'Please complete the pre-assessment first');
-    //   return;
-    // }
+    // Allow direct access to follow-up if remarks exist
+    if (route.params?.remarks) {
+      const formattedDob = `${year_of_birth}-${month_of_birth}-${date_of_birth}`;
+      
+      const params = {
+        gender: gender,
+        dob: formattedDob,
+        condition: reason,
+        appointmentNo: route.params?.appointmentNo,
+        scope: route.params.remarks,
+        remarks: route.params.remarks,
+        phn: phn,
+        demographicNo: demographicNo,
+        scopeAssessment: {
+          reason: reason,
+          scopeAnswers: preAssessmentAnswers?.scopeAnswers || {},
+          gender: gender,
+          scope: route.params.remarks
+        },
+        onDone: (result) => {
+          setFollowupAssessmentDone(true);
+          setScopeStatus(result.scopeStatus || route.params.remarks);
+          setFollowUpAnswers(result.followUpAnswers);
+          setScopeAnswers(result.scopeAnswers);
+          setAppointmentNo(result.appointmentNo);
+          setScope(result.scope || route.params.remarks);
+        }
+      };
+
+      navigation.navigate('FollowUpAssessment', params);
+      return;
+    }
+
+    if (!preAssessmentAnswers) {
+      Alert.alert('Error', 'Please complete the pre-assessment first');
+      return;
+    }
+
+    // Format the date of birth
+    const formattedDob = `${year_of_birth}-${month_of_birth}-${date_of_birth}`;
+
+    // Get the scope status
+    const currentScope = preAssessmentAnswers.scope || scopeStatus;
+    console.log('Current scope status:', currentScope); // Debug log
+
+    // Validate required parameters including scope
+    if (!gender || !formattedDob || !reason || !route.params?.appointmentNo || !currentScope) {
+      console.error('Missing parameters:', {
+        gender,
+        dob: formattedDob,
+        reason,
+        appointmentNo: route.params?.appointmentNo,
+        scope: currentScope
+      });
+      Alert.alert('Error', 'Missing required parameters. Please ensure all information is complete.');
+      return;
+    }
 
     const formattedAnswers = Object.entries(preAssessmentAnswers.scopeAnswers).map(([question, answer], index) => ({
       questionId: index + 1,
       question: question,
-      answer: String(answer)
+      answer: Array.isArray(answer) ? answer : String(answer)
     }));
 
     const params = {
-      gender: preAssessmentAnswers.gender,
-      dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
+      gender: gender,
+      dob: formattedDob,
       condition: preAssessmentAnswers.reason || reason,
-      appointmentNo: route.params?.appointmentNo || demographicNo,
-      scope: preAssessmentAnswers.scope,
+      appointmentNo: route.params?.appointmentNo,
+      scope: currentScope, // Use the current scope status
       answers: formattedAnswers,
       phn: phn,
+      demographicNo: demographicNo,
       scopeAssessment: {
-        reason: preAssessmentAnswers.reason,
+        reason: preAssessmentAnswers.reason || reason,
         scopeAnswers: preAssessmentAnswers.scopeAnswers,
-        gender: preAssessmentAnswers.gender,
-        scope: preAssessmentAnswers.scope
+        gender: gender,
+        scope: currentScope
       },
       onDone: (result) => {
         setFollowupAssessmentDone(true);
@@ -193,8 +288,17 @@ console.log (encounterNotes,'encounter')
         setScopeAnswers(result.scopeAnswers);
         setAppointmentNo(result.appointmentNo);
         setScope(result.scope);
+        
+        // Enable next steps based on scope status
+        if (!result.scopeStatus?.toLowerCase().includes('refer')) {
+          // If not referred, enable prescription
+          setPrescriptionDone(false);
+        }
       }
     };
+
+    // Log the parameters being passed
+    console.log('Navigating to FollowUpAssessment with params:', params);
 
     navigation.navigate('FollowUpAssessment', params);
   };
@@ -304,7 +408,6 @@ console.log (encounterNotes,'encounter')
       if (route.params?.soapNotesDone) {
         setSoapNotesDone(true);
       }
-      // ...set other state as needed
     }, [route.params])
   );
 
@@ -363,6 +466,8 @@ console.log (encounterNotes,'encounter')
             dob={`${year_of_birth}-${month_of_birth}-${date_of_birth}`}
             previousAnswers={assessmentData}
             appointmentNo={route.params?.appointmentNo}
+            subdomain={subdomain}
+            demographicNo={route.params?.demographicNo || patientDetails?.demographicNo}
           />
         ) : (
           <>
@@ -445,10 +550,15 @@ console.log (encounterNotes,'encounter')
                 contentContainerStyle={styles.footerRow}
               >
                 <TouchableOpacity 
-                  style={[styles.footerButton, { width: 130, height: 130 }]}
+                  style={[
+                    styles.footerButton, 
+                    { width: 130, height: 130 },
+                    (isPreAssessmentDone || route.params?.remarks) && styles.footerButtonDisabled
+                  ]}
                   onPress={handlePreAssessment}
+                  disabled={isPreAssessmentDone || route.params?.remarks}
                 >
-                  {preAssessmentAnswers && (
+                  {(preAssessmentAnswers || isPreAssessmentDone || route.params?.remarks) && (
                     <View style={styles.checkmarkContainer}>
                       <TickIcon />
                     </View>
@@ -463,14 +573,14 @@ console.log (encounterNotes,'encounter')
                   style={[
                     styles.footerButton, 
                     { width: 130, height: 130 },
-                    !preAssessmentAnswers && styles.footerButtonDisabled
+                    (!preAssessmentAnswers && !route.params?.remarks) && styles.footerButtonDisabled
                   ]}
                   onPress={() => {
                     handleFollowupAssessment();
                   }}
-                  disabled={!preAssessmentAnswers}
+                  disabled={!preAssessmentAnswers && !route.params?.remarks}
                 >
-                  {followupAssessmentDone && (
+                  {(followupAssessmentDone || route.params?.followupAssessmentDone) && (
                     <View style={styles.checkmarkContainer}>
                       <TickIcon />
                     </View>
@@ -481,21 +591,21 @@ console.log (encounterNotes,'encounter')
                     </Text>
                   </View>
                 </TouchableOpacity>
-                {scopeStatus && scopeStatus.toLowerCase().includes('refer') ? null : (
+                {scopeStatus && !scopeStatus.toLowerCase().includes('refer') && (
                   <TouchableOpacity 
                     style={[
                       styles.footerButton, 
                       { width: 130, height: 130 },
-                      (!preAssessmentAnswers || !followupAssessmentDone) && styles.footerButtonDisabled
+                      (!followupAssessmentDone && !route.params?.followupAssessmentDone) && styles.footerButtonDisabled
                     ]}
                     onPress={() => {
-                      if (!preAssessmentAnswers || !followupAssessmentDone) {
-                        Alert.alert('Error', 'Please complete the previous steps first');
+                      if (!followupAssessmentDone && !route.params?.followupAssessmentDone) {
+                        Alert.alert('Error', 'Please complete the follow-up assessment first');
                         return;
                       }
                       navigation.navigate('DrugPrescription', {
                         demographicNo: demographicNo,
-                        condition: preAssessmentAnswers.reason || reason,
+                        condition: preAssessmentAnswers?.reason || reason,
                         gender: gender,
                         dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
                         phn: phn,
@@ -503,7 +613,7 @@ console.log (encounterNotes,'encounter')
                         onDone: () => setPrescriptionDone(true),
                       });
                     }}
-                    disabled={!preAssessmentAnswers || !followupAssessmentDone}
+                    disabled={!followupAssessmentDone && !route.params?.followupAssessmentDone}
                   >
                     {prescriptionDone && (
                       <View style={styles.checkmarkContainer}>
@@ -522,15 +632,15 @@ console.log (encounterNotes,'encounter')
                     styles.footerButton, 
                     { width: 130, height: 130 },
                     (scopeStatus && scopeStatus.toLowerCase().includes('refer')
-                      ? (!preAssessmentAnswers || !followupAssessmentDone)
-                      : (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone)
+                      ? (!followupAssessmentDone && !route.params?.followupAssessmentDone)
+                      : (!followupAssessmentDone || !prescriptionDone)
                     ) && styles.footerButtonDisabled
                   ]}
                   onPress={() => {
                     if (
                       (scopeStatus && scopeStatus.toLowerCase().includes('refer')
-                        ? (!preAssessmentAnswers || !followupAssessmentDone)
-                        : (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone)
+                        ? (!followupAssessmentDone && !route.params?.followupAssessmentDone)
+                        : (!followupAssessmentDone || !prescriptionDone)
                       )
                     ) {
                       Alert.alert('Error', 'Please complete the previous steps first');
@@ -555,8 +665,8 @@ console.log (encounterNotes,'encounter')
                   }}
                   disabled={
                     scopeStatus && scopeStatus.toLowerCase().includes('refer')
-                      ? (!preAssessmentAnswers || !followupAssessmentDone)
-                      : (!preAssessmentAnswers || !followupAssessmentDone || !prescriptionDone)
+                      ? (!followupAssessmentDone && !route.params?.followupAssessmentDone)
+                      : (!followupAssessmentDone || !prescriptionDone)
                   }
                 >
                   {soapNotesDone && (

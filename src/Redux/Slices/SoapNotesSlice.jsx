@@ -16,8 +16,8 @@ export const fetchSoapNotes = createAsyncThunk(
   }
 );
 
-export const saveSoapPdfDocument = createAsyncThunk(
-  'soapNotes/saveSoapPdfDocument',
+export const savePdfDocument = createAsyncThunk(
+  'soapNotes/savePdfDocument',
   async ({ demographicNo, pdfFile }, { rejectWithValue }) => {
     try {
       const formData = new FormData();

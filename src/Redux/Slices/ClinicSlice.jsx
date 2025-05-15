@@ -12,7 +12,7 @@ export const fetchSubdomains = createAsyncThunk(
       const response = await axiosInstance.get('/authentication/fetchAllEntitiesSubdomains/');
       
       // console.log('Raw Response:', response); 
-      console.log('d:', response.data); 
+      console.log('response', response.data); 
       
       if (!response.data) {
         return rejectWithValue('No data received from the server');

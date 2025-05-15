@@ -128,6 +128,8 @@ export function getScopeAssessmentHtml({
         display: block;
         margin-bottom: 2px;
       }
+
+      /* Status Cell and Box Styles */
       td.status-cell {
         width: 85px;
         text-align: right;
@@ -135,37 +137,40 @@ export function getScopeAssessmentHtml({
         border: none;
         padding: 0 0 2px 0;
       }
-      .status-box {
-        border: 1px solid;
-        padding: 8px 20px;
-        color: #fff;
-        font-weight: bold;
-        border-radius: 4px;
-        font-size: 18pt;
-        text-align: center;
-        line-height: 1.1;
-        display: inline-block;
-        margin-top: 0;
-        box-sizing: border-box;
+      .status-box { 
+        border: 1px solid; 
+        padding: 3px 5px; 
+        color: white; 
+        font-weight: bold; 
+        border-radius: 3px; 
+        background-color: #888888; 
+        font-size: 9pt; 
+        text-align: center; 
+        line-height: 1.1; 
+        display: inline-block; 
+        margin-top: 0; 
+        box-sizing: border-box; 
       }
-      .status-box.refer {
-        border-color: #A00000;
-        background-color: #D9534F;
+      .status-box span.status-date { 
+        display: block; 
+        font-size: 7.5pt; 
+        font-weight: normal; 
+        margin-top: 1px; 
+        color: black; 
+        background-color: transparent; 
       }
-      .status-box.inscope {
-        border-color: #006400;
-        background-color: #4CAF50;
+      .status-box.refer { 
+        border-color: #A00000; 
+        background-color: #D9534F; 
       }
-      .status-date {
-        display: block;
-        font-size: 12pt;
-        font-weight: normal;
-        margin-top: 8px;
-        color: #111;
-        background-color: transparent;
+      .status-box.inscope { 
+        border-color: #006400; 
+        background-color: #5CB85C; 
+        color: white; 
       }
+
       .patient-info {
-        margin: 18px 0 10px 0;
+        margin: 18px 0 4px 0;
       }
       .patient-info b {
         font-size: 12pt;
@@ -183,11 +188,11 @@ export function getScopeAssessmentHtml({
       .assessment-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 10px;
+    
       }
       .assessment-table th, .assessment-table td {
         border: 0.5px solid #bbb;
-        padding: 8px 6px;
+ 
         text-align: left;
         font-size: 10pt;
       }
@@ -202,28 +207,45 @@ export function getScopeAssessmentHtml({
         margin-top: 18px;
         border: 1.5px solid #bbb;
         background: #f9f9f9;
-        padding: 12px;
+   
         border-radius: 4px;
       }
       .result-box b {
         font-size: 11pt;
       }
       .footer {
-        margin-top: 30px;
+        margin-top: 10px;
         color: #888;
         font-size: 10pt;
         text-align: center;
-      }
-      .status-box span {
-        background: #E53935;
-        padding: 4px 12px;
-        border-radius: 4px;
       }
     </style>
     <title>Scope Assessment Report</title>
   </head>
   <body>
-    ${headerHtml}
+    <table class="header-table">
+      <tr>
+        <td class="logo-cell">
+          ${logoHtml}
+        </td>
+        <td class="clinic-info-cell">
+          <b>${clinic?.entityName}</b>
+          ${clinic?.address || ''}<br/>
+          ${clinic?.city || ''}<br/>
+          ${clinic?.province || ''} ${clinic?.postalCode || ''}<br/>
+          ${clinic?.phone ? `Phone: ${clinic.phone}` : ''}
+        </td>
+        <td class="status-cell">
+          <div class="status-box ${scopeStatus?.toLowerCase().includes('refer') ? 'refer' : 'inscope'}">
+            ${scopeStatus?.toLowerCase().includes('refer') ? 'Refer' : 'In Scope'}
+            <span class="status-date">
+              ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
     ${tableHtml}
     <div class="assessment-result">
       <b>Assessment Result</b>
@@ -244,39 +266,58 @@ export function getStaticScopeAssessmentHtml({
   answers,
   assessmentResult,
   scopeStatus,
+  scopeStatusReason,
   logoBase64
 }) {
   let logoHtml = '';
   if (logoBase64) {
-    logoHtml = `<img src="data:image/png;base64,${logoBase64}" alt="Clinic Logo" style="max-width:70px;max-height:70px;vertical-align:top;" />`;
+    logoHtml = `<img src="data:image/png;base64,${logoBase64}" alt="Clinic Logo" style="max-width:100px;max-height:100px;" />`;
   } else if (clinic?.logo) {
     const isAbsolute = clinic.logo.startsWith('http://') || clinic.logo.startsWith('https://');
     const logoUrl = isAbsolute ? clinic.logo : MEDIA_URL + clinic.logo;
-    logoHtml = `<img src="${logoUrl}" alt="Clinic Logo" style="max-width:70px;max-height:70px;vertical-align:top;" />`;
+    logoHtml = `<img src="${logoUrl}" alt="Clinic Logo" style="max-width:100px;max-height:100px;" />`;
   }
 
-  // Status box logic
-  const statusClass =
-    scopeStatus && scopeStatus.toLowerCase().includes('refer')
-      ? 'refer'
-      : scopeStatus && scopeStatus.toLowerCase().includes('in scope')
-      ? 'inscope'
-      : '';
-  const statusText =
-    scopeStatus && scopeStatus.toLowerCase().includes('refer')
-      ? 'Refer'
-      : scopeStatus && scopeStatus.toLowerCase().includes('in scope')
-      ? 'In Scope'
-      : '';
-  const statusDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const isRefer = scopeStatus?.toLowerCase().includes('refer');
+  const statusDate = new Date().toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
 
+  // Status HTML with separated date
   const statusHtml = `
-    <td class="status-cell">
-      <div class="status-box ${statusClass}">
-        ${statusText}
-        <span class="status-date">${statusDate}</span>
+    <div style="text-align: right;">
+      <div style="display: inline-block;">
+        <div style="
+          background: ${isRefer ? '#ff1a1a !important' : '#3b9437 !important'}; 
+        
+          color: #FFFFFF; 
+          padding-top:10px; 
+          font-weight: bold; 
+          border-radius: 3px; 
+          font-size: 9pt; 
+          text-align: center; 
+          line-height: 1.1; 
+          min-width: 85px;
+          display: inline-block;
+          box-shadow: none;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        ">
+          ${isRefer ? 'Refer' : 'In Scope'}
+        </div>
+        <div style="
+          font-size: 7.5pt; 
+          font-weight: normal; 
+          margin-top: 4px; 
+          color: #000000;
+          text-align: center;
+        ">
+          ${statusDate}
+        </div>
       </div>
-    </td>
+    </div>
   `;
 
   return `
@@ -285,147 +326,141 @@ export function getStaticScopeAssessmentHtml({
   <head>
     <meta charset="UTF-8">
     <style>
-      @page {
-        size: letter;
-        margin: 0.7in;
-      }
       body {
-        font-family: Helvetica, Arial, sans-serif;
-        font-size: 9pt;
-        line-height: 1.2;
-        color: #222222;
-        margin:35px;
+        font-family: Arial, sans-serif;
+        margin: 40px;
+        color: #333;
+        line-height: 1.4;
       }
-      table.header-table {
-        width: 100%;
-        border: none;
-        border-collapse: collapse;
-        margin: 0 0 2px 0;
-        padding: 0;
-        border-bottom: 1px solid #E0E0E0;
-        vertical-align: top;
+      
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 20px;
       }
-      td.logo-cell {
+      
+      .logo-section {
+        display: flex;
+        gap: 20px;
+      }
+      
+      .logo {
         width: 100px;
-        padding: 0 5px 5px 0;
-        vertical-align: top;
-        border: none;
       }
-      td.logo-cell img {
-        max-width: 100px;
-        max-height: 100px;
-        vertical-align: top;
+      
+      .clinic-info {
+        font-size: 14px;
       }
-      td.clinic-info-cell {
-        vertical-align: top;
-        padding: 0 2px 0px 0;
-        border: none;
-        font-size: 8.5pt;
-        line-height: 1.3;
-        color: #333333;
-        margin-left: 2px;
-      }
-      td.clinic-info-cell b {
-        font-size: 10pt;
+      
+      .clinic-name {
+        font-size: 16px;
         font-weight: bold;
-        color: #000000;
-        display: block;
-        margin-bottom: 0px;
+        margin-bottom: 5px;
       }
-  
-      .status-box {
-        padding: 16px 32px 12px 32px;
-        border-radius: 4px;
-        color: #fff;
-        font-weight: bold;
-        font-size: 28px;
-        text-align: center;
-        line-height: 1.1;
-        letter-spacing: 0.5px;
-        box-sizing: border-box;
-        border: none;
-        display: inline-block;
-        margin-bottom: 0;
+      
+      .status {
+        text-align: right;
       }
-      .status-box.inscope {
-        background: #4CAF50;
-      }
-      .status-box.refer {
-        background: #E53935;
-      }
+      
+
+      
       .status-date {
-        display: block;
-        font-size: 22px;
-        font-weight: 600;
-        color: #111;
-        margin-top: 16px;
-        text-align: center;
-        letter-spacing: 0.5px;
-        font-family: Helvetica, Arial, sans-serif;
-      }
-      .patient-info { margin-bottom: 2px; padding-bottom: 2px;}
-      .patient-info b { font-size: 10.5pt; font-weight: bold; color: #000000; display: block; margin-bottom: 0px; }
-      .patient-info span { display: block; margin-bottom: 0px; font-size: 9pt; color: #333333; }
-      table.assessment-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin-bottom: 15px;
-        border: 1px solid #A0A0A0;
-      }
-      .assessment-table th {
-        border: none;
-        padding: 4px 5px;
-        text-align: left;
-        vertical-align: top;
-        font-size: 8.5pt;
+        margin-top: 5px;
+        font-size: 16px;
+        color: #000;
         font-weight: bold;
-        color: #000000;
-        background-color: transparent;
-        border-bottom: 1.5px solid #AAAAAA;
+        text-align: center;
       }
+      
+      .patient-info {
+        margin-bottom: 20px;
+      }
+      
+      .patient-name {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      
+      .patient-details {
+        font-size: 14px;
+        margin-bottom: 3px;
+      }
+      
+      .assessment-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      
+      .assessment-table th,
       .assessment-table td {
-        border: 1px solid black;
-        padding: 3px 5px;
+        border: 1px solid #ddd;
+        padding: 6px;
         text-align: left;
-        vertical-align: top;
-        font-size: 8.5pt;
-        line-height: 1.2;
+        font-size: 12px;
       }
-      .assessment-table td:first-child { width: 65%; }
-      .assessment-table td:last-child { width: 35%; color: #333; }
-      .assessment-result { border: 1px solid #CCCCCC; padding: 8px 10px; background-color: #F9F9F9; margin-top: 15px; font-size: 9pt; border-radius: 0px; }
-      .assessment-result b { display: block; font-size: 10pt; font-weight: bold; color: #000000; }
-      .footer { font-size: 7.5pt; color: #999999; text-align: center; }
-      .status-box span {
-        background: #E53935;
-        padding: 4px 12px;
-        border-radius: 4px;
+      
+      .assessment-table th {
+        background-color: #f8f8f8;
+      }
+      
+      .assessment-table td:first-child {
+        width: 70%;
+      }
+      
+      .result-section {
+        margin-top: 2px;
+            border: 1px solid #ddd;
+      }
+      
+      .result-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      
+      .result-content {
+        font-size: 14px;
+      }
+      
+      .footer {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 12px;
+        color: #666;
+        font-style: italic;
       }
     </style>
-    <title>Scope Assessment Report</title>
   </head>
   <body>
-    <table class="header-table">
-      <tr>
-        <td class="logo-cell">${logoHtml}</td>
-        <td class="clinic-info-cell">
-          <b>${clinic?.entityName }</b>
-          ${clinic?.address || ''}<br/>
-          ${clinic?.city || ''}<br/>
-          ${clinic?.province || ''} ${clinic?.postalCode || ''}<br/>
-          ${clinic?.phone ? `Phone: ${clinic.phone}` : ''}${clinic?.fax ? ` | Fax: ${clinic.fax}` : ''}
-        </td>
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo">
+          ${logoHtml}
+        </div>
+        <div class="clinic-info">
+          <div class="clinic-name">${clinic?.entityName || ''}</div>
+          <div>${clinic?.address || ''}</div>
+          <div>${clinic?.city || ''}, ${clinic?.province || ''} ${clinic?.postalCode || ''}</div>
+          <div>Phone: ${clinic?.phoneNo || ''} | Fax: ${clinic?.faxNo || ''}</div>
+        </div>
+      </div>
+      <div class="status">
         ${statusHtml}
-      </tr>
-    </table>
-    <div class="patient-info">
-      <b>${patient.name}</b>
-      <span>DOB: ${patient.dob}</span>
-      <span>PHN: ${patient.phn}</span>
-      <span>${patient.address}</span>
-      <span>Reason of Appointment: ${patient.reason}</span>
+      </div>
     </div>
+
+    <div class="patient-info">
+      <div class="patient-name">${patient.name}</div>
+      <div class="patient-details">DOB: ${patient.dob}</div>
+      <div class="patient-details">PHN: ${patient.phn}</div>
+      <div class="patient-details">Reason of Appointment: ${patient.reason}</div>
+    </div>
+
     <table class="assessment-table">
       <thead>
         <tr>
@@ -437,16 +472,37 @@ export function getStaticScopeAssessmentHtml({
         ${questions.map((q, idx) => `
           <tr>
             <td>${q}</td>
-            <td>${Array.isArray(answers[idx]) ? answers[idx].join(', ') : answers[idx] || 'N/A'}</td>
+            <td>${answers[idx] || 'N/A'}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>
-    <div class="assessment-result">
-      <b>Assessment Result</b>
-      ${assessmentResult || ''}
+
+    <div class="result-section">
+      <div class="result-title">Assessment Result</div>
+      <div class="result-content" style="
+ 
+        border-radius: 4px;
+        padding: 10px;
+      
+      ">
+        ${assessmentResult}
+        ${scopeStatus?.toLowerCase().includes('refer') && scopeStatusReason ? `
+          <div style="
+        
+            
+            background-color: #ffebee;
+            border-radius: 4px;
+            color: #000000;
+          
+          ">
+            <strong>Reason for Referral:</strong> ${scopeStatusReason}
+          </div>
+        ` : ''}
+      </div>
     </div>
-    <div class="footer" style="margin-top: 30px;">
+
+    <div class="footer">
       This scope assessment was completed electronically.
     </div>
   </body>

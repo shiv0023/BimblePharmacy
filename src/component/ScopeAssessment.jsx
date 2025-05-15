@@ -10,6 +10,7 @@ import ScopeAssessmentPdf from '../component/ScopeAssessmentpdf.'; // fix the im
 import { fetchClinicDetails } from '../Redux/Slices/ClinicDetails'; // adjust path as needed
 import { getStaticScopeAssessmentHtml } from './ScopeAssessmentpdf..jsx';
 import { fetchPatientDetails } from '../Redux/Slices/PatientDetailsSlice';
+import { savePdfDocument } from '../Redux/Slices/SoapNotesSlice';
 
 function calculateFullAge(year, month, day) {
   if (!year || !month || !day) return null;
@@ -52,9 +53,13 @@ const AcneScopeAssessment = ({
   dob,
   previousAnswers,
   demographicNo,
-  appointmentNo
+  appointmentNo,
+  remarks,
+  subdomain
 }) => {
   const dispatch = useDispatch();
+
+  console.log('Subdomain in Scope Assessment page:', subdomain);
   const scopeStatusLoading = useSelector(
     state => state.generateAssessment?.scopeStatusLoading || false
   );
@@ -68,8 +73,13 @@ const AcneScopeAssessment = ({
 
   const appointment = useSelector(state => state.appointment?.selectedAppointment);
 
+  const authData = useSelector(state => state.auth?.userData || {});
+console.log (authData,'subdoomain')
   const computedAgeString = ageString || getAgeString(year_of_birth, month_of_birth, date_of_birth);
 
+  // Add this console log to debug demographicNo
+  console.log('DemographicNo from props:', demographicNo);
+  console.log('PatientDetails:', patientDetails);
   useEffect(() => {
     if (!clinic) {
       dispatch(fetchClinicDetails());
@@ -81,16 +91,16 @@ const AcneScopeAssessment = ({
     questions.forEach((q, idx) => {
       if (previousAnswers && previousAnswers[q.question] !== undefined) {
         initialState[`question_${idx}`] = previousAnswers[q.question];
+      } else if (remarks) {
+        initialState[`question_${idx}`] = q.type === 'checkbox' ? [] : '';
       } else if (q.type === 'checkbox') {
         initialState[`question_${idx}`] = [];
-      } else if (q.question.toLowerCase().includes('how old are you')) {
-        initialState[`question_${idx}`] = ageString || getAgeString(year_of_birth, month_of_birth, date_of_birth) || '';
       } else {
         initialState[`question_${idx}`] = '';
       }
     });
     setAssessmentDataState(initialState);
-  }, [questions, ageString, year_of_birth, month_of_birth, date_of_birth, previousAnswers]);
+  }, [questions, previousAnswers, remarks]);
 
   useEffect(() => {
     if (demographicNo) {
@@ -187,28 +197,37 @@ const AcneScopeAssessment = ({
     }
   };
 
+  // Update shouldShowQuestion to handle dependencies properly
+  const shouldShowQuestion = (question, index) => {
+    // If question has a dependency
+    if (question.dependsOn) {
+      // Find the parent question by key
+      const parentQuestion = questions.find(q => q.key === question.dependsOn.key);
+      if (!parentQuestion) return false;
+
+      // Find the index of the parent question
+      const parentIndex = questions.indexOf(parentQuestion);
+      if (parentIndex === -1) return false;
+
+      // Get the parent question's answer
+      const parentAnswer = assessmentDataState[`question_${parentIndex}`];
+      
+      // Show this question only if parent's answer matches the required value
+      return parentAnswer === question.dependsOn.value;
+    }
+
+    // If no dependencies, show the question
+    return true;
+  };
+
   const handleCheckScope = async () => {
-    // Only require answers for visible questions
-    const visibleQuestions = questions.filter((question, index) => {
-      if (question.dependsOn) {
-        const depIndex = questions.findIndex(q =>
-          (q.key && q.key === question.dependsOn.key) ||
-          (q.question && q.question === question.dependsOn.key)
-        );
-        if (depIndex === -1) return false;
-        const depAnswer = assessmentDataState[`question_${depIndex}`];
-        if (depAnswer !== question.dependsOn.value) return false;
-      }
-      // Optionally, keep your previous logic for the last question
-      if (index === questions.length - 1 && !showLastQuestion) {
-        return false;
-      }
-      return true;
-    });
+    // Only validate visible questions
+    const visibleQuestions = questions.filter((q, idx) => shouldShowQuestion(q, idx));
 
     const missing = visibleQuestions.filter((q, idx) => {
       const answer = assessmentDataState[`question_${questions.indexOf(q)}`];
-      return typeof answer === 'undefined' || answer === null || answer === '';
+      return typeof answer === 'undefined' || answer === null || answer === '' || 
+             (Array.isArray(answer) && answer.length === 0);
     });
 
     if (missing.length > 0) {
@@ -218,45 +237,46 @@ const AcneScopeAssessment = ({
 
     setLocalLoading(true);
 
-    // Build scopeAnswers: include ALL questions, but for hidden ones, send empty string
+    // Build scopeAnswers with the exact structure needed
     const scopeAnswers = {};
     questions.forEach((q, idx) => {
-      let isVisible = true;
-      if (q.dependsOn) {
-        const depIndex = questions.findIndex(qq =>
-          (qq.key && qq.key === q.dependsOn.key) ||
-          (qq.question && qq.question === q.dependsOn.key)
-        );
-        if (depIndex === -1) isVisible = false;
-        const depAnswer = assessmentDataState[`question_${depIndex}`];
-        if (depAnswer !== q.dependsOn.value) isVisible = false;
-      }
-      // Optionally, keep your previous logic for the last question
-      if (idx === questions.length - 1 && !showLastQuestion) {
-        isVisible = false;
-      }
-      // If visible, use the answer; if not, send empty string
+      const isVisible = shouldShowQuestion(q, idx);
       let answer = isVisible ? assessmentDataState[`question_${idx}`] : '';
-      if (typeof answer === 'undefined' || answer === null) answer = '';
-      scopeAnswers[q.question] = answer;
+      
+      // Convert answers to lowercase
+      if (q.type === 'checkbox') {
+        // For checkbox, convert each array item to lowercase
+        answer = Array.isArray(answer) ? answer.map(item => item.toLowerCase()) : [];
+        scopeAnswers[q.question] = answer;
+      } else {
+        // For other types (button, text, etc), convert string to lowercase
+        answer = (typeof answer === 'string' ? answer.toLowerCase() : '');
+        scopeAnswers[q.question] = answer;
+      }
     });
 
     // Format DOB if not provided directly
     const formattedDob = dob || `${year_of_birth}-${month_of_birth}-${date_of_birth}`;
 
     const payload = {
-      reason: reason || '',
-      gender: gender || '',
-      scopeAnswers: scopeAnswers,
+   
+      scopeAnswers: scopeAnswers, // This will now contain all lowercase answers
+      reason: reason,
+      gender: gender,
       dob: formattedDob,
       appointmentNo: appointmentNo,
+      subdomainBimble: subdomain
     };
 
-    console.log('Payload with DOB:', payload);
+    console.log('Payload:', payload);
 
     try {
       const result = await dispatch(getScopeStatus(payload)).unwrap();
       
+      // Get the scope status from the result or use remarks
+      const scopeStatus = result?.scopeStatus || result?.status || remarks || 'In Scope';
+      console.log('Scope status:', scopeStatus);
+
       // Use the clinic and patientDetails from the component level
       const patient = {
         name: `${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''}${patientDetails?.gender ? '/' + (patientDetails.gender === 'M' ? 'Male' : 'Female') : ''}`,
@@ -282,42 +302,79 @@ const AcneScopeAssessment = ({
         answers: answersArr,
         assessmentResult: result?.assessmentResult || '',
         scopeStatus: result?.scopeStatus || '',
+        scopeStatusReason: result?.scopeStatusReason || '',
       });
 
       // Create PDF file
       const options = {
         html: htmlContent,
-        fileName: `Scope_Assessment_${patientDetails?.firstName || ''} ${patientDetails?.lastName || ''} ${new Date().toISOString().split("T")[0]}`,
+        fileName: `Scope_Assessment_${patientDetails?.firstName || ''}_${patientDetails?.lastName || ''}_${new Date().toISOString().split("T")[0]}.pdf`,
         directory: Platform.OS === 'android' ? 'Download' : 'Documents',
         base64: false
       };
 
       try {
         const file = await RNHTMLtoPDF.convert(options);
-        
-        // Open the PDF
+        console.log('PDF generated:', file);
+
+        // Validate and convert demographicNo to integer
+        const numericDemographicNo = parseInt(demographicNo, 10);
+        if (isNaN(numericDemographicNo)) {
+          console.error('Invalid demographicNo:', demographicNo);
+          Alert.alert('Warning', 'Invalid patient information format');
+          return;
+        }
+
+        // Log the parameters being sent
+        console.log('Saving PDF with params:', {
+          demographicNo: numericDemographicNo,
+          fileName: options.fileName,
+          filePath: file.filePath
+        });
+
+        // Save PDF to document storage
+        try {
+          const saveDocumentResponse = await dispatch(savePdfDocument({
+            demographicNo: numericDemographicNo, // Send as integer
+            pdfFile: {
+              uri: Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`,
+              name: options.fileName,
+              type: 'application/pdf'
+            }
+          })).unwrap();
+          
+          console.log('PDF saved to document storage:', saveDocumentResponse);
+        } catch (saveError) {
+          console.error('Error saving PDF to document storage:', saveError);
+          console.error('DemographicNo value:', numericDemographicNo);
+          Alert.alert('Warning', 'PDF generated but failed to save to document storage');
+        }
+
+        // Show the PDF regardless of save status
         await FileViewer.open(file.filePath, {
           showOpenWithDialog: true,
           onDismiss: () => {
             console.log('PDF viewer dismissed');
           }
         });
-      } catch (error) {
-        console.error('PDF generation error:', error);
-        Alert.alert('Error', 'Failed to generate PDF');
-      }
 
-      onSubmit && onSubmit({
-        result,
-        formattedPayload: {
-          reason: reason || '',
-          scopeAnswers: scopeAnswers,
-          gender: gender || '',
-          dob: formattedDob,
-          appointmentNo: ''
-        },
-        scopeStatus: result?.scopeStatus
-      });
+        // Continue with the existing onSubmit callback
+        onSubmit && onSubmit({
+          result,
+          formattedPayload: {
+            reason: reason || '',
+            scopeAnswers: scopeAnswers,
+            gender: gender || '',
+            dob: formattedDob,
+            appointmentNo: appointmentNo
+          },
+          scopeStatus: scopeStatus
+        });
+
+      } catch (pdfError) {
+        console.error('PDF generation or viewing error:', pdfError);
+        Alert.alert('Error', 'Failed to generate or view PDF');
+      }
 
     } catch (error) {
       console.error('Failed to get scope status:', error);
@@ -335,24 +392,6 @@ const AcneScopeAssessment = ({
         appointment?.date_of_birth
       );
 
-  const secondLastIndex = questions.length - 2;
-  const showLastQuestion = assessmentDataState[`question_${secondLastIndex}`] === 'Yes';
-
-  const generateAndOpenPdf = async () => {
-    try {
-      const fileName = `Scope_Assessment_${firstName}_${lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
-      const options = {
-        html: htmlContent,
-        fileName: fileName.replace('.pdf', ''),
-        directory: Platform.OS === 'android' ? 'Download' : 'Documents',
-      };
-      const file = await RNHTMLtoPDF.convert(options);
-      await FileViewer.open(file.filePath, { showOpenWithDialog: true });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to open PDF: ' + error.message);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <CustomHeader title=" Scope Assessment" />
@@ -360,19 +399,8 @@ const AcneScopeAssessment = ({
         {/* <Text style={styles.assessmentTitle}>Acne Scope Assessment</Text> */}
         
         {questions.map((question, index) => {
-          // Handle conditional rendering based on dependsOn
-          if (question.dependsOn) {
-            // Find the index of the dependency question
-            const depIndex = questions.findIndex(q =>
-              (q.key && q.key === question.dependsOn.key) ||
-              (q.question && q.question === question.dependsOn.key)
-            );
-            if (depIndex === -1) return null;
-            const depAnswer = assessmentDataState[`question_${depIndex}`];
-            if (depAnswer !== question.dependsOn.value) return null;
-          }
-          // Optionally, keep your previous logic for the last question
-          if (index === questions.length - 1 && !showLastQuestion) {
+          // Only render if the question should be shown
+          if (!shouldShowQuestion(question, index)) {
             return null;
           }
           return renderQuestion(question, index);

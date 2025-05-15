@@ -13,56 +13,86 @@ export function getFollowUpAssessmentHtml({
   logoBase64,
   reason
 }) {
-  // Format the header HTML with clinic and patient details
+  const isRefer = statusClass === 'refer';
+  
+  let logoHtml = '';
+  if (clinic?.logo) {
+    if (clinic.logo.startsWith('http://') || clinic.logo.startsWith('https://')) {
+      logoHtml = `<img src="${clinic.logo}" alt="Clinic Logo" style="max-width:80px; height:auto; border: 1px solid #ddd; padding: 5px;" />`;
+    } else {
+      logoHtml = `<img src="${MEDIA_URL}${clinic.logo}" alt="Clinic Logo" style="max-width:80px; height:auto; border: 1px solid #ddd; padding: 5px;" />`;
+    }
+  } else if (logoBase64) {
+    logoHtml = `<img src="data:image/png;base64,${logoBase64}" alt="Clinic Logo" style="max-width:80px; height:auto; border: 1px solid #ddd; padding: 5px;" />`;
+  }
+
   const headerHtml = `
     <table class="header-table">
       <tr>
         <td class="logo-cell">
-          ${clinic.logo ? `<img src="${clinic.logo}" alt="Clinic Logo" />` : ''}
+          ${logoHtml}
         </td>
         <td class="clinic-info-cell">
-          <div class="clinic-line clinic-name"><b>${clinic.clinicName || ''}</b></div>
-          <div class="clinic-line">${clinic.address || ''}</div>
-          <div class="clinic-line">${clinic.city || ''}</div>
-          <div class="clinic-line">${clinic.province || ''} ${clinic.postalCode || ''}</div>
-          <div class="clinic-line">Phone: ${clinic.phone || ''}${clinic.fax ? ' | Fax: ' + clinic.fax : ''}</div>
+          <div class="clinic-name">${clinic?.clinicName || ''}</div>
+          <div class="clinic-line">${clinic?.address || ''}</div>
+          <div class="clinic-line">${clinic?.city || ''}, ${clinic?.province || ''} ${clinic?.postalCode || ''}</div>
+          <div class="clinic-line">Phone: ${clinic?.phone || ''}${clinic?.fax ? ' | Fax: ' + clinic?.fax : ''}</div>
         </td>
         <td class="status-cell">
-          <div class="status-box ${statusClass}">
-            ${statusText}
-            <span class="status-date">${followUpDate}</span>
+          <div style="text-align: right;">
+            <div style="display: inline-block;">
+              <div style="
+                background: ${isRefer ? '#ff1a1a !important' : '#3b9437 !important'}; 
+                color: #FFFFFF; 
+                padding: 3px 8px; 
+                font-weight: bold; 
+                border-radius: 3px; 
+                font-size: 9pt; 
+                text-align: center; 
+                line-height: 1.1; 
+                min-width: 85px;
+                display: inline-block;
+                box-shadow: none;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              ">
+                ${isRefer ? 'Refer' : 'In Scope'}
+              </div>
+              <div style="
+                font-size: 7.5pt; 
+                font-weight: normal; 
+            
+                color: #000000;
+                text-align: center;
+              ">
+                ${followUpDate}
+              </div>
+            </div>
           </div>
         </td>
       </tr>
     </table>
+  `;
+
+  const patientInfoHtml = `
     <div class="patient-info">
-      <b>${patient?.firstName || ''} ${patient?.lastName || ''}${patient?.gender ? '/' + (patient.gender === 'M' ? 'Male' : 'Female') : ''}</b>
-      <span>DOB: ${patient?.dob || 'N/A'}${patient?.ageString ? ` (${patient.ageString})` : ''}</span>
-      <span>PHN: ${patient?.phn || 'N/A'}</span>
-      <span>Reason of Appointment: ${reason || patient?.reason || 'N/A'}</span>
-      <span>Address: ${[
-        patient?.address,
-        patient?.city,
-        patient?.province,
-        patient?.postalCode
-      ].filter(Boolean).join(', ')}</span>
+      <div class="patient-name">${patient.name || ''}</div>
+      <div class="patient-details">DOB: ${patient.dob || ''}</div>
+      <div class="patient-details">PHN: ${patient.phn || ''}</div>
+      ${patient.address ? `<div class="patient-details">Address: ${patient.address}</div>` : ''}
+      <div class="patient-details">Reason of Appointment: ${patient.reason || ''}</div>
     </div>
   `;
 
-  // Format the assessment table
   const tableHtml = `
-    <table class="assessment-table">
-      <tbody>
-        ${questions.map((question, index) => `
-          <tr>
-            <td colspan="2" class="question-cell"><b>${question}</b></td>
-          </tr>
-          <tr>
-            <td colspan="2" class="answer-cell">${answers[index] || 'N/A'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
+    <div class="assessment-content">
+      ${questions.map((question, index) => `
+        <div class="qa-section">
+          <div class="question">${question}</div>
+          <div class="answer">${answers[index] || ''}</div>
+        </div>
+      `).join('')}
+    </div>
   `;
 
   return `
@@ -73,144 +103,107 @@ export function getFollowUpAssessmentHtml({
     <style>
       @page {
         size: letter;
-        margin: 0.7in;
+        margin: 0.3in;
       }
       body {
-        font-family: Helvetica, Arial, sans-serif;
-        font-size: 9pt;
-        line-height: 1.2;
-        color: #222222;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        color: #333;
+        line-height: 1.4;
       }
-      table.header-table {
+      .header-table {
         width: 100%;
         border-collapse: collapse;
-        border-bottom: 1px solid #E0E0E0;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
-      td.logo-cell {
+      .logo-cell {
         width: 90px;
         vertical-align: top;
-        padding: 0 10px 0 0;
+        padding: 0 15px 15px 0;
       }
-      td.logo-cell img {
+      .logo-cell img {
         max-width: 80px;
-        max-height: 80px;
-        vertical-align: top;
+        height: auto;
+        border: 1px solid #ddd;
+        padding: 5px;
       }
-      td.clinic-info-cell {
+      .clinic-info-cell {
         vertical-align: top;
-        text-align: left;
-        font-size: 11pt;
-        color: #222;
-        padding: 0 10px 0 0;
-        line-height: 1.0;
-      margin-bottom: 5px;
-      }
-      .clinic-line {
-        margin-bottom: 5px;
+        padding: 0;
       }
       .clinic-name {
-        font-size: 13pt;
+        font-size: 14px;
         font-weight: bold;
+        margin-bottom: 3px;
+      }
+      .clinic-line {
+        font-size: 11px;
+        line-height: 1.3;
+        color: #000;
+      }
+      .status-cell {
+        width: 85px;
+        vertical-align: top;
+        text-align: right;
+        padding: 0;
+      }
+      
+      .patient-info {
+        margin: 4px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+      }
+      
+      .patient-name {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 2px;
+        color: #000;
+      }
+      
+      .patient-details {
+        font-size: 12px;
+        margin-bottom: 4px;
+        color: #000;
+      }
+      
+      .assessment-content {
+        margin-top: 10px;
+      }
+      
+      .qa-section {
+        margin-bottom: 0;
+        border-top: 1px solid #eee;
+        padding: 8px 0;
+      }
+      
+      .question {
+        font-size: 11px;
+        font-weight: normal;
         color: #000;
         margin-bottom: 4px;
       }
-               td.status-cell {
-                width: 85px; /* Keep status width */
-                // text-align: right;
-                vertical-align: top;
-                border: none;
-                padding: 0 0 2px 0; /* Reduced bottom padding */
-            }
-            /* Status Box Styles (Keep as before) */
-            .status-box {
-              border: 1px solid;
-              padding: 3px 5px;
-              color: white;
-              font-weight: bold;
-              border-radius: 3px;
-              background-color: #888888;
-              font-size: 9pt;
-              text-align: center;
-              line-height: 1.1;
-              display: inline-block;
-              margin-top: 0;
-              box-sizing: border-box;
-            }
-            .status-box span.status-date {
-              display: block;
-              font-size: 7.5pt;
-              font-weight: normal;
-              margin-top: 1px;
-              color: black;
-              background-color: transparent;
-            }
-            .status-box.refer {
-              border-color: #A00000;
-              background-color: #D9534F;
-            }
-            .status-box.inscope {
-              border-color: #006400;
-              background-color: #5CB85C;
-              color: white;
-            }
-      .status-date {
-        display: block;
-        font-size: 9pt;
-        font-weight: normal;
-        color: #222;
-        background: none;
-        margin-top: 2px;
-      }
-      .patient-info {
-        margin: 10px 0;
-        padding: 5px 0;
-      }
-      .patient-info b {
-        font-size: 10.5pt;
-        font-weight: bold;
-        display: block;
-        margin-bottom: 2px;
-      }
-      .patient-info span {
-        display: block;
-        margin-bottom: 1px;
-        font-size: 9pt;
-      }
-      table.assessment-table {
-        width: 100%;
-        border-collapse: collapse;
       
+      .answer {
+        font-size: 11px;
+        color: #000;
+        margin-left: 0;
       }
-      .assessment-table td {
-        border: none;
-     
-        font-size: 11pt;
-        vertical-align: top;
-      }
-      .question-cell {
-        font-weight: bold;
-        background: #fff;
-        border-top: 1px solid #ccc;
-        color: #666;
-       font-weight: bold;
-      }
-      .answer-cell {
-        color: #222;
-        padding-bottom: 2px;
-        padding-left: 8px;
-      }
+      
       .footer {
-        margin-top: 5px;
+        margin-top: 10px;
         text-align: center;
-        font-size: 8pt;
+        font-size: 12px;
         color: #666;
+        font-style: italic;
       }
     </style>
-    <title>Follow-up Assessment Report</title>
   </head>
   <body>
     ${headerHtml}
+    ${patientInfoHtml}
     ${tableHtml}
     <div class="footer">
       This follow-up assessment was completed electronically.

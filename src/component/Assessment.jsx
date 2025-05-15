@@ -11,11 +11,26 @@ import {
   StatusBar,
   Platform,
   Dimensions,
+  Alert,
 } from 'react-native';
 import CustomHeader from './CustomHeader';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAssessmentQuestions } from '../Redux/Slices/GenerateAssessmentslice';
+import { getScopeStatus } from '../Redux/Slices/GenerateAssessmentSlice';
 
 const { width, height } = Dimensions.get('window');
+
+const isReferralQuestion = (question, answer) => {
+  if (!question.note) return false;
+  if (answer === 'Yes' && question.note.includes("'Yes' will Refer")) return true;
+  if (answer === 'No' && question.note.includes("'No' will Refer")) return true;
+  if (question.type === 'checkbox' && 
+      question.note.includes("any option other than 'Face'") && 
+      answer.length > 0 && 
+      !answer.includes('Face')) return true;
+  return false;
+};
 
 const Assessment = ({ route, navigation }) => {
   const {
@@ -24,130 +39,67 @@ const Assessment = ({ route, navigation }) => {
     appointmentReason,
     appointmentDesc,
     appointmentDate,
-    chatType
+    chatType,
+    gender,
+    age
   } = route.params;
 
+  const dispatch = useDispatch();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [error, setError] = useState('');
-  const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
 
-  // Function to generate questions based on appointment reason
-  const generateQuestionsForCondition = (condition) => {
-    const baseQuestions = {
-      'RAI': [
-        {
-          id: 1,
-          question: "Besides the initial symptoms, have you developed any new symptoms in the last few days?",
-          type: "multiple",
-          options: [
-            "No new symptoms",
-            "Ear pain or pressure",
-            "Chest pain or difficulty breathing",
-            "High fever (above 102°F/39°C)",
-            "Severe headache",
-            "Other"
-          ]
-        },
-        {
-          id: 2,
-          question: "What is your most prominent symptom currently?",
-          type: "multiple",
-          options: [
-            "Runny or blocked nose",
-            "Sore throat",
-            "Persistent cough",
-            "High fever",
-            "Body aches",
-            "Other"
-          ]
-        },
-        {
-          id: 3,
-          question: "When did your symptoms first appear?",
-          type: "multiple",
-          options: [
-            "Within the last 24 hours",
-            "2-3 days ago",
-            "4-7 days ago",
-            "More than a week ago",
-            "More than two weeks ago",
-            "Other"
-          ]
-        }
-      ],
-      'default': [
-        {
-          id: 1,
-          question: "How would you rate the severity of your symptoms?",
-          type: "multiple",
-          options: [
-            "Mild - barely noticeable",
-            "Moderate - noticeable but manageable",
-            "Severe - affecting daily activities",
-            "Very severe - cannot perform normal activities",
-            "Other"
-          ]
-        }
-      ]
+  // Get questions from Redux store
+  const { questions, questionsLoading, questionsError } = useSelector(
+    (state) => state.generateAssessment
+  );
+
+  // Fetch questions when component mounts
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        await dispatch(fetchAssessmentQuestions({
+          condition: appointmentReason,
+          gender,
+          age
+        })).unwrap();
+      } catch (error) {
+        setError('Failed to load questions');
+      }
     };
 
-    // Common questions for all conditions
-    const commonQuestions = [
-      {
-        id: 6,
-        question: "Have you taken any medications for these symptoms?",
-        type: "multiple",
-        options: [
-          "No medications taken",
-          "Over-the-counter pain relievers",
-          "Prescribed medications",
-          "Home remedies",
-          "Traditional medicines",
-          "Other"
-        ]
-      },
-      {
-        id: 7,
-        question: "How are your symptoms affecting your daily activities?",
-        type: "multiple",
-        options: [
-          "No effect on daily activities",
-          "Mild interference with work/study",
-          "Difficulty sleeping",
-          "Unable to work/study",
-          "Requiring bed rest",
-          "Other"
-        ]
-      }
-    ];
+    fetchQuestions();
+  }, [appointmentReason, gender, age, dispatch]);
 
-    // Get condition-specific questions or default questions
-    const conditionQuestions = baseQuestions[condition] || baseQuestions['default'];
-    return [...conditionQuestions, ...commonQuestions];
-  };
-
-  useEffect(() => {
-    try {
-      const reason = appointmentReason?.trim() || '';
-      const generatedQuestions = generateQuestionsForCondition(reason);
-      if (Array.isArray(generatedQuestions) && generatedQuestions.length > 0) {
-        setQuestions(generatedQuestions);
-      } else {
-        setQuestions([]);
-        setError('No questions available for this condition');
+  const handleAnswer = (questionId, answer) => {
+    setError('');
+    const question = questions.find(q => q.question === questionId);
+    
+    // Check if this answer should trigger a referral
+    if (question?.note) {
+      if (
+        (answer === 'Yes' && question.note.includes("'Yes' will Refer")) ||
+        (answer === 'No' && question.note.includes("'No' will Refer")) ||
+        (question.type === 'checkbox' && 
+         question.note.includes("any option other than 'Face'") && 
+         !answer.includes('Face'))
+      ) {
+        Alert.alert(
+          'Referral Required',
+          'Based on your answer, this condition requires a referral to a healthcare provider.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+        return;
       }
-    } catch (err) {
-      console.error('Error generating questions:', err);
-      setQuestions([]);
-      setError('Error generating questions');
-    } finally {
-      setLoading(false);
     }
-  }, [appointmentReason]);
+
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: answer
+    }));
+  };
 
   const isCurrentQuestionAnswered = () => {
     if (!questions || !questions[currentQuestionIndex]) {
@@ -155,32 +107,39 @@ const Assessment = ({ route, navigation }) => {
     }
 
     const currentQuestion = questions[currentQuestionIndex];
-    const currentAnswer = answers[currentQuestion.id];
+    const currentAnswer = answers[currentQuestion.question];
 
+    // If the question is optional, always return true
+    if (currentQuestion.optional === true) {
+      return true;
+    }
+
+    // If it's a dependent question and dependency is not met, return true
+    if (currentQuestion.dependsOn) {
+      const dependentAnswer = answers[currentQuestion.dependsOn.questionId];
+      if (dependentAnswer !== currentQuestion.dependsOn.answer) {
+        return true;
+      }
+    }
+
+    // Check answer based on question type
     switch (currentQuestion.type) {
       case 'text':
-        return currentAnswer && currentAnswer.trim().length > 0;
+        return Boolean(currentAnswer && currentAnswer.trim().length > 0);
       case 'scale':
         return typeof currentAnswer !== 'undefined';
       case 'boolean':
         return typeof currentAnswer !== 'undefined';
       case 'multiple':
-        return Array.isArray(currentAnswer) && currentAnswer.length > 0;
+        return Array.isArray(currentAnswer) ? currentAnswer.length > 0 : Boolean(currentAnswer);
       default:
-        return false;
+        return true;
     }
-  };
-
-  const handleAnswer = (questionId, answer) => {
-    setError('');
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: answer
-    }));
   };
 
   const handleNavigation = async (direction) => {
     if (direction === 'next') {
+      // Check if current question needs to be answered
       if (!isCurrentQuestionAnswered()) {
         setError('Please answer the question before proceeding');
         return;
@@ -189,9 +148,27 @@ const Assessment = ({ route, navigation }) => {
       if (currentQuestionIndex === questions.length - 1) {
         try {
           setIsSubmitting(true);
-          console.log('Assessment answers:', answers);
-          // Simulate API call with setTimeout
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Prepare answers for submission
+          const finalAnswers = {};
+          questions.forEach((q) => {
+            // For optional questions or questions with unmet dependencies, use empty string
+            if (q.optional || (q.dependsOn && !shouldShowQuestion(q))) {
+              finalAnswers[q.question] = '';
+            } else {
+              finalAnswers[q.question] = answers[q.question] || '';
+            }
+          });
+
+          // Submit assessment
+          await dispatch(getScopeStatus({
+            reason: appointmentReason,
+            gender,
+            scopeAnswers: finalAnswers,
+            dob: appointmentDate,
+            appointmentNo: patientId
+          })).unwrap();
+
           navigation.goBack();
         } catch (error) {
           setError('Failed to submit assessment');
@@ -199,11 +176,19 @@ const Assessment = ({ route, navigation }) => {
           setIsSubmitting(false);
         }
       } else {
-        setCurrentQuestionIndex(prev => prev + 1);
+        let nextIndex = currentQuestionIndex + 1;
+        while (nextIndex < questions.length && !shouldShowQuestion(questions[nextIndex])) {
+          nextIndex++;
+        }
+        setCurrentQuestionIndex(nextIndex);
         setError('');
       }
     } else {
-      setCurrentQuestionIndex(prev => prev - 1);
+      let prevIndex = currentQuestionIndex - 1;
+      while (prevIndex >= 0 && !shouldShowQuestion(questions[prevIndex])) {
+        prevIndex--;
+      }
+      setCurrentQuestionIndex(prevIndex);
       setError('');
     }
   };
@@ -224,95 +209,81 @@ const Assessment = ({ route, navigation }) => {
     return null;
   };
 
-  const renderQuestion = (question) => {
-    switch (question.type) {
-      case 'text':
-        return (
-          <TextInput
-            style={styles.input}
-            placeholder="Type your answer here"
-            multiline
-            value={answers[question.id] || ''}
-            onChangeText={(text) => handleAnswer(question.id, text)}
-          />
-        );
+  const shouldShowQuestion = (question, index) => {
+    // For the first question, always show
+    if (index === 0) return true;
 
-      case 'scale':
-        return (
-          <View style={styles.scaleContainer}>
-            {question.options.map((option) => (
-              <TouchableOpacity
-                key={option}
-                style={[
-                  styles.scaleButton,
-                  answers[question.id] === option && styles.selectedScale
-                ]}
-                onPress={() => handleAnswer(question.id, option)}
-              >
-                <Text style={styles.scaleText}>{option}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        );
+    // Get previous question's answer
+    const prevQuestion = questions[index - 1];
+    const prevAnswer = answers[prevQuestion.question];
 
-      case 'boolean':
-        return (
-          
-          <View style={styles.booleanContainer}>
-            {question.options.map((option) => (
-              <TouchableOpacity
-                key={option}
-                style={[
-                  styles.booleanButton,
-                  answers[question.id] === option && styles.selectedBoolean
-                ]}
-                onPress={() => handleAnswer(question.id, option)}
-              >
-                <Text style={styles.booleanText}>{option}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        );
+    // If previous question wasn't answered or was answered 'No', don't show this question
+    if (!prevAnswer || prevAnswer === 'No') return false;
 
-      case 'multiple':
-        return (
-          <View>
-            <View style={styles.multipleContainer}>
-              {question.options.map((option) => {
-                const isSelected = (answers[question.id] || []).includes(option);
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    style={[
-                      styles.multipleButton,
-                      isSelected && styles.selectedMultiple
-                    ]}
-                    onPress={() => {
-                      handleAnswer(question.id, [option]);
-                      if (option === "Other") {
-                        setShowOtherInput(true);
-                      } else {
-                        setShowOtherInput(false);
-                      }
-                    }}
-                  >
-                    <View style={styles.radioOuter}>
-                      {isSelected && <View style={styles.radioInner} />}
-                    </View>
-                    <Text style={[
-                      styles.multipleText,
-                      isSelected && styles.selectedMultipleText
-                    ]}>
-                      {option}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {renderOtherInput(question.id)}
-          </View>
-        );
+    // For checkbox type questions, check if Face was selected
+    if (prevQuestion.type === 'checkbox' && 
+        prevQuestion.note?.includes("'Face'")) {
+      return prevAnswer.includes('Face');
     }
+
+    return true;
+  };
+
+  const renderQuestion = (question) => {
+    return (
+      <View style={styles.questionContainer} key={question.question}>
+        <Text style={styles.questionText}>{question.question}</Text>
+        {question.note && (
+          <Text style={styles.noteText}>{question.note}</Text>
+        )}
+        {question.type === 'button' && (
+          <View style={styles.buttonGroup}>
+            {question.options.map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.button,
+                  answers[question.question] === option && styles.selectedButton
+                ]}
+                onPress={() => handleAnswer(question.question, option)}
+              >
+                <Text style={[
+                  styles.buttonText,
+                  answers[question.question] === option && styles.selectedButtonText
+                ]}>
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+        {question.type === 'checkbox' && (
+          <View style={styles.checkboxGroup}>
+            {question.options.map((option) => {
+              const isSelected = (answers[question.question] || []).includes(option);
+              return (
+                <TouchableOpacity
+                  key={option}
+                  style={styles.checkboxRow}
+                  onPress={() => {
+                    const currentAnswers = answers[question.question] || [];
+                    const newAnswers = isSelected
+                      ? currentAnswers.filter(a => a !== option)
+                      : [...currentAnswers, option];
+                    handleAnswer(question.question, newAnswers);
+                  }}
+                >
+                  <View style={[styles.checkbox, isSelected && styles.selectedCheckbox]}>
+                    {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.checkboxText}>{option}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+      </View>
+    );
   };
 
   const renderHeader = () => (
@@ -332,22 +303,69 @@ const Assessment = ({ route, navigation }) => {
     </View>
   );
 
-  const renderQuestionSection = (question) => (
-    <View style={styles.questionSection}>
-      <View style={styles.questionHeader}>
-        <Text style={styles.doctorLabel}>Dr's Question:</Text>
-        <Text style={styles.questionNumber}>
-          {currentQuestionIndex + 1} of {questions.length}
+  const renderQuestionSection = (question) => {
+    if (!question || !shouldShowQuestion(question, currentQuestionIndex)) {
+      return null;
+    }
+
+    return (
+      <View style={styles.questionSection}>
+        <View style={styles.questionHeader}>
+          <Text style={styles.doctorLabel}>Dr's Question:</Text>
+          <Text style={styles.questionNumber}>
+            {currentQuestionIndex + 1} of {questions.length}
+          </Text>
+        </View>
+        <Text style={styles.questionText}>
+          {question.question || 'No question available'}
         </Text>
+        <Text style={styles.patientLabel}>Your Answer:</Text>
+        {renderQuestion(question)}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
-      <Text style={styles.questionText}>
-        {question?.question || 'No question available'}
-      </Text>
-      <Text style={styles.patientLabel}>Your Answer:</Text>
-      {renderQuestion(question)}
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </View>
-  );
+    );
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      // Format answers for API
+      const scopeAnswers = {};
+      questions.forEach(question => {
+        // Initialize with empty string
+        scopeAnswers[question.question] = '';
+        
+        // If answer exists, format it properly
+        if (answers[question.question]) {
+          if (question.type === 'checkbox') {
+            scopeAnswers[question.question] = answers[question.question].join(', ');
+          } else {
+            scopeAnswers[question.question] = answers[question.question];
+          }
+        }
+      });
+
+      console.log('Submitting answers:', scopeAnswers);
+
+      const result = await dispatch(getScopeStatus({
+        reason: appointmentReason,
+        gender,
+        scopeAnswers,
+        dob: appointmentDate,
+        appointmentNo: patientId
+      })).unwrap();
+
+      if (result) {
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      Alert.alert('Error', 'Failed to submit assessment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -363,10 +381,14 @@ const Assessment = ({ route, navigation }) => {
       />
       
       <View style={styles.mainContainer}>
-        {loading ? (
+        {questionsLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#0049F8" />
-            <Text style={styles.loadingText}>Preparing doctor's questions...</Text>
+            <Text style={styles.loadingText}>Loading questions...</Text>
+          </View>
+        ) : questionsError ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{questionsError}</Text>
           </View>
         ) : questions.length > 0 ? (
           <KeyboardAwareScrollView
@@ -393,7 +415,7 @@ const Assessment = ({ route, navigation }) => {
           </View>
         )}
 
-        {!loading && questions.length > 0 && (
+        {!questionsLoading && questions.length > 0 && (
           <View style={styles.navigationButtonsContainer}>
             <View style={styles.navigationButtons}>
               <TouchableOpacity
@@ -565,11 +587,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Product Sans Regular',
   },
   questionText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#191919',
-    marginBottom: 16,
-    fontFamily: 'Product Sans Regular',
-    lineHeight: 24,
+    marginBottom: 8,
+    fontWeight: '500',
   },
   input: {
     borderWidth: 1,
@@ -683,7 +704,16 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   submitButton: {
-    backgroundColor: '#00A811',
+    backgroundColor: '#4CAF50',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   navButtonText: {
     color: '#fff',
@@ -692,8 +722,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#FF3B30',
-    fontSize: 14,
-    marginTop: 8,
+    fontSize: 16,
+    textAlign: 'center',
     fontFamily: 'Product Sans Regular',
   },
   loadingContainer: {
@@ -721,6 +751,74 @@ const styles = StyleSheet.create({
     minHeight: 40,
     backgroundColor: '#FFFFFF',
     maxHeight: 100,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noteText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  selectedButton: {
+    backgroundColor: '#0049F8',
+    borderColor: '#0049F8',
+  },
+  buttonText: {
+    fontSize: 14,
+    color: '#191919',
+  },
+  selectedButtonText: {
+    color: '#fff',
+  },
+  checkboxGroup: {
+    marginTop: 8,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedCheckbox: {
+    backgroundColor: '#0049F8',
+    borderColor: '#0049F8',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  checkboxText: {
+    fontSize: 14,
+    color: '#191919',
+    flex: 1,
   },
 });
 

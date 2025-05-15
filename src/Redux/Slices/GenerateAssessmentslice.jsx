@@ -55,17 +55,47 @@ export const generateScopeAssessment = createAsyncThunk(
     }
 );
 
+export const fetchAssessmentQuestions = createAsyncThunk(
+  'assessment/fetchQuestions',
+  async ({ condition, gender, age }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/appointment/getAssessmentQuestions/', {
+        condition,
+        gender,
+        age
+      });
+
+      // Ensure the response has the expected structure
+      if (response.data?.status === 'Success' && Array.isArray(response.data?.data)) {
+        return response.data.data;
+      }
+
+      throw new Error('Invalid response format');
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 export const getScopeStatus = createAsyncThunk(
   'appointment/getScopeStatus',
   async (params, { rejectWithValue }) => {
-    console.log('getScopeStatus params:', params);
     try {
-      const response = await axiosInstance.post('/appointment/getScopeStatus/', params);
+      // No need to clean the scopeAnswers as they're already in correct format
+      const response = await axiosInstance.post('/appointment/getScopeStatusByPatient/', {
+        subdomainBimble: params.subdomainBimble,
+        scopeAnswers: params.scopeAnswers,
+        reason: params.reason,
+        gender: params.gender,
+        dob: params.dob,
+        appointmentNo: params.appointmentNo
+      });
+
       console.log('getScopeStatus response:', response.data);
       return response.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to get scope status';
-      return rejectWithValue(errorMessage);
+      console.error('getScopeStatus error:', error);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
