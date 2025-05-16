@@ -71,5 +71,9 @@
 		<string>SimpleLineIcons.ttf</string>
 		<string>Zocial.ttf</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to save PDFs to your device.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires access to save PDFs to your device.</string>
 </dict>
 </plist>

@@ -1,6 +1,7 @@
 // src/Redux/Slices/SoapNotesSlice.js
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axiosInstance from '../../Api/AxiosInstance';
+import Appointment from '../../component/Appointment';
 
 export const fetchSoapNotes = createAsyncThunk(
   'soapNotes/fetchSoapNotes',
@@ -18,14 +19,23 @@ export const fetchSoapNotes = createAsyncThunk(
 
 export const savePdfDocument = createAsyncThunk(
   'soapNotes/savePdfDocument',
-  async ({ demographicNo, pdfFile }, { rejectWithValue }) => {
+  async ({ demographicNo, appointmentNo, pdfFile }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-      formData.append('data', JSON.stringify({ demographicNo }));
+      formData.append('data', JSON.stringify({ 
+        demographicNo,
+        appointmentNo
+      }));
       formData.append('pdfFile', {
         uri: pdfFile.uri,
         name: pdfFile.name,
         type: 'application/pdf',
+      });
+
+      console.log('[DEBUG] Sending form data:', {
+        demographicNo,
+        appointmentNo,
+        fileName: pdfFile.name
       });
 
       const response = await axiosInstance.post(
@@ -37,9 +47,10 @@ export const savePdfDocument = createAsyncThunk(
           },
         }
       );
-      console.log (response.data,'document')
+      console.log(response.data, 'document');
       return response.data;
     } catch (error) {
+      console.error('[DEBUG] Save document error:', error);
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }

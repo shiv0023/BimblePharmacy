@@ -9,9 +9,10 @@ export const fetchSubdomains = createAsyncThunk(
     try {
       // console.log('Fetching subdomains...'); 
       // Based on the error message, the correct path should be under authentication
+      console.log('pressi')
       const response = await axiosInstance.get('/authentication/fetchAllEntitiesSubdomains/');
-      
-      // console.log('Raw Response:', response); 
+      console.log(response,"res")
+;      // console.log('Raw Response:', response); 
       console.log('response', response.data); 
       
       if (!response.data) {

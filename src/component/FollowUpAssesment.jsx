@@ -52,6 +52,7 @@ console.log(clinicDetails,'hello')
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -132,6 +133,8 @@ console.log(clinicDetails,'hello')
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true);
+      
       const answersArray = Object.entries(answers).map(([index, answer]) => ({
         questionId: parseInt(index) + 1,
         answer: answer
@@ -193,30 +196,27 @@ console.log(clinicDetails,'hello')
 
       const file = await RNHTMLtoPDF.convert(options);
       
-      // Get and validate demographicNo
+      // Get and validate both numbers
       const numericDemographicNo = parseInt(route.params?.demographicNo, 10);
-      if (isNaN(numericDemographicNo)) {
-        console.error('Invalid demographicNo:', route.params?.demographicNo);
-        Alert.alert('Warning', 'Invalid patient information format');
-        return;
-      }
+      const numericAppointmentNo = parseInt(route.params?.appointmentNo, 10);
+
+      console.log('[DEBUG] Save document values:', {
+        demographicNo: numericDemographicNo,
+        appointmentNo: numericAppointmentNo
+      });
 
       // Save PDF to document storage
-      try {
-        const saveDocumentResponse = await dispatch(savePdfDocument({
-          demographicNo: numericDemographicNo,
-          pdfFile: {
-            uri: Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`,
-            name: options.fileName,
-            type: 'application/pdf'
-          }
-        })).unwrap();
-        
-        console.log('PDF saved to document storage:', saveDocumentResponse);
-      } catch (saveError) {
-        console.error('Error saving PDF to document storage:', saveError);
-        Alert.alert('Warning', 'PDF generated but failed to save to document storage');
-      }
+      const saveDocumentResponse = await dispatch(savePdfDocument({
+        demographicNo: numericDemographicNo,
+        appointmentNo: numericAppointmentNo,
+        pdfFile: {
+          uri: Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`,
+          name: options.fileName,
+          type: 'application/pdf'
+        }
+      })).unwrap();
+      
+      console.log('[DEBUG] PDF saved to document storage:', saveDocumentResponse);
 
       // Show the PDF regardless of save status
       await FileViewer.open(file.filePath, {
@@ -241,6 +241,8 @@ console.log(clinicDetails,'hello')
     } catch (error) {
       console.error('Submit error:', error);
       Alert.alert('Error', 'Failed to submit assessment');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -330,11 +332,19 @@ console.log(clinicDetails,'hello')
 
           {currentQuestionIndex === questions.length - 1 ? (
             <TouchableOpacity 
-              style={[styles.navButton, styles.submitButton]}
+              style={[
+                styles.navButton,
+                styles.submitButton,
+                isLoading && styles.disabledButton
+              ]}
               onPress={handleSubmit}
-              disabled={!answers[currentQuestionIndex]}
+              disabled={isLoading}
             >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
               <Text style={styles.submitButtonText}>Submit</Text>
+              )}
             </TouchableOpacity>
           ) : (
             <TouchableOpacity 

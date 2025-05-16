@@ -17,6 +17,7 @@ export const loginUser = createAsyncThunk(
         '/authentication/loginEntity/',
         requestedData
       );
+       console.log(response,"response");
      await AsyncStorage.setItem("auth_tokens",response.data.access_token)
    const myAcesssToken=  await AsyncStorage.getItem("auth_tokens")
 

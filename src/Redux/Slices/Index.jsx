@@ -9,6 +9,7 @@ import generateAssessmentReducer from './GenerateAssessmentslice';
 import followupAssessmentReducer from './FollowUpAssessmentSlice';
 import medicationReducer from './MedicationlistSlice';
 import soapNotesReducer from './SoapNotesSlice';
+import parPdfReducer from './ParPdfSlices';
 
 const rootReducer = combineReducers({
   user: AuthReducer,
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   followupAssessment: followupAssessmentReducer,
   medication: medicationReducer,
   soapNotes: soapNotesReducer,
+  parPdf: parPdfReducer,
 });
 
 export default rootReducer;

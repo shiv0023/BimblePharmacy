@@ -53,6 +53,7 @@ export function getFollowUpAssessmentHtml({
                 min-width: 85px;
                 display: inline-block;
                 box-shadow: none;
+                margin-left:20px;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
               ">
@@ -110,12 +111,14 @@ export function getFollowUpAssessmentHtml({
         margin: 0;
         padding: 0;
         color: #333;
-        line-height: 1.4;
+        
       }
       .header-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 4px;
+        margin-top: 10px;
+        padding:20px;
+        margin:20px;
       }
       .logo-cell {
         width: 90px;
@@ -139,7 +142,7 @@ export function getFollowUpAssessmentHtml({
       }
       .clinic-line {
         font-size: 11px;
-        line-height: 1.3;
+        
         color: #000;
       }
       .status-cell {
@@ -150,8 +153,8 @@ export function getFollowUpAssessmentHtml({
       }
       
       .patient-info {
-        margin: 4px 0;
-        padding: 15px;
+       
+        padding: 20px;
         background-color: #f8f9fa;
         border-radius: 4px;
       }
@@ -159,18 +162,19 @@ export function getFollowUpAssessmentHtml({
       .patient-name {
         font-size: 14px;
         font-weight: bold;
-        margin-bottom: 2px;
+
         color: #000;
       }
       
       .patient-details {
         font-size: 12px;
-        margin-bottom: 4px;
+   
         color: #000;
       }
       
       .assessment-content {
-        margin-top: 10px;
+     
+        padding:20px;
       }
       
       .qa-section {
