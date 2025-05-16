@@ -52,7 +52,7 @@ export default function Login({navigation}) {
 
   const clinicData = useSelector(state => state?.auth?.clinic?.data || []);
   const isLoadingClinic = useSelector(state => state?.auth?.clinic?.loading || false);
-
+  
   // Memoize filtered suggestions
   const filteredSuggestions = useMemo(() => {
     if (!clinicData || !Array.isArray(clinicData)) return [];
@@ -144,18 +144,18 @@ export default function Login({navigation}) {
     setIsLoading(true);
     try {
       const credentials = {
-        subdomainBimble: subdomainBimble.trim(),
-        username: username.trim(),
-        password: password.trim(),
-        pin: pin.trim()
+        subdomainBimble: '123Virtual1.bimble.pro',
+        username: "oscardoc",
+        password:"Orange123",
+        pin: 1117
       };
-
+console.log(credentials,"credentials");
       const response = await dispatch(loginUser({ requestedData: credentials })).unwrap();
 
       await AsyncStorage.setItem('auth_token', response.access_token);
 
       if (rememberMe) {
-        await AsyncStorage.setItem(
+        await AsyncSorage.setItem(
           'userCredentials',
           JSON.stringify({
             ...credentials,
