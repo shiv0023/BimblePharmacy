@@ -51,6 +51,11 @@ const SoapNotes = ({ route, navigation }) =>{
 console.log (parPdfData,'par pdf ')
   const HIGHLIGHT = 'highlight';
   const [isParPdf, setIsParPdf] = useState(false);
+  const [pdfPath, setPdfPath] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPDF, setShowPDF] = useState(false);
+  const [pdfData, setPdfData] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fallback if reason is missing
   const safeReason = reason || 'General'; // or any default value your API accepts
@@ -82,7 +87,15 @@ console.log (parPdfData,'par pdf ')
 
   // Add this useEffect for PDFTron initialization
   useEffect(() => {
-    RNPdftron.initialize("");  // Add your license key if you have one
+    const initPDFTron = async () => {
+      try {
+        await RNPdftron.initialize("");
+        console.log('PDFTron initialized successfully');
+      } catch (error) {
+        console.error('PDFTron initialization failed:', error);
+      }
+    };
+    initPDFTron();
   }, []);
 
   useEffect(() => {
@@ -142,6 +155,7 @@ console.log (parPdfData,'par pdf ')
       console.log('API Response:', response);
       console.log('Response data:', response.data);
       console.log('PDF data:', response.data?.pdf || response.data?.data);
+      console.log('Base64 data length:', response?.data?.data?.length);
 
       if (response.data.status === 'Success' && response.data.pdf) {
         setIsParPdf(false);
@@ -204,6 +218,14 @@ console.log (parPdfData,'par pdf ')
         throw new Error('File was not created successfully');
       }
 
+      console.log('File path:', filePath);
+      try {
+        const exists = await RNPdftron.fileExists(filePath);
+        console.log('File exists:', exists);
+      } catch (error) {
+        console.error('Error checking file:', error);
+      }
+
     } catch (error) {
       console.error('PDF Download error:', error);
       Alert.alert('Error', `Failed to download PDF: ${error.message}`);
@@ -214,37 +236,30 @@ console.log (parPdfData,'par pdf ')
   const handleGenerateParPdf = async () => {
     try {
       setParPdfLoading(true);
-      console.log("iam here inside pdf")
-      // Get and validate parameters early
-      const { demographicNo, appointmentNo } = route.params;
+      console.log("Generating PAR PDF...");
       
-      // Convert to integers early
+      const { demographicNo, appointmentNo } = route.params;
       const demographicNoInt = parseInt(demographicNo, 10);
       const appointmentNoInt = parseInt(appointmentNo, 10);
 
-      // Validate the conversions
       if (isNaN(demographicNoInt) || isNaN(appointmentNoInt)) {
         throw new Error('Invalid demographic number or appointment number');
       }
 
       const requestBody = {
         demographicNo: demographicNoInt,
-        mobile: parseInt(route.params.mobile || '0'),
-        scopeAnswers: {
-          condition: scopeAnswers?.condition || '',
-          status: scopeAnswers?.status || ''
-        },
+        mobile: parseInt(route.params.mobile || '87878788686'),
+        scopeAnswers: {},
         appointmentNo: appointmentNoInt,
         allergies: allergies || '',
         reasonDescription: reasonDescription || '',
-        followUpAnswers: followUpAnswers,  // Send as is, don't format
+        followUpAnswers: {},
         soapNotes: htmlContent,
         reason: route.params.reason || reason || 'General'
       };
 
-      // Make the API call with increased timeout
       const response = await axiosInstance.post('/appointment/generateParPdf/', requestBody, {
-        timeout: 30000, // 30 seconds timeout
+        timeout: 30000,
         maxBodyLength: Infinity,
         maxContentLength: Infinity,
         headers: {
@@ -252,68 +267,41 @@ console.log (parPdfData,'par pdf ')
         }
       });
 
-      if (response.data && (response.data.pdf || response.data.data)) {
+      console.log('PAR PDF Response:', response.data);
+
+      if (response.data && (response.data.data || response.data.pdf)) {
         setIsParPdf(true);
         const base64Pdf = response.data.pdf || response.data.data;
         
-        // Compress the PDF data if it's too large
-        const compressedPdf = base64Pdf.length > 1000000 ? 
-          await compressPdf(base64Pdf) : base64Pdf;
+        // Create a temporary file path using RNFS
+        const fileName = `PAR_Notes_${Date.now()}.pdf`;
+        const filePath = Platform.OS === 'ios' 
+          ? `${RNFS.DocumentDirectoryPath}/${fileName}`
+          : `${RNFS.DownloadDirectoryPath}/${fileName}`;
 
-        await handleDownloadPdf(
-          compressedPdf,
-          route.params?.firstName,
-          route.params?.lastName
-        );
+        // Save the PDF using RNFS
+        await RNFS.writeFile(filePath, base64Pdf, 'base64');
+        
+        // Set the PDF source for viewing
+        setPdfSource({
+          uri: Platform.OS === 'ios' ? filePath : `file://${filePath}`
+        });
 
-        // Save the initial PDF document
-        if (pdfSource) {
-          // Log before creating pdfFile
-          console.log('[DEBUG] PDF Source:', pdfSource);
-
-          const pdfFile = {
-            uri: pdfSource.uri,
-            name: `PAR_Notes_${route.params?.firstName || 'Unknown'}_${route.params?.lastName || 'Patient'}_${new Date().getTime()}.pdf`,
-            type: 'application/pdf'
-          };
-
-          // Log before dispatch with validated integers
-          console.log('[DEBUG] Dispatching savePdfDocument with:', {
-            demographicNo: demographicNoInt,
-            appointmentNo: appointmentNoInt,
-            pdfFile: {
-              name: pdfFile.name,
-              type: pdfFile.type,
-              uri: pdfFile.uri
-            }
-          });
-
-          // Use the validated integer values when dispatching
-          const result = await dispatch(savePdfDocument({
-            demographicNo: demographicNoInt,
-            appointmentNo: appointmentNoInt, // Now properly passing the appointment number
-            pdfFile
-          })).unwrap();
-
-          // Log the result
-          console.log('[DEBUG] Save PDF Result:', result);
-
-          if (result.status === 'Success') {
-            setSaveStatus('success');
-            Alert.alert(
-              'Success',
-              'Document saved and uploaded successfully',
-              [{ text: 'OK', onPress: () => setSaveStatus('') }]
-            );
-
-            if (Platform.OS === 'android') {
-              await RNFS.scanFile(pdfSource.uri);
-            }
-          } else {
-            throw new Error('Server upload failed');
+        // Verify file exists
+        const fileExists = await RNFS.exists(filePath);
+        console.log('PDF file exists:', fileExists);
+        console.log('PDF file path:', filePath);
+        
+        if (fileExists) {
+          // Show the PDF viewer modal
+          setPdfVisible(true);
+          
+          if (Platform.OS === 'android') {
+            // Scan file to make it visible in downloads
+            await RNFS.scanFile(filePath);
           }
         } else {
-          console.log('[DEBUG] No PDF source available');
+          throw new Error('PDF file was not created successfully');
         }
 
         if (route.params?.onDone) {
@@ -322,12 +310,11 @@ console.log (parPdfData,'par pdf ')
       } else {
         throw new Error('No PDF data in response');
       }
-
     } catch (error) {
-      console.error('[DEBUG] PAR PDF Generation error:', error);
+      console.error('Generate PAR PDF error:', error);
       Alert.alert(
         'Error',
-        'Failed to generate PDF. The file might be too large. Please try again with less content.'
+        'Failed to generate PDF. Please try again.'
       );
     } finally {
       setParPdfLoading(false);
@@ -400,7 +387,7 @@ console.log (parPdfData,'par pdf ')
     const handleSaveChanges = async () => {
       try {
         setIsSaving(true);
-        setSaveStatus('');
+     
 
         if (!viewer.current) {
           throw new Error('PDF viewer not initialized');
@@ -550,6 +537,163 @@ console.log (parPdfData,'par pdf ')
     );
   };
 
+  // Function to convert base64 to file path
+  const saveBase64AsPDF = async (base64Data) => {
+    try {
+      const fileName = 'soap_note.pdf';
+      const path = Platform.OS === 'ios' 
+        ? `${RNPdftron.getDocumentDirectory()}/${fileName}`
+        : `${RNPdftron.getDocumentDirectory()}/${fileName}`;
+        
+      await RNPdftron.saveDocument(base64Data, path);
+      return path;
+    } catch (error) {
+      console.error('Error saving PDF:', error);
+      return null;
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    try {
+      setIsLoading(true);
+      const response = await yourPDFGenerationAPI(); // Your API call
+      
+      if (response?.data?.data) {
+        setPdfData(response.data.data);
+        setShowPDF(true);
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const pdfViewerConfig = {
+    showLeadingNavButton: true,
+    leadingNavButtonIcon: Platform.OS === 'ios' ? 'back' : 'arrow_back',
+    nightModeEnabled: false,
+    documentSliderEnabled: true,
+    pageNumberIndicatorEnabled: true,
+    readOnly: true,
+  };
+
+  const generatePDFHandler = async () => {
+    try {
+      const response = await yourGeneratePDFAPI(); // Your API call
+      if (response?.data?.data) {
+        await handleGeneratePDF(response);
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
+
+  // Handle the PDF response
+  const handlePDFResponse = async (response) => {
+    try {
+      setIsLoading(true);
+      console.log("Handling PDF response");
+
+      // Get base64 data
+      const base64Data = response?.data?.data;
+      if (!base64Data) {
+        console.error("No PDF data found");
+        return;
+      }
+
+      // Create file path
+      const fileName = `soap_note_${Date.now()}.pdf`;
+      const documentsDir = await RNPdftron.getDocumentDirectory();
+      const filePath = `${documentsDir}/${fileName}`;
+
+      console.log("Saving PDF to:", filePath);
+
+      // Save the document
+      await RNPdftron.saveDocument(base64Data, filePath);
+      console.log("PDF saved successfully");
+
+      // Set the path to display PDF
+      setPdfPath(filePath);
+    } catch (error) {
+      console.error("Error handling PDF:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Call this function when you get the PDF response
+  // useEffect(() => {
+  //   if (response?.data?.data) {
+  //     handlePDFResponse(response);
+  //   }
+  // }, [response]);
+
+  const handleSaveDocument = async () => {
+    try {
+      setIsSaving(true);
+      
+      const { demographicNo, appointmentNo } = route.params;
+      const demographicNoInt = parseInt(demographicNo, 10);
+      const appointmentNoInt = parseInt(appointmentNo, 10);
+
+      if (!pdfSource || !pdfSource.uri) {
+        throw new Error('No PDF document to save');
+      }
+
+      // Create a file object from the PDF source
+      const fileName = `PAR_Notes_${demographicNoInt}_${Date.now()}.pdf`;
+      const pdfFile = {
+        uri: pdfSource.uri,
+        type: 'application/pdf',
+        name: fileName
+      };
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('demographicNo', demographicNoInt.toString());
+      formData.append('appointmentNo', appointmentNoInt.toString());
+      formData.append('pdfFile', pdfFile);
+
+      // Call the save document API
+      const result = await dispatch(savePdfDocument({
+        demographicNo: demographicNoInt,
+        appointmentNo: appointmentNoInt,
+        pdfFile
+      })).unwrap();
+
+      if (result.status === 'Success') {
+        Alert.alert(
+          'Success',
+          'Document saved successfully',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setPdfVisible(false);
+                setPdfSource(null);
+                if (route.params?.onDone) {
+                  route.params.onDone();
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        throw new Error('Failed to save document');
+      }
+
+    } catch (error) {
+      console.error('Save document error:', error);
+      Alert.alert(
+        'Error',
+        'Failed to save document. Please try again.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <>
       <StatusBar backgroundColor="#0049F8" barStyle="light-content" />
@@ -645,13 +789,59 @@ console.log (parPdfData,'par pdf ')
         animationType="slide"
       >
         <SafeAreaView style={{ flex: 1 }}>
-            {pdfSource && (
-            isParPdf ? (
-              <EditablePdfViewer pdfPath={pdfSource} />
-            ) : (
-              <SimplePdfViewer pdfPath={pdfSource} />
-            )
-          )}
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+          ) : pdfSource ? (
+            <View style={styles.pdfContainer}>
+              <DocumentView
+                document={pdfSource.uri}
+                showLeadingNavButton={true}
+                leadingNavButtonIcon={Platform.OS === 'ios' ? 'back' : 'arrow_back'}
+                onLeadingNavButtonPressed={() => {
+                  setPdfVisible(false);
+                  setPdfSource(null);
+                }}
+                showBottomToolbar={true}
+                showTopToolbar={true}
+                readOnly={false}
+                annotationAuthor="User"
+                pageChangeOnTap={true}
+                useStylusAsPen={true}
+                bottomToolbarEnabled={true}
+                hideToolbarsOnTap={true}
+                maintainZoomLevel={true}
+                documentSliderEnabled={true}
+                pageNumberIndicatorEnabled={true}
+                onDocumentLoaded={() => {
+                  console.log('PDF loaded successfully');
+                }}
+                onError={(error) => {
+                  console.error('PDF viewer error:', error);
+                }}
+                style={styles.pdfViewer}
+              />
+              <View style={styles.pdfButtonContainer}>
+                <TouchableOpacity
+                  style={[styles.saveButton, isSaving && styles.buttonDisabled]}
+                  onPress={handleSaveDocument}
+                  disabled={isSaving}
+                >
+                  <Text style={styles.saveButtonText}>
+                    {isSaving ? 'Saving...' : 'Save Document'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => {
+                    setPdfVisible(false);
+                    setPdfSource(null);
+                  }}
+                >
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
         </SafeAreaView>
       </Modal>
     </>
@@ -727,43 +917,62 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
+    left: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 10,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    backgroundColor: 'transparent',
     zIndex: 999,
   },
   saveButton: {
-    backgroundColor: '#0049F8',
+    backgroundColor: '#2E7D32', // Green color for save button
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    minWidth: 120,
+    flex: 1,
+    marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   closeButton: {
     backgroundColor: '#666',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    minWidth: 100,
+    width: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   saveButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   closeButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   buttonDisabled: {
     backgroundColor: '#A0A0A0',
+    opacity: 0.7,
   },
   successButton: {
     backgroundColor: '#2E7D32',
@@ -773,6 +982,17 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: '#fff',
+  },
+  pdfViewer: {
+    flex: 1,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pdfContainer: {
+    flex: 1,
   },
 });
 

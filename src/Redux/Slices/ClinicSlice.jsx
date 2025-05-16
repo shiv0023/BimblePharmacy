@@ -5,45 +5,26 @@ console.log('Axios Instance:', axiosInstance.defaults.baseURL);
 
 export const fetchSubdomains = createAsyncThunk(
   'clinic/fetchSubdomains',
-  async (_, { rejectWithValue }) => {
+  async (searchQuery, { rejectWithValue }) => {
     try {
-      // console.log('Fetching subdomains...'); 
-      // Based on the error message, the correct path should be under authentication
-      console.log('pressi')
+      console.log('Fetching subdomains with query:', searchQuery);
       const response = await axiosInstance.get('/authentication/fetchAllEntitiesSubdomains/');
-      console.log(response,"res")
-;      // console.log('Raw Response:', response); 
-      console.log('response', response.data); 
+      
+      console.log('Subdomains API Response:', response.data);
       
       if (!response.data) {
-        return rejectWithValue('No data received from the server');
+        throw new Error('No data received from the server');
       }
       
       return response.data;
     } catch (error) {
-      console.error('API Error Details:', {
+      console.error('Subdomains API Error:', {
         message: error.message,
-        response: error.response ? {
-          status: error.response.status,
-          data: error.response.data
-        } : 'No response',
-        request: error.request ? 'Request made' : 'No request'
+        status: error.response?.status,
+        data: error.response?.data,
       });
       
-      // If we get a 404, try an alternative endpoint
-      if (error.response && error.response.status === 404) {
-            try {
-              // console.log('Trying alternative endpoint...');
-          const altResponse = await axiosInstance.get('/authentication/fetchAllEntitiesSubdomains/');
-          console.log('Alternative endpoint success:', altResponse.data);
-          return altResponse.data;
-        } catch (altError) {
-          console.error('Alternative endpoint also failed:', altError.message);
-          return rejectWithValue('Error fetching subdomains: Both primary and alternative endpoints failed');
-        }
-      }
-      
-      return rejectWithValue('Error fetching subdomains: ' + (error.message || 'Unknown error'));
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch clinics');
     }
   }
 );
@@ -51,7 +32,7 @@ export const fetchSubdomains = createAsyncThunk(
 const clinicSlice = createSlice({
   name: 'clinic',
   initialState: {
-    subdomains: [],
+    data: [],
     loading: false,
     error: null
   },
@@ -68,12 +49,13 @@ const clinicSlice = createSlice({
       })
       .addCase(fetchSubdomains.fulfilled, (state, action) => {
         state.loading = false;
-        state.subdomains = action.payload;
+        state.data = action.payload;
+        state.error = null;
       })
       .addCase(fetchSubdomains.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        console.error('Clinic Slice Error State:', action.payload);
+        console.error('Clinic fetch failed:', action.payload);
       });
   }
 });

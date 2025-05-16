@@ -50,15 +50,23 @@ export default function Login({navigation}) {
   const authResponse = useSelector(state => state?.user);
   const error = authResponse?.error || null;
 
-  const clinicData = useSelector(state => state?.auth?.clinic?.data || []);
-  const isLoadingClinic = useSelector(state => state?.auth?.clinic?.loading || false);
-  
+  const clinicData = useSelector(state => state?.auth?.clinic?.data?.data || []);
+  console.log(clinicData,'hello');
+
+  // Effect to fetch clinics when search text changes
+  useEffect(() => {
+    if (subdomainBimble && subdomainBimble.length >= 2) {
+      dispatch(fetchSubdomains(subdomainBimble));
+    }
+  }, [subdomainBimble, dispatch]);
+
   // Memoize filtered suggestions
   const filteredSuggestions = useMemo(() => {
     if (!clinicData || !Array.isArray(clinicData)) return [];
     if (!subdomainBimble) return [];
     
     return clinicData.filter(clinic => 
+      clinic?.entityName?.toLowerCase()?.includes(subdomainBimble.toLowerCase()) ||
       clinic?.subdomainBimble?.toLowerCase()?.includes(subdomainBimble.toLowerCase())
     );
   }, [clinicData, subdomainBimble]);
@@ -144,10 +152,10 @@ export default function Login({navigation}) {
     setIsLoading(true);
     try {
       const credentials = {
-        subdomainBimble: '123Virtual1.bimble.pro',
-        username: "oscardoc",
-        password:"Orange123",
-        pin: 1117
+        subdomainBimble: subdomainBimble.trim(),
+        username: username.trim(),
+        password: password.trim(),
+        pin: pin.trim()
       };
 console.log(credentials,"credentials");
       const response = await dispatch(loginUser({ requestedData: credentials })).unwrap();
@@ -155,7 +163,7 @@ console.log(credentials,"credentials");
       await AsyncStorage.setItem('auth_token', response.access_token);
 
       if (rememberMe) {
-        await AsyncSorage.setItem(
+        await AsyncStorage.setItem(
           'userCredentials',
           JSON.stringify({
             ...credentials,
@@ -223,26 +231,21 @@ console.log(credentials,"credentials");
           placeholderTextColor={'black'}
         />
         
-        {/* Only show suggestions if we have input and suggestions are enabled */}
         {showSuggestions && subdomainBimble && (
           <View style={styles.suggestionsContainer}>
-            {isLoadingClinic ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#2968FF" />
-              </View>
-            ) : filteredSuggestions.length > 0 ? (
+            {filteredSuggestions.length > 0 ? (
               filteredSuggestions.map((clinic, index) => (
                 <TouchableOpacity
                   key={index}
                   style={styles.suggestionItem}
                   onPress={() => {
-                    setSubdomain(clinic.subdomainBimble || '');
-                    setClinicDisplayName(clinic.entityName || '');
+                    setSubdomain(clinic.subdomainBimble);
+                    setClinicDisplayName(clinic.entityName);
                     setShowSuggestions(false);
                   }}
                 >
                   <Text style={styles.suggestionText}>
-                    {clinic.entityName || ''}
+                    {clinic.entityName}
                   </Text>
                 </TouchableOpacity>
               ))
@@ -621,10 +624,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#151515',
     fontFamily: 'Product Sans Regular',
-  },
-  loadingContainer: {
-    padding: 15,
-    alignItems: 'center',
   },
   noSuggestionsContainer: {
     padding: 15,

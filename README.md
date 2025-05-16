@@ -13,3 +13,10 @@ call this api in @generateParpdf componnet and when any chnages is done in pdf a
 
 
 
+try {
+      const credentials = {
+        subdomainBimble: subdomainBimble.trim(),
+        username: username.trim(),
+        password: password.trim(),
+        pin: pin.trim()
+      };
