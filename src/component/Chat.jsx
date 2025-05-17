@@ -125,7 +125,7 @@ console.log (encounterNotes,'encounter')
       // If we have remarks, set the scope status and mark pre-assessment as done
       const scopeAnswersFromRemarks = {
         // Add any default answers based on the remarks
-        condition: route.params.reason || '',
+        condition: route.params.reason ,
         status: route.params.remarks
       };
 
@@ -651,7 +651,7 @@ console.log (encounterNotes,'encounter')
                       appointmentNo,
                       gender,
                       dob: `${year_of_birth}-${month_of_birth}-${date_of_birth}`,
-                      allergies: route.params?.allergies || '',
+                      allergies: route.params?.allergies ,
                       phn: phn,
                       followUpAnswers,
                       scopeAnswers,
@@ -660,6 +660,8 @@ console.log (encounterNotes,'encounter')
                       medications: route.params?.medications || [],
                       firstName: route.params?.firstName,
                       lastName: route.params?.lastName,
+                      clinicContact: route.params?.clinicContact,
+                      reasonDesc: route.params?.reasonDesc ,
                       onDone: () => setSoapNotesDone(true),
                     });
                   }}

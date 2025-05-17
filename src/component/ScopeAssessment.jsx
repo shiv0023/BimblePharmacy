@@ -335,7 +335,7 @@ console.log (authData,'subdoomain')
         // Save PDF to document storage
         try {
           const saveDocumentResponse = await dispatch(savePdfDocument({
-            demographicNo: numericDemographicNo, // Send as integer
+            demographicNo: String(numericDemographicNo), // Convert to string
             pdfFile: {
               uri: Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`,
               name: options.fileName,
@@ -346,7 +346,13 @@ console.log (authData,'subdoomain')
           console.log('PDF saved to document storage:', saveDocumentResponse);
         } catch (saveError) {
           console.error('Error saving PDF to document storage:', saveError);
-          console.error('DemographicNo value:', numericDemographicNo);
+          // Add more detailed error logging
+          console.error('Save Error details:', {
+            message: saveError.message,
+            stack: saveError.stack,
+            demographicNo: numericDemographicNo,
+            type: typeof numericDemographicNo
+          });
           Alert.alert('Warning', 'PDF generated but failed to save to document storage');
         }
 

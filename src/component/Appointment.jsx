@@ -93,7 +93,7 @@ function getAgeString(year, month, day) {
 
 export default function Appointment({navigation, route}) {
   const subdomain = route?.params?.subdomain;
-  console.log('Subdomain:', subdomain);
+  console.log('Subdomains:', subdomain);
   const [currentDate, setCurrentDate] = useState('');
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -236,7 +236,7 @@ export default function Appointment({navigation, route}) {
     navigation.navigate("Chat", {
       date: item.appointmentDate,
       reason: item.reason,
-      reasonDesc: item.reasonDesc,
+      reasonDesc: item.reasonDesc ,
       demographicNo: formattedDemographicNo,
       status: item.status,
       appointmentNo: item.appointmentNo,
@@ -252,6 +252,7 @@ export default function Appointment({navigation, route}) {
       remarks: item.remarks,
       scopeStatus: item.remarks,
       subdomain: subdomain,
+      clinicContact: item.clinicContact,
     });
   };
 
@@ -421,7 +422,7 @@ export default function Appointment({navigation, route}) {
               data={userData.filter(item => {
                 const today = getCurrentDate();
                 const itemDate = item.appointmentDate;
-                const demographicType = (item.demographicType || '').toLowerCase();
+                const demographicType = (item.demographicType ).toLowerCase();
                 
                 // Skip cancelled appointments
                 if (item.status === 'Cancelled') {
@@ -452,6 +453,19 @@ export default function Appointment({navigation, route}) {
             <Text style={styles.emptyText}>No appointments available</Text>
           )}
         </View>
+
+        {/* Add the Create Appointment button */}
+        <TouchableOpacity 
+          style={styles.createAppointmentButton}
+          onPress={() => navigation.navigate('CreateAppointment', { 
+            subdomain: subdomain
+          })}
+        >
+          <View style={styles.buttonContent}>
+            <Text style={styles.plusIcon}>+</Text>
+            <Text style={styles.buttonText}>Create Appointment</Text>
+          </View>
+        </TouchableOpacity>
       </SafeAreaViewSafeAreaContext>
     </PanGestureHandler>
   );
@@ -793,6 +807,42 @@ fontWeight:'400',
     marginLeft: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  createAppointmentButton: {
+    position: 'absolute',
+    bottom: 50,
+    right: 20,
+    backgroundColor: '#0049F8',
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  plusIcon: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    marginRight: 8,
+    fontWeight: '300',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '400',
+    fontFamily: 'Product Sans Regular',
   },
 });
 

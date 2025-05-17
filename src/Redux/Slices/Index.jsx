@@ -10,6 +10,8 @@ import followupAssessmentReducer from './FollowUpAssessmentSlice';
 import medicationReducer from './MedicationlistSlice';
 import soapNotesReducer from './SoapNotesSlice';
 import parPdfReducer from './ParPdfSlices';
+import patientSearchReducer from '../Slices/PatientSlice';
+import appointmentReasonReducer from '../Slices/AppointmentReasoSlice';
 
 const rootReducer = combineReducers({
   user: AuthReducer,
@@ -23,6 +25,8 @@ const rootReducer = combineReducers({
   medication: medicationReducer,
   soapNotes: soapNotesReducer,
   parPdf: parPdfReducer,
+  patientSearch: patientSearchReducer,
+  appointmentReason: appointmentReasonReducer,
 });
 
 export default rootReducer;

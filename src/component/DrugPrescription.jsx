@@ -345,10 +345,10 @@ const DrugPrescription = ({ route, navigation }) => {
       // Format drugs data
       const formattedDrugs = allDrugs.map(drug => ({
         indication: condition || '',
-        instructions: drug.instructions || '',
-        duration: parseInt(drug.duration) || 0,
-        quantity: parseInt(drug.quantity) || 0,
-        repeat: parseInt(drug.refills) || 0,
+        instructions: drug.instructions ,
+        duration: parseInt(drug.duration) ,
+        quantity: parseInt(drug.quantity) ,
+        repeat: parseInt(drug.refills) ,
         groupName: drug.drugName,
         drugForm: "",
         dosage: "",

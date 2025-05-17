@@ -35,13 +35,18 @@ const SoapNotes = ({ route, navigation }) =>{
     dob,
     appointmentNo,
     reason,
-    reasonDescription,
+    reasonDesc,
+  
     allergies,
     scope,
     scopeAnswers,
     followUpAnswers,
-    medications
+    medications,
+   
+  
   } = route.params;
+  
+  console.log (route.params,'hello world')
   const { loading, soapNote, error } = useSelector(state => state.auth.soapNotes);
   const [pdfVisible, setPdfVisible] = useState(false);
   const [pdfSource, setPdfSource] = useState(null);
@@ -64,16 +69,16 @@ console.log (parPdfData,'par pdf ')
 
   useEffect(() => {
     dispatch(fetchSoapNotes({
-      gender: gender || '',
-      dob: dob || '',
-      appointmentNo: appointmentNo || '',
-      reason: reason || 'General',
-      reasonDescription: reasonDescription || '',
-      allergies: allergies || '',
-      scope: scope || '',
-      scopeAnswers: scopeAnswers || {},
-      followUpAnswers: followUpAnswers || [],
-      medications: medications || [],
+      gender: gender,
+      dob: dob,
+      appointmentNo: appointmentNo,
+      reason: reason,
+      reasonDescription: reasonDesc , 
+      allergies: allergies,
+      scope: scope,
+      scopeAnswers: scopeAnswers,
+      followUpAnswers: followUpAnswers,
+      medications: medications,
     }));
   }, [dispatch]);
 
@@ -143,7 +148,7 @@ console.log (parPdfData,'par pdf ')
         soapNote: htmlContent,
 
         scope: route.params.scope,
-        reason: route.params.reason || 'General',
+        reason: route.params.reason ,
     
       };
       
@@ -223,7 +228,7 @@ console.log (parPdfData,'par pdf ')
         const exists = await RNPdftron.fileExists(filePath);
         console.log('File exists:', exists);
       } catch (error) {
-        console.error('Error checking file:', error);
+        // console.error('Error checking file:', error);
       }
 
     } catch (error) {
@@ -238,25 +243,46 @@ console.log (parPdfData,'par pdf ')
       setParPdfLoading(true);
       console.log("Generating PAR PDF...");
       
-      const { demographicNo, appointmentNo } = route.params;
+      const { 
+        demographicNo, 
+        appointmentNo,
+        scopeAnswers,
+        followUpAnswers,
+        allergies,
+        reasonDescription,
+        reasonDesc,
+        reason,
+        clinicContact
+      } = route.params;
+
       const demographicNoInt = parseInt(demographicNo, 10);
       const appointmentNoInt = parseInt(appointmentNo, 10);
 
-      if (isNaN(demographicNoInt) || isNaN(appointmentNoInt)) {
-        throw new Error('Invalid demographic number or appointment number');
-      }
+      // Format followUpAnswers into an object instead of an array
+      const formattedFollowUpAnswers = {};
+      followUpAnswers.forEach(answer => {
+        formattedFollowUpAnswers[answer.questionId] = answer.answer;
+      });
+
+      // Format scopeAnswers
+      const formattedScopeAnswers = {
+        condition: scopeAnswers.condition || reason,
+        status: scopeAnswers.status || scope
+      };
 
       const requestBody = {
         demographicNo: demographicNoInt,
-        mobile: parseInt(route.params.mobile || '87878788686'),
-        scopeAnswers: {},
+        mobile: parseInt(clinicContact ),
+        scopeAnswers: formattedScopeAnswers,
         appointmentNo: appointmentNoInt,
-        allergies: allergies || '',
-        reasonDescription: reasonDescription || '',
-        followUpAnswers: {},
+        allergies: allergies,
+        reasonDescription: reasonDesc,
+        followUpAnswers: formattedFollowUpAnswers,
         soapNotes: htmlContent,
-        reason: route.params.reason || reason || 'General'
+        reason: reason
       };
+
+      console.log('Request Body:', JSON.stringify(requestBody, null, 2));
 
       const response = await axiosInstance.post('/appointment/generateParPdf/', requestBody, {
         timeout: 30000,
@@ -273,31 +299,25 @@ console.log (parPdfData,'par pdf ')
         setIsParPdf(true);
         const base64Pdf = response.data.pdf || response.data.data;
         
-        // Create a temporary file path using RNFS
         const fileName = `PAR_Notes_${Date.now()}.pdf`;
         const filePath = Platform.OS === 'ios' 
           ? `${RNFS.DocumentDirectoryPath}/${fileName}`
           : `${RNFS.DownloadDirectoryPath}/${fileName}`;
 
-        // Save the PDF using RNFS
         await RNFS.writeFile(filePath, base64Pdf, 'base64');
         
-        // Set the PDF source for viewing
         setPdfSource({
           uri: Platform.OS === 'ios' ? filePath : `file://${filePath}`
         });
 
-        // Verify file exists
         const fileExists = await RNFS.exists(filePath);
         console.log('PDF file exists:', fileExists);
         console.log('PDF file path:', filePath);
         
         if (fileExists) {
-          // Show the PDF viewer modal
           setPdfVisible(true);
           
           if (Platform.OS === 'android') {
-            // Scan file to make it visible in downloads
             await RNFS.scanFile(filePath);
           }
         } else {
@@ -394,8 +414,8 @@ console.log (parPdfData,'par pdf ')
         }
 
         const { demographicNo, appointmentNo } = route.params;
-        const demographicNoInt = parseInt(demographicNo, 10);
-        const appointmentNoInt = parseInt(appointmentNo, 10);
+        const demographicNoInt = parseInt(demographicNo);
+        const appointmentNoInt = parseInt(appointmentNo);
 
         // Create a new file name
         const timestamp = new Date().getTime();
@@ -538,20 +558,20 @@ console.log (parPdfData,'par pdf ')
   };
 
   // Function to convert base64 to file path
-  const saveBase64AsPDF = async (base64Data) => {
-    try {
-      const fileName = 'soap_note.pdf';
-      const path = Platform.OS === 'ios' 
-        ? `${RNPdftron.getDocumentDirectory()}/${fileName}`
-        : `${RNPdftron.getDocumentDirectory()}/${fileName}`;
+  // const saveBase64AsPDF = async (base64Data) => {
+  //   try {
+  //     const fileName = 'soap_note.pdf';
+  //     const path = Platform.OS === 'ios' 
+  //       ? `${RNPdftron.getDocumentDirectory()}/${fileName}`
+  //       : `${RNPdftron.getDocumentDirectory()}/${fileName}`;
         
-      await RNPdftron.saveDocument(base64Data, path);
-      return path;
-    } catch (error) {
-      console.error('Error saving PDF:', error);
-      return null;
-    }
-  };
+  //     await RNPdftron.saveDocument(base64Data, path);
+  //     return path;
+  //   } catch (error) {
+  //     console.error('Error saving PDF:', error);
+  //     return null;
+  //   }
+  // };
 
   const handleGeneratePDF = async () => {
     try {

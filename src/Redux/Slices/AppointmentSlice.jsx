@@ -18,7 +18,7 @@ export const fetchAppointments = createAsyncThunk(
         startDate,
         endDate
       });
-
+console.log (response,'appointment data')
       // Log the raw response
   
 
